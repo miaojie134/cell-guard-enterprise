@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { MainLayout } from "@/layouts/MainLayout";
 import { useData } from "@/context/DataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Phone, User, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Link } from "react-router-dom";
+import { sampleEmployees, samplePhoneNumbers } from "@/data/sampleData";
 
 const Dashboard = () => {
   const { phoneNumbers, employees, getRiskPhones } = useData();
@@ -29,6 +30,10 @@ const Dashboard = () => {
   
   // Risk phones (top 5)
   const riskPhones = getRiskPhones().slice(0, 5);
+
+  useEffect(() => {
+    console.log("Dashboard data:", { phoneNumbers, employees });
+  }, [phoneNumbers, employees]);
 
   return (
     <MainLayout title="仪表盘">
@@ -111,6 +116,13 @@ const Dashboard = () => {
                       <td>{phone.registrationDate}</td>
                     </tr>
                   ))}
+                  {recentPhones.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="text-center py-4">
+                        暂无数据
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -148,6 +160,13 @@ const Dashboard = () => {
                         <td><StatusBadge status={phone.status} /></td>
                       </tr>
                     ))}
+                    {riskPhones.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="text-center py-4">
+                          暂无风险号码
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>

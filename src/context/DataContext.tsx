@@ -58,11 +58,11 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>(sampleEmployees);
+  const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>(samplePhoneNumbers);
   const [phoneUsage, setPhoneUsage] = useState<PhoneUsage[]>([]);
   const [phoneAssigns, setPhoneAssigns] = useState<PhoneAssign[]>([]);
-  const [phoneHistory, setPhoneHistory] = useState<PhoneUsageHistory[]>([]);
+  const [phoneHistory, setPhoneHistory] = useState<PhoneUsageHistory[]>(samplePhoneHistory);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -81,6 +81,8 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         } else {
           // Use sample data if no stored data
           setEmployees(sampleEmployees);
+          // Save sample data to localStorage
+          localStorage.setItem("employees", JSON.stringify(sampleEmployees));
         }
 
         // Load phone numbers
@@ -90,6 +92,8 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         } else {
           // Use sample data if no stored data
           setPhoneNumbers(samplePhoneNumbers);
+          // Save sample data to localStorage
+          localStorage.setItem("phoneNumbers", JSON.stringify(samplePhoneNumbers));
         }
 
         // Load phone usage history
@@ -99,6 +103,8 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         } else {
           // Use sample data if no stored data
           setPhoneHistory(samplePhoneHistory);
+          // Save sample data to localStorage
+          localStorage.setItem("phoneHistory", JSON.stringify(samplePhoneHistory));
         }
 
         const storedPhoneUsage = localStorage.getItem("phoneUsage");
