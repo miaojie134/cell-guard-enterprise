@@ -25,6 +25,24 @@ export interface PhoneNumber {
   notes?: string;
 }
 
+export interface PhoneUsage {
+  id: string;
+  phoneId: string;
+  employeeId: string;
+  startDate: string;
+  endDate?: string;
+  dataUsage?: number;
+}
+
+export interface PhoneAssign {
+  id: string;
+  phoneId: string;
+  employeeId: string;
+  assignDate: string;
+  returnDate?: string;
+  notes?: string;
+}
+
 export interface PhoneUsageHistory {
   id: string;
   phoneId: string;

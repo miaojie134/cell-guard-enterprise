@@ -9,7 +9,8 @@ import {
   Employee,
   PhoneNumber,
   PhoneUsage,
-  PhoneAssign as PhoneAssignType,
+  PhoneAssign,
+  ImportResult,
 } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/components/ui/use-toast";
@@ -20,7 +21,7 @@ type DataContextType = {
   employees: Employee[];
   phoneNumbers: PhoneNumber[];
   phoneUsage: PhoneUsage[];
-  phoneAssigns: PhoneAssignType[];
+  phoneAssigns: PhoneAssign[];
   loading: boolean;
   error: string | null;
   getEmployeeById: (id: string) => Employee | undefined;
@@ -29,19 +30,24 @@ type DataContextType = {
     data: PhoneNumber[];
     total: number;
   };
+  getEmployees: (searchParams: any) => {
+    data: Employee[];
+    total: number;
+  };
+  getRiskPhones: () => PhoneNumber[];
   addEmployee: (employee: Omit<Employee, "id">) => void;
   updateEmployee: (id: string, updates: Partial<Employee>) => void;
   deleteEmployee: (id: string) => void;
   addPhone: (phone: Omit<PhoneNumber, "id">) => void;
   updatePhone: (id: string, updates: Partial<PhoneNumber>) => void;
   deletePhone: (id: string) => void;
-  assignPhone: (phoneAssign: Omit<PhoneAssignType, "id">) => void;
-  unassignPhone: (id: string) => void;
-  getPhoneAssignsByEmployeeId: (employeeId: string) => PhoneAssignType[];
-  getPhoneAssignsByPhoneId: (phoneId: string) => PhoneAssignType[];
-  updatePhoneAssign: (id: string, updates: Partial<PhoneAssignType>) => void;
-  importEmployees: (data: Omit<Employee, "id">[]) => void;
-  importPhones: (data: Omit<PhoneNumber, "id">[]) => void;
+  assignPhone: (phoneId: string, employeeId: string) => void;
+  recoverPhone: (phoneId: string) => void;
+  getPhoneAssignsByEmployeeId: (employeeId: string) => PhoneAssign[];
+  getPhoneAssignsByPhoneId: (phoneId: string) => PhoneAssign[];
+  updatePhoneAssign: (id: string, updates: Partial<PhoneAssign>) => void;
+  importEmployees: (data: Omit<Employee, "id">[]) => Promise<ImportResult>;
+  importPhones: (data: Omit<PhoneNumber, "id">[]) => Promise<ImportResult>;
 };
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -52,7 +58,7 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([]);
   const [phoneUsage, setPhoneUsage] = useState<PhoneUsage[]>([]);
-  const [phoneAssigns, setPhoneAssigns] = useState<PhoneAssignType[]>([]);
+  const [phoneAssigns, setPhoneAssigns] = useState<PhoneAssign[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -164,6 +170,51 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     [phoneNumbers]
   );
 
+  const getEmployees = useCallback(
+    (searchParams: any) => {
+      let filteredEmployees = [...employees];
+
+      if (searchParams.query) {
+        const query = searchParams.query.toLowerCase();
+        filteredEmployees = filteredEmployees.filter((employee) => {
+          return (
+            employee.name.toLowerCase().includes(query) ||
+            employee.employeeId.toLowerCase().includes(query) ||
+            employee.department.toLowerCase().includes(query)
+          );
+        });
+      }
+
+      const filter = searchParams.filters || {};
+      if (filter.status) {
+        filteredEmployees = filteredEmployees.filter(employee => employee.status === filter.status);
+      }
+      if (filter.department) {
+        filteredEmployees = filteredEmployees.filter(employee => employee.department === filter.department);
+      }
+
+      const page = searchParams.page || 1;
+      const pageSize = searchParams.pageSize || 10;
+      const start = (page - 1) * pageSize;
+      const end = start + pageSize;
+      const paginatedEmployees = filteredEmployees.slice(start, end);
+
+      return {
+        data: paginatedEmployees,
+        total: filteredEmployees.length,
+      };
+    },
+    [employees]
+  );
+
+  const getRiskPhones = useCallback(() => {
+    // Filter phones where registrant is inactive but phone is still active
+    return phoneNumbers.filter(phone => 
+      phone.registrantStatus === "inactive" && 
+      (phone.status === "active" || phone.status === "pending")
+    );
+  }, [phoneNumbers]);
+
   const addEmployee = (employee: Omit<Employee, "id">) => {
     const newEmployee: Employee = { ...employee, id: uuidv4() };
     setEmployees((prev) => [...prev, newEmployee]);
@@ -224,47 +275,72 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   };
 
-  const assignPhone = (phoneAssign: Omit<PhoneAssignType, "id">) => {
-    const newPhoneAssign: PhoneAssignType = { ...phoneAssign, id: uuidv4() };
+  const assignPhone = (phoneId: string, employeeId: string) => {
+    // Create a new phone assignment
+    const newPhoneAssign: PhoneAssign = {
+      id: uuidv4(),
+      phoneId,
+      employeeId,
+      assignDate: new Date().toISOString().split('T')[0],
+    };
+    
     setPhoneAssigns((prev) => [...prev, newPhoneAssign]);
 
     // Update the phone number with the current user
-    const employee = employees.find((emp) => emp.id === phoneAssign.employeeId);
-    const phone = phoneNumbers.find((p) => p.id === phoneAssign.phoneId);
-
-    if (phone && employee) {
-      updatePhone(phone.id, { currentUser: employee.name });
+    const employee = employees.find((emp) => emp.id === employeeId);
+    if (employee) {
+      updatePhone(phoneId, { 
+        currentUser: employee.name,
+        currentUserId: employee.id,
+        status: "active" 
+      });
     }
 
     toast({
       title: "分配成功",
-      description: `成功分配号码 ${phoneAssign.phoneId} 给员工 ${phoneAssign.employeeId}`,
+      description: `成功分配号码给员工`,
     });
   };
 
-  const unassignPhone = (id: string) => {
-    const phoneAssign = phoneAssigns.find((assign) => assign.id === id);
-    if (phoneAssign) {
-      // Clear the currentUser field on the phone number
-      updatePhone(phoneAssign.phoneId, { currentUser: "" });
+  const recoverPhone = (phoneId: string) => {
+    // Find the phone assignment for this phone
+    const assignment = phoneAssigns.find((assign) => 
+      assign.phoneId === phoneId && !assign.returnDate
+    );
+    
+    if (assignment) {
+      // Update the assignment with a return date
+      setPhoneAssigns((prev) => 
+        prev.map((assign) => 
+          assign.id === assignment.id 
+            ? { ...assign, returnDate: new Date().toISOString().split('T')[0] } 
+            : assign
+        )
+      );
     }
-
-    setPhoneAssigns((prev) => prev.filter((assign) => assign.id !== id));
+    
+    // Update the phone status to inactive and clear current user
+    updatePhone(phoneId, { 
+      status: "inactive", 
+      currentUser: "",
+      currentUserId: ""
+    });
+    
     toast({
-      title: "解除分配成功",
-      description: `成功解除号码分配`,
+      title: "回收成功",
+      description: `成功回收号码`,
     });
   };
 
-  const getPhoneAssignsByEmployeeId = (employeeId: string): PhoneAssignType[] => {
+  const getPhoneAssignsByEmployeeId = (employeeId: string): PhoneAssign[] => {
     return phoneAssigns.filter((assign) => assign.employeeId === employeeId);
   };
 
-  const getPhoneAssignsByPhoneId = (phoneId: string): PhoneAssignType[] => {
+  const getPhoneAssignsByPhoneId = (phoneId: string): PhoneAssign[] => {
     return phoneAssigns.filter((assign) => assign.phoneId === phoneId);
   };
 
-  const updatePhoneAssign = (id: string, updates: Partial<PhoneAssignType>) => {
+  const updatePhoneAssign = (id: string, updates: Partial<PhoneAssign>) => {
     setPhoneAssigns((prev) =>
       prev.map((assign) => (assign.id === id ? { ...assign, ...updates } : assign))
     );
@@ -274,29 +350,79 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   };
 
-  const importEmployees = (data: Omit<Employee, "id">[]) => {
-    const newEmployees = data.map((employee) => ({
-      ...employee,
-      id: uuidv4(),
-    }));
-    setEmployees((prev) => [...prev, ...newEmployees]);
-    toast({
-      title: "导入成功",
-      description: `成功导入 ${data.length} 位员工`,
-    });
+  const importEmployees = async (data: Omit<Employee, "id">[]): Promise<ImportResult> => {
+    try {
+      const result: ImportResult = {
+        success: 0,
+        failed: 0,
+        errors: []
+      };
+      
+      const newEmployees = data.map((employee) => ({
+        ...employee,
+        id: uuidv4(),
+      }));
+      
+      setEmployees((prev) => [...prev, ...newEmployees]);
+      result.success = newEmployees.length;
+      
+      toast({
+        title: "导入成功",
+        description: `成功导入 ${data.length} 位员工`,
+      });
+      
+      return result;
+    } catch (error: any) {
+      toast({
+        title: "导入失败",
+        description: error.message,
+        variant: "destructive",
+      });
+      
+      return {
+        success: 0,
+        failed: data.length,
+        errors: [error.message]
+      };
+    }
   };
 
-  const importPhones = (data: Omit<PhoneNumber, "id">[]) => {
-    const newPhones = data.map((phone) => ({
-      ...phone,
-      id: uuidv4(),
-      currentUser: "",
-    }));
-    setPhoneNumbers((prev) => [...prev, ...newPhones]);
-    toast({
-      title: "导入成功",
-      description: `成功导入 ${data.length} 个号码`,
-    });
+  const importPhones = async (data: Omit<PhoneNumber, "id">[]): Promise<ImportResult> => {
+    try {
+      const result: ImportResult = {
+        success: 0,
+        failed: 0,
+        errors: []
+      };
+      
+      const newPhones = data.map((phone) => ({
+        ...phone,
+        id: uuidv4(),
+        currentUser: "",
+      }));
+      
+      setPhoneNumbers((prev) => [...prev, ...newPhones]);
+      result.success = newPhones.length;
+      
+      toast({
+        title: "导入成功",
+        description: `成功导入 ${data.length} 个号码`,
+      });
+      
+      return result;
+    } catch (error: any) {
+      toast({
+        title: "导入失败",
+        description: error.message,
+        variant: "destructive",
+      });
+      
+      return {
+        success: 0,
+        failed: data.length,
+        errors: [error.message]
+      };
+    }
   };
 
   const value: DataContextType = {
@@ -309,6 +435,8 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     getEmployeeById,
     getPhoneById,
     getPhoneNumbers,
+    getEmployees,
+    getRiskPhones,
     addEmployee,
     updateEmployee,
     deleteEmployee,
@@ -316,7 +444,7 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     updatePhone,
     deletePhone,
     assignPhone,
-    unassignPhone,
+    recoverPhone,
     getPhoneAssignsByEmployeeId,
     getPhoneAssignsByPhoneId,
     updatePhoneAssign,

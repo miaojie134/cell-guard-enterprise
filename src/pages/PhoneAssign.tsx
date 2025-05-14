@@ -72,7 +72,7 @@ const PhoneAssign = () => {
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem value="" disabled>
+                    <SelectItem value="none" disabled>
                       无可用闲置号码
                     </SelectItem>
                   )}
