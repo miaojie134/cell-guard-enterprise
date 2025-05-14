@@ -35,8 +35,8 @@ const Phones = () => {
   const [searchParams, setSearchParams] = useState({
     query: "",
     filters: {
-      status: "",
-      registrantStatus: "",
+      status: "all",  // Changed from empty string to "all"
+      registrantStatus: "all",  // Changed from empty string to "all"
     },
     page: 1,
     pageSize: 10,
@@ -181,7 +181,7 @@ const Phones = () => {
                   <SelectValue placeholder="号码状态" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">全部状态</SelectItem>
+                  <SelectItem value="all">全部状态</SelectItem>
                   <SelectItem value="active">在用</SelectItem>
                   <SelectItem value="inactive">闲置</SelectItem>
                   <SelectItem value="pending">待开通</SelectItem>
@@ -196,7 +196,7 @@ const Phones = () => {
                   <SelectValue placeholder="办卡人状态" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">全部状态</SelectItem>
+                  <SelectItem value="all">全部状态</SelectItem>
                   <SelectItem value="active">在职</SelectItem>
                   <SelectItem value="inactive">已离职</SelectItem>
                 </SelectContent>
