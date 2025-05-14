@@ -186,7 +186,7 @@ const Employees = () => {
                   <SelectValue placeholder="在职状态" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">全部状态</SelectItem>
+                  <SelectItem value="all">全部状态</SelectItem>
                   <SelectItem value="active">在职</SelectItem>
                   <SelectItem value="inactive">离职</SelectItem>
                 </SelectContent>
@@ -199,7 +199,7 @@ const Employees = () => {
                   <SelectValue placeholder="部门" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">全部部门</SelectItem>
+                  <SelectItem value="all">全部部门</SelectItem>
                   <SelectItem value="市场部">市场部</SelectItem>
                   <SelectItem value="销售部">销售部</SelectItem>
                   <SelectItem value="财务部">财务部</SelectItem>
