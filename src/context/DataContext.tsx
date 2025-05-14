@@ -326,12 +326,22 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         currentUserId: employee.id,
         status: "active" 
       });
+      
+      // Add to phone usage history
+      const newHistory: PhoneUsageHistory = {
+        id: uuidv4(),
+        phoneId,
+        userId: employee.id,
+        userName: employee.name,
+        startDate: new Date().toISOString().split('T')[0],
+      };
+      
+      setPhoneHistory(prev => [...prev, newHistory]);
+      
+      // Update localStorage for phoneHistory
+      const updatedHistory = [...phoneHistory, newHistory];
+      localStorage.setItem("phoneHistory", JSON.stringify(updatedHistory));
     }
-
-    toast({
-      title: "分配成功",
-      description: `成功分配号码给员工`,
-    });
   };
 
   const recoverPhone = (phoneId: string) => {
@@ -351,6 +361,10 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       );
     }
     
+    // Find the phone to get current user info before clearing it
+    const phone = phoneNumbers.find(p => p.id === phoneId);
+    const userId = phone?.currentUserId || "";
+    
     // Update the phone status to inactive and clear current user
     updatePhone(phoneId, { 
       status: "inactive", 
@@ -358,10 +372,31 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       currentUserId: ""
     });
     
-    toast({
-      title: "回收成功",
-      description: `成功回收号码`,
-    });
+    // Update the history record to add end date
+    if (phone?.currentUserId) {
+      setPhoneHistory(prev => 
+        prev.map(history => {
+          if (history.phoneId === phoneId && history.userId === phone.currentUserId && !history.endDate) {
+            return {
+              ...history,
+              endDate: new Date().toISOString().split('T')[0]
+            };
+          }
+          return history;
+        })
+      );
+      
+      // Update localStorage for phoneHistory
+      localStorage.setItem("phoneHistory", JSON.stringify(phoneHistory.map(history => {
+        if (history.phoneId === phoneId && history.userId === phone.currentUserId && !history.endDate) {
+          return {
+            ...history,
+            endDate: new Date().toISOString().split('T')[0]
+          };
+        }
+        return history;
+      })));
+    }
   };
 
   const getPhoneAssignsByEmployeeId = (employeeId: string): PhoneAssign[] => {

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/layouts/MainLayout";
 import { useData } from "@/context/DataContext";
 import {
@@ -12,9 +12,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
+import { useToast } from "@/components/ui/use-toast";
+import { ArrowRight, RotateCw } from "lucide-react";
 
 const PhoneAssign = () => {
-  const { phoneNumbers, employees, assignPhone, recoverPhone } = useData();
+  const { phoneNumbers, employees, assignPhone, recoverPhone, getPhoneHistoryByPhoneId } = useData();
+  const { toast } = useToast();
   
   const [selectedPhoneId, setSelectedPhoneId] = useState<string>("");
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
@@ -31,11 +34,25 @@ const PhoneAssign = () => {
   // Selected phone and employee objects
   const selectedPhone = phoneNumbers.find(phone => phone.id === selectedPhoneId);
   const selectedEmployee = employees.find(emp => emp.id === selectedEmployeeId);
+
+  // Debug data on component mount
+  useEffect(() => {
+    console.log("PhoneAssign data:", { 
+      phoneNumbers, 
+      employees, 
+      availablePhones: availablePhones.length,
+      phonesInUse: phonesInUse.length
+    });
+  }, [phoneNumbers, employees]);
   
   // Handle assignment
   const handleAssignPhone = () => {
     if (selectedPhoneId && selectedEmployeeId) {
       assignPhone(selectedPhoneId, selectedEmployeeId);
+      toast({
+        title: "分配成功",
+        description: `成功将号码 ${selectedPhone?.number} 分配给 ${selectedEmployee?.name}`,
+      });
       setSelectedPhoneId("");
       setSelectedEmployeeId("");
     }
@@ -43,7 +60,12 @@ const PhoneAssign = () => {
   
   // Handle recovery
   const handleRecoverPhone = (phoneId: string) => {
+    const phone = phoneNumbers.find(p => p.id === phoneId);
     recoverPhone(phoneId);
+    toast({
+      title: "回收成功",
+      description: `成功从 ${phone?.currentUser || "用户"} 回收号码 ${phone?.number}`,
+    });
   };
   
   return (
@@ -52,7 +74,10 @@ const PhoneAssign = () => {
         {/* Assign Phone Card */}
         <Card>
           <CardHeader>
-            <CardTitle>分配号码</CardTitle>
+            <CardTitle className="flex items-center">
+              <ArrowRight className="h-5 w-5 mr-2" />
+              分配号码
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -81,10 +106,11 @@ const PhoneAssign = () => {
             </div>
             
             {selectedPhoneId && (
-              <div className="p-2 bg-muted rounded-md text-sm">
+              <div className="p-3 bg-muted rounded-md text-sm">
                 <p><span className="font-medium">号码:</span> {selectedPhone?.number}</p>
                 <p><span className="font-medium">供应商:</span> {selectedPhone?.provider}</p>
                 <p><span className="font-medium">办卡人:</span> {selectedPhone?.registrant}</p>
+                <p><span className="font-medium">使用历史:</span> {getPhoneHistoryByPhoneId(selectedPhoneId).length} 条记录</p>
               </div>
             )}
             
@@ -98,17 +124,23 @@ const PhoneAssign = () => {
                   <SelectValue placeholder="选择一个员工" />
                 </SelectTrigger>
                 <SelectContent>
-                  {activeEmployees.map(employee => (
-                    <SelectItem key={employee.id} value={employee.id}>
-                      {employee.name} ({employee.employeeId} - {employee.department})
+                  {activeEmployees.length > 0 ? (
+                    activeEmployees.map(employee => (
+                      <SelectItem key={employee.id} value={employee.id}>
+                        {employee.name} ({employee.employeeId} - {employee.department})
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled>
+                      无可用员工
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
             
             {selectedEmployeeId && (
-              <div className="p-2 bg-muted rounded-md text-sm">
+              <div className="p-3 bg-muted rounded-md text-sm">
                 <p><span className="font-medium">员工工号:</span> {selectedEmployee?.employeeId}</p>
                 <p><span className="font-medium">员工姓名:</span> {selectedEmployee?.name}</p>
                 <p><span className="font-medium">所属部门:</span> {selectedEmployee?.department}</p>
@@ -128,7 +160,10 @@ const PhoneAssign = () => {
         {/* Recover Phone Card */}
         <Card>
           <CardHeader>
-            <CardTitle>回收号码</CardTitle>
+            <CardTitle className="flex items-center">
+              <RotateCw className="h-5 w-5 mr-2" />
+              回收号码
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-y-auto max-h-96">
