@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { MainLayout } from "@/layouts/MainLayout";
 import { useData } from "@/context/DataContext";
@@ -25,17 +26,28 @@ import { PhoneNumber } from "@/types";
 import { SearchBar } from "@/components/SearchBar";
 import { Pagination } from "@/components/Pagination";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Plus, Edit, ExternalLink } from "lucide-react";
+import { Plus, Edit, ExternalLink, ArrowRight, RotateCw } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const Phones = () => {
-  const { getPhoneNumbers, getPhoneById, addPhone, updatePhone, employees, getPhoneHistoryByPhoneId } = useData();
+  const { 
+    getPhoneNumbers, 
+    getPhoneById, 
+    addPhone, 
+    updatePhone, 
+    employees, 
+    getPhoneHistoryByPhoneId,
+    assignPhone,
+    recoverPhone
+  } = useData();
+  const { toast } = useToast();
   
   // State
   const [searchParams, setSearchParams] = useState({
     query: "",
     filters: {
-      status: "all",  // Changed from empty string to "all"
-      registrantStatus: "all",  // Changed from empty string to "all"
+      status: "all",
+      registrantStatus: "all",
     },
     page: 1,
     pageSize: 10,
@@ -43,7 +55,9 @@ const Phones = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [currentPhoneId, setCurrentPhoneId] = useState<string | null>(null);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
   const [formData, setFormData] = useState<Partial<PhoneNumber>>({
     number: "",
     registrant: "",
@@ -58,6 +72,12 @@ const Phones = () => {
   const { data: phones, total } = getPhoneNumbers(searchParams);
   const totalPages = Math.ceil(total / searchParams.pageSize);
   const currentPhone = currentPhoneId ? getPhoneById(currentPhoneId) : null;
+  
+  // Filter inactive phones for assignment
+  const availablePhones = phones.filter(phone => phone.status === "inactive");
+  
+  // Filter active employees for assignment
+  const activeEmployees = employees.filter(emp => emp.status === "active");
 
   // Handle search and filters
   const handleSearch = (query: string) => {
@@ -122,6 +142,12 @@ const Phones = () => {
     setCurrentPhoneId(id);
     setShowDetailsDialog(true);
   };
+  
+  const openAssignDialog = (id: string) => {
+    setCurrentPhoneId(id);
+    setSelectedEmployeeId("");
+    setShowAssignDialog(true);
+  };
 
   // Submit handlers
   const handleAddSubmit = (e: React.FormEvent) => {
@@ -153,6 +179,33 @@ const Phones = () => {
       });
       setShowEditDialog(false);
     }
+  };
+  
+  const handleAssignSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (currentPhoneId && selectedEmployeeId) {
+      assignPhone(currentPhoneId, selectedEmployeeId);
+      
+      const phone = getPhoneById(currentPhoneId);
+      const employee = employees.find(emp => emp.id === selectedEmployeeId);
+      
+      toast({
+        title: "分配成功",
+        description: `成功将号码 ${phone?.number} 分配给 ${employee?.name}`,
+      });
+      
+      setShowAssignDialog(false);
+      setSelectedEmployeeId("");
+    }
+  };
+  
+  const handleRecoverPhone = (phoneId: string) => {
+    const phone = getPhoneById(phoneId);
+    recoverPhone(phoneId);
+    toast({
+      title: "回收成功",
+      description: `成功从 ${phone?.currentUser || "用户"} 回收号码 ${phone?.number}`,
+    });
   };
 
   return (
@@ -236,6 +289,7 @@ const Phones = () => {
                           variant="ghost" 
                           size="sm" 
                           onClick={() => openDetailsDialog(phone.id)}
+                          title="查看详情"
                         >
                           <ExternalLink className="h-4 w-4" />
                         </Button>
@@ -243,9 +297,29 @@ const Phones = () => {
                           variant="ghost" 
                           size="sm" 
                           onClick={() => openEditDialog(phone.id)}
+                          title="编辑"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
+                        {phone.status === "inactive" ? (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => openAssignDialog(phone.id)}
+                            title="分配号码"
+                          >
+                            <ArrowRight className="h-4 w-4" />
+                          </Button>
+                        ) : phone.status === "active" ? (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleRecoverPhone(phone.id)}
+                            title="回收号码"
+                          >
+                            <RotateCw className="h-4 w-4" />
+                          </Button>
+                        ) : null}
                       </div>
                     </td>
                   </tr>
@@ -554,6 +628,68 @@ const Phones = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Assign Phone Dialog */}
+      <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>分配号码</DialogTitle>
+            <DialogDescription>
+              将号码分配给员工使用
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAssignSubmit}>
+            <div className="space-y-4 py-2">
+              {currentPhone && (
+                <div className="p-3 bg-muted rounded-md text-sm mb-4">
+                  <p><span className="font-medium">号码:</span> {currentPhone.number}</p>
+                  <p><span className="font-medium">供应商:</span> {currentPhone.provider}</p>
+                  <p><span className="font-medium">状态:</span> <StatusBadge status={currentPhone.status} /></p>
+                </div>
+              )}
+              
+              <div className="space-y-2">
+                <Label htmlFor="employeeId">选择员工</Label>
+                <Select
+                  value={selectedEmployeeId}
+                  onValueChange={setSelectedEmployeeId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择一个员工" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeEmployees.length > 0 ? (
+                      activeEmployees.map(employee => (
+                        <SelectItem key={employee.id} value={employee.id}>
+                          {employee.name} ({employee.employeeId} - {employee.department})
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="none" disabled>
+                        无可用员工
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {selectedEmployeeId && (
+                <div className="p-3 bg-muted rounded-md text-sm">
+                  <p><span className="font-medium">员工姓名:</span> {employees.find(emp => emp.id === selectedEmployeeId)?.name}</p>
+                  <p><span className="font-medium">员工工号:</span> {employees.find(emp => emp.id === selectedEmployeeId)?.employeeId}</p>
+                  <p><span className="font-medium">所属部门:</span> {employees.find(emp => emp.id === selectedEmployeeId)?.department}</p>
+                </div>
+              )}
+            </div>
+            <DialogFooter className="mt-4">
+              <Button variant="outline" type="button" onClick={() => setShowAssignDialog(false)}>
+                取消
+              </Button>
+              <Button type="submit" disabled={!selectedEmployeeId}>分配</Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </MainLayout>

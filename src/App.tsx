@@ -13,7 +13,6 @@ import Phones from "./pages/Phones";
 import Employees from "./pages/Employees";
 import RiskPhones from "./pages/RiskPhones";
 import ImportData from "./pages/ImportData";
-import PhoneAssign from "./pages/PhoneAssign";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,7 +34,6 @@ const App = () => (
                 <Route path="/employees" element={<Employees />} />
                 <Route path="/risk" element={<RiskPhones />} />
                 <Route path="/import" element={<ImportData />} />
-                <Route path="/assign" element={<PhoneAssign />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </DataProvider>
