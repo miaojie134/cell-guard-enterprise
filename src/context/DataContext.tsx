@@ -11,11 +11,13 @@ import {
   PhoneUsage,
   PhoneAssign,
   ImportResult,
+  PhoneUsageHistory
 } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/components/ui/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./AuthContext";
+import { sampleEmployees, samplePhoneNumbers, samplePhoneHistory } from "@/data/sampleData";
 
 type DataContextType = {
   employees: Employee[];
@@ -45,6 +47,7 @@ type DataContextType = {
   recoverPhone: (phoneId: string) => void;
   getPhoneAssignsByEmployeeId: (employeeId: string) => PhoneAssign[];
   getPhoneAssignsByPhoneId: (phoneId: string) => PhoneAssign[];
+  getPhoneHistoryByPhoneId: (phoneId: string) => PhoneUsageHistory[];
   updatePhoneAssign: (id: string, updates: Partial<PhoneAssign>) => void;
   importEmployees: (data: Omit<Employee, "id">[]) => Promise<ImportResult>;
   importPhones: (data: Omit<PhoneNumber, "id">[]) => Promise<ImportResult>;
@@ -59,6 +62,7 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([]);
   const [phoneUsage, setPhoneUsage] = useState<PhoneUsage[]>([]);
   const [phoneAssigns, setPhoneAssigns] = useState<PhoneAssign[]>([]);
+  const [phoneHistory, setPhoneHistory] = useState<PhoneUsageHistory[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -70,14 +74,31 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     const loadData = () => {
       setLoading(true);
       try {
+        // Load employees
         const storedEmployees = localStorage.getItem("employees");
         if (storedEmployees) {
           setEmployees(JSON.parse(storedEmployees));
+        } else {
+          // Use sample data if no stored data
+          setEmployees(sampleEmployees);
         }
 
+        // Load phone numbers
         const storedPhoneNumbers = localStorage.getItem("phoneNumbers");
         if (storedPhoneNumbers) {
           setPhoneNumbers(JSON.parse(storedPhoneNumbers));
+        } else {
+          // Use sample data if no stored data
+          setPhoneNumbers(samplePhoneNumbers);
+        }
+
+        // Load phone usage history
+        const storedPhoneHistory = localStorage.getItem("phoneHistory");
+        if (storedPhoneHistory) {
+          setPhoneHistory(JSON.parse(storedPhoneHistory));
+        } else {
+          // Use sample data if no stored data
+          setPhoneHistory(samplePhoneHistory);
         }
 
         const storedPhoneUsage = localStorage.getItem("phoneUsage");
@@ -120,6 +141,11 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     localStorage.setItem("phoneAssigns", JSON.stringify(phoneAssigns));
   }, [phoneAssigns]);
+
+  // Save phone history to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("phoneHistory", JSON.stringify(phoneHistory));
+  }, [phoneHistory]);
 
   const getEmployeeById = useCallback(
     (id: string): Employee | undefined => {
@@ -340,6 +366,13 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     return phoneAssigns.filter((assign) => assign.phoneId === phoneId);
   };
 
+  const getPhoneHistoryByPhoneId = useCallback(
+    (phoneId: string): PhoneUsageHistory[] => {
+      return phoneHistory.filter(history => history.phoneId === phoneId);
+    },
+    [phoneHistory]
+  );
+
   const updatePhoneAssign = (id: string, updates: Partial<PhoneAssign>) => {
     setPhoneAssigns((prev) =>
       prev.map((assign) => (assign.id === id ? { ...assign, ...updates } : assign))
@@ -447,6 +480,7 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     recoverPhone,
     getPhoneAssignsByEmployeeId,
     getPhoneAssignsByPhoneId,
+    getPhoneHistoryByPhoneId,
     updatePhoneAssign,
     importEmployees,
     importPhones,

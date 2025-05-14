@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { MainLayout } from "@/layouts/MainLayout";
 import { useData } from "@/context/DataContext";
@@ -29,7 +28,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Plus, Edit, ExternalLink } from "lucide-react";
 
 const Phones = () => {
-  const { getPhoneNumbers, getPhoneById, addPhone, updatePhone, employees } = useData();
+  const { getPhoneNumbers, getPhoneById, addPhone, updatePhone, employees, getPhoneHistoryByPhoneId } = useData();
   
   // State
   const [searchParams, setSearchParams] = useState({
@@ -536,12 +535,20 @@ const Phones = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {/* This would normally come from phone history data */}
-                    <tr>
-                      <td>{currentPhone.currentUser || "-"}</td>
-                      <td>2023-05-01</td>
-                      <td>{currentPhone.currentUser ? "-" : "2023-11-15"}</td>
-                    </tr>
+                    {currentPhoneId && getPhoneHistoryByPhoneId(currentPhoneId).map((history) => (
+                      <tr key={history.id}>
+                        <td>{history.userName}</td>
+                        <td>{history.startDate}</td>
+                        <td>{history.endDate || "-"}</td>
+                      </tr>
+                    ))}
+                    {currentPhoneId && getPhoneHistoryByPhoneId(currentPhoneId).length === 0 && (
+                      <tr>
+                        <td colSpan={3} className="text-center py-4">
+                          暂无使用历史记录
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
