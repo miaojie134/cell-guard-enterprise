@@ -15,7 +15,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
   const navigate = useNavigate();
 
   React.useEffect(() => {
+    console.log("MainLayout auth check:", { isAuthenticated, isLoading });
     if (!isLoading && !isAuthenticated) {
+      console.log("Not authenticated, redirecting to login");
       navigate("/login");
     }
   }, [isAuthenticated, isLoading, navigate]);
@@ -31,6 +33,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
     );
   }
 
+  // Prevent rendering content until authentication is confirmed
   if (!isAuthenticated) {
     return null;
   }

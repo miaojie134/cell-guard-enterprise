@@ -32,9 +32,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
       try {
-        setUser(JSON.parse(savedUser));
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+        console.log("User loaded from localStorage:", parsedUser);
       } catch (e) {
         // If there's an error parsing the saved user, clear it
+        console.error("Error parsing user from localStorage:", e);
         localStorage.removeItem("user");
       }
     }
@@ -48,6 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (username === "admin" && password === "password") {
         setUser(MOCK_ADMIN);
         localStorage.setItem("user", JSON.stringify(MOCK_ADMIN));
+        console.log("User logged in and saved to localStorage:", MOCK_ADMIN);
         toast({
           title: "登录成功",
           description: "欢迎回来，管理员",
@@ -70,6 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    console.log("User logged out, localStorage cleared");
     toast({
       title: "退出成功",
       description: "您已安全退出系统",
