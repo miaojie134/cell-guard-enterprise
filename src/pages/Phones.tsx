@@ -35,7 +35,7 @@ import { PhoneNumber } from "@/types";
 import { SearchBar } from "@/components/SearchBar";
 import { Pagination } from "@/components/Pagination";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Plus, Edit, ExternalLink, ArrowRight, RotateCw } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 const Phones = () => {
@@ -304,40 +304,40 @@ const Phones = () => {
                     <td><StatusBadge status={phone.status} /></td>
                     <td>{phone.registrationDate}</td>
                     <td>
-                      <div className="flex space-x-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button 
-                          variant="ghost" 
+                          variant="outline" 
                           size="sm" 
                           onClick={() => openDetailsDialog(phone.id)}
-                          title="查看详情"
+                          className="text-xs"
                         >
-                          <ExternalLink className="h-4 w-4" />
+                          详情
                         </Button>
                         <Button 
-                          variant="ghost" 
+                          variant="outline" 
                           size="sm" 
                           onClick={() => openEditDialog(phone.id)}
-                          title="编辑"
+                          className="text-xs"
                         >
-                          <Edit className="h-4 w-4" />
+                          编辑
                         </Button>
                         {phone.status === "inactive" ? (
                           <Button 
-                            variant="ghost" 
+                            variant="outline" 
                             size="sm" 
                             onClick={() => openAssignDialog(phone.id)}
-                            title="分配号码"
+                            className="text-xs"
                           >
-                            <ArrowRight className="h-4 w-4" />
+                            分配
                           </Button>
                         ) : phone.status === "active" ? (
                           <Button 
-                            variant="ghost" 
+                            variant="outline" 
                             size="sm" 
                             onClick={() => openRecoverDialog(phone.id)}
-                            title="回收号码"
+                            className="text-xs"
                           >
-                            <RotateCw className="h-4 w-4" />
+                            回收
                           </Button>
                         ) : null}
                       </div>
