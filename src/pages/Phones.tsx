@@ -35,7 +35,7 @@ import { PhoneNumber } from "@/types";
 import { SearchBar } from "@/components/SearchBar";
 import { Pagination } from "@/components/Pagination";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Plus } from "lucide-react";
+import { Plus, FileText, Pencil } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 const Phones = () => {
@@ -307,19 +307,21 @@ const Phones = () => {
                       <div className="flex flex-wrap gap-2">
                         <Button 
                           variant="outline" 
-                          size="sm" 
+                          size="icon" 
                           onClick={() => openDetailsDialog(phone.id)}
-                          className="text-xs"
+                          className="h-8 w-8"
                         >
-                          详情
+                          <FileText className="h-4 w-4" />
+                          <span className="sr-only">详情</span>
                         </Button>
                         <Button 
                           variant="outline" 
-                          size="sm" 
+                          size="icon" 
                           onClick={() => openEditDialog(phone.id)}
-                          className="text-xs"
+                          className="h-8 w-8"
                         >
-                          编辑
+                          <Pencil className="h-4 w-4" />
+                          <span className="sr-only">编辑</span>
                         </Button>
                         {phone.status === "inactive" ? (
                           <Button 
