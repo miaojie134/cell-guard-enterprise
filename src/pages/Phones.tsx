@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { MainLayout } from "@/layouts/MainLayout";
 import { useData } from "@/context/DataContext";
@@ -19,6 +18,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -56,6 +65,7 @@ const Phones = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
+  const [showRecoverDialog, setShowRecoverDialog] = useState(false);
   const [currentPhoneId, setCurrentPhoneId] = useState<string | null>(null);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
   const [formData, setFormData] = useState<Partial<PhoneNumber>>({
@@ -149,6 +159,11 @@ const Phones = () => {
     setShowAssignDialog(true);
   };
 
+  const openRecoverDialog = (id: string) => {
+    setCurrentPhoneId(id);
+    setShowRecoverDialog(true);
+  };
+
   // Submit handlers
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -199,13 +214,18 @@ const Phones = () => {
     }
   };
   
-  const handleRecoverPhone = (phoneId: string) => {
-    const phone = getPhoneById(phoneId);
-    recoverPhone(phoneId);
-    toast({
-      title: "回收成功",
-      description: `成功从 ${phone?.currentUser || "用户"} 回收号码 ${phone?.number}`,
-    });
+  const handleRecoverPhone = () => {
+    if (currentPhoneId) {
+      const phone = getPhoneById(currentPhoneId);
+      recoverPhone(currentPhoneId);
+      
+      toast({
+        title: "回收成功",
+        description: `成功从 ${phone?.currentUser || "用户"} 回收号码 ${phone?.number}`,
+      });
+      
+      setShowRecoverDialog(false);
+    }
   };
 
   return (
@@ -314,7 +334,7 @@ const Phones = () => {
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            onClick={() => handleRecoverPhone(phone.id)}
+                            onClick={() => openRecoverDialog(phone.id)}
                             title="回收号码"
                           >
                             <RotateCw className="h-4 w-4" />
@@ -692,6 +712,34 @@ const Phones = () => {
           </form>
         </DialogContent>
       </Dialog>
+      
+      {/* Phone Recovery Confirmation Dialog */}
+      <AlertDialog open={showRecoverDialog} onOpenChange={setShowRecoverDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认回收号码</AlertDialogTitle>
+            <AlertDialogDescription>
+              {currentPhone ? (
+                <div className="space-y-2">
+                  <p>您确定要回收以下号码吗？</p>
+                  <div className="p-3 bg-muted rounded-md text-sm">
+                    <p><span className="font-medium">号码:</span> {currentPhone.number}</p>
+                    <p><span className="font-medium">当前使用人:</span> {currentPhone.currentUser || "未分配"}</p>
+                    <p><span className="font-medium">供应商:</span> {currentPhone.provider}</p>
+                  </div>
+                  <p>回收后，该号码将变为闲置状态，并清空使用人信息。</p>
+                </div>
+              ) : (
+                <p>确定要回收选中的号码吗？</p>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRecoverPhone}>确认回收</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MainLayout>
   );
 };
