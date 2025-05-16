@@ -46,12 +46,12 @@ export const Sidebar = () => {
   ];
 
   return (
-    <div className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col h-screen overflow-hidden">
+    <div className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
       <div className="p-4 border-b border-sidebar-border">
         <h2 className="text-xl font-bold text-sidebar-primary">企业号码管理</h2>
       </div>
 
-      <nav className="flex-1 p-4 overflow-y-auto">
+      <nav className="flex-1 p-4">
         <ul className="space-y-2">
           {navItems.map((item) => (
             <li key={item.path}>
@@ -74,7 +74,7 @@ export const Sidebar = () => {
         </ul>
       </nav>
 
-      <div className="p-4 border-t border-sidebar-border mt-auto">
+      <div className="p-4 border-t border-sidebar-border">
         <Button
           variant="ghost"
           className="w-full flex items-center text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"

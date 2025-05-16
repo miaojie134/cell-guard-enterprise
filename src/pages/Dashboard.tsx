@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Phone, User, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Link } from "react-router-dom";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { sampleEmployees, samplePhoneNumbers } from "@/data/sampleData";
 
 const Dashboard = () => {
   const { phoneNumbers, employees, getRiskPhones } = useData();
@@ -96,72 +96,81 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>号码</TableHead>
-                    <TableHead>办卡人</TableHead>
-                    <TableHead>使用人</TableHead>
-                    <TableHead>状态</TableHead>
-                    <TableHead>办卡日期</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>号码</th>
+                    <th>办卡人</th>
+                    <th>使用人</th>
+                    <th>状态</th>
+                    <th>办卡日期</th>
+                  </tr>
+                </thead>
+                <tbody>
                   {recentPhones.map((phone) => (
-                    <TableRow key={phone.id}>
-                      <TableCell>{phone.number}</TableCell>
-                      <TableCell>{phone.registrant}</TableCell>
-                      <TableCell>{phone.currentUser || "-"}</TableCell>
-                      <TableCell><StatusBadge status={phone.status} /></TableCell>
-                      <TableCell>{phone.registrationDate}</TableCell>
-                    </TableRow>
+                    <tr key={phone.id}>
+                      <td>{phone.number}</td>
+                      <td>{phone.registrant}</td>
+                      <td>{phone.currentUser || "-"}</td>
+                      <td><StatusBadge status={phone.status} /></td>
+                      <td>{phone.registrationDate}</td>
+                    </tr>
                   ))}
                   {recentPhones.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-4">
+                    <tr>
+                      <td colSpan={5} className="text-center py-4">
                         暂无数据
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   )}
-                </TableBody>
-              </Table>
+                </tbody>
+              </table>
             </div>
           </CardContent>
         </Card>
         
         {/* Risk phones */}
         {riskPhones.length > 0 && (
-          <Card>
+          <Card className="border-red-200">
             <CardHeader className="bg-red-50 border-b border-red-200">
               <CardTitle className="text-red-700 flex items-center">
                 <AlertTriangle className="mr-2 h-5 w-5" />
                 风险号码警示
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>号码</TableHead>
-                    <TableHead>办卡人</TableHead>
-                    <TableHead>办卡人状态</TableHead>
-                    <TableHead>使用人</TableHead>
-                    <TableHead>状态</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {riskPhones.map((phone) => (
-                    <TableRow key={phone.id}>
-                      <TableCell>{phone.number}</TableCell>
-                      <TableCell>{phone.registrant}</TableCell>
-                      <TableCell><StatusBadge status="inactive" text="已离职" /></TableCell>
-                      <TableCell>{phone.currentUser || "-"}</TableCell>
-                      <TableCell><StatusBadge status={phone.status} /></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <div className="p-4 text-right border-t">
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>号码</th>
+                      <th>办卡人</th>
+                      <th>办卡人状态</th>
+                      <th>使用人</th>
+                      <th>状态</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {riskPhones.map((phone) => (
+                      <tr key={phone.id}>
+                        <td>{phone.number}</td>
+                        <td>{phone.registrant}</td>
+                        <td><StatusBadge status="inactive" text="已离职" /></td>
+                        <td>{phone.currentUser || "-"}</td>
+                        <td><StatusBadge status={phone.status} /></td>
+                      </tr>
+                    ))}
+                    {riskPhones.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="text-center py-4">
+                          暂无风险号码
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-4 text-right">
                 <Link to="/risk">
                   <Button variant="outline" size="sm">
                     查看全部风险号码
