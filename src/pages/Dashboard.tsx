@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Phone, User, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Link } from "react-router-dom";
-import { sampleEmployees, samplePhoneNumbers } from "@/data/sampleData";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 
 const Dashboard = () => {
@@ -139,39 +138,30 @@ const Dashboard = () => {
                 风险号码警示
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>号码</TableHead>
-                      <TableHead>办卡人</TableHead>
-                      <TableHead>办卡人状态</TableHead>
-                      <TableHead>使用人</TableHead>
-                      <TableHead>状态</TableHead>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>号码</TableHead>
+                    <TableHead>办卡人</TableHead>
+                    <TableHead>办卡人状态</TableHead>
+                    <TableHead>使用人</TableHead>
+                    <TableHead>状态</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {riskPhones.map((phone) => (
+                    <TableRow key={phone.id}>
+                      <TableCell>{phone.number}</TableCell>
+                      <TableCell>{phone.registrant}</TableCell>
+                      <TableCell><StatusBadge status="inactive" text="已离职" /></TableCell>
+                      <TableCell>{phone.currentUser || "-"}</TableCell>
+                      <TableCell><StatusBadge status={phone.status} /></TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {riskPhones.map((phone) => (
-                      <TableRow key={phone.id}>
-                        <TableCell>{phone.number}</TableCell>
-                        <TableCell>{phone.registrant}</TableCell>
-                        <TableCell><StatusBadge status="inactive" text="已离职" /></TableCell>
-                        <TableCell>{phone.currentUser || "-"}</TableCell>
-                        <TableCell><StatusBadge status={phone.status} /></TableCell>
-                      </TableRow>
-                    ))}
-                    {riskPhones.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-4">
-                          暂无风险号码
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-              <div className="mt-4 text-right">
+                  ))}
+                </TableBody>
+              </Table>
+              <div className="p-4 text-right border-t">
                 <Link to="/risk">
                   <Button variant="outline" size="sm">
                     查看全部风险号码
