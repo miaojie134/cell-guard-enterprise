@@ -131,10 +131,10 @@ const Dashboard = () => {
         
         {/* Risk phones */}
         {riskPhones.length > 0 && (
-          <Card className="border-red-200">
-            <CardHeader className="bg-red-50 border-b border-red-200">
-              <CardTitle className="text-red-700 flex items-center">
-                <AlertTriangle className="mr-2 h-5 w-5" />
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <AlertTriangle className="mr-2 h-5 w-5 text-red-600" />
                 风险号码警示
               </CardTitle>
             </CardHeader>
