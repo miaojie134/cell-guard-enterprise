@@ -37,8 +37,6 @@ import { Pagination } from "@/components/Pagination";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Plus, FileText, Pencil } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { EmployeeCombobox } from "@/components/EmployeeCombobox";
-import { PhoneAssignForm } from "@/components/PhoneAssignForm";
 
 const Phones = () => {
   const { 
@@ -198,12 +196,13 @@ const Phones = () => {
     }
   };
   
-  const handleAssignSubmit = (phoneId: string, employeeId: string) => {
-    if (phoneId && employeeId) {
-      assignPhone(phoneId, employeeId);
+  const handleAssignSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (currentPhoneId && selectedEmployeeId) {
+      assignPhone(currentPhoneId, selectedEmployeeId);
       
-      const phone = getPhoneById(phoneId);
-      const employee = employees.find(emp => emp.id === employeeId);
+      const phone = getPhoneById(currentPhoneId);
+      const employee = employees.find(emp => emp.id === selectedEmployeeId);
       
       toast({
         title: "分配成功",
@@ -211,6 +210,7 @@ const Phones = () => {
       });
       
       setShowAssignDialog(false);
+      setSelectedEmployeeId("");
     }
   };
   
@@ -404,25 +404,36 @@ const Phones = () => {
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="registrantId">选择办卡人</Label>
-                <EmployeeCombobox
-                  value={formData.registrantId || ""}
-                  onValueChange={(value) => handleSelectChange("registrantId", value)}
-                  placeholder="搜索员工姓名..."
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="registrant">或手动输入办卡人</Label>
-                <Input
-                  id="registrant"
-                  name="registrant"
-                  placeholder="外部人员姓名"
-                  value={formData.registrant || ""}
-                  onChange={handleFormChange}
-                  disabled={!!formData.registrantId}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="registrantId">选择办卡人</Label>
+                  <Select
+                    value={formData.registrantId}
+                    onValueChange={(value) => handleSelectChange("registrantId", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="选择员工" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {employees.map((emp) => (
+                        <SelectItem key={emp.id} value={emp.id}>
+                          {emp.name} ({emp.employeeId})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="registrant">或手动输入办卡人</Label>
+                  <Input
+                    id="registrant"
+                    name="registrant"
+                    placeholder="外部人员姓名"
+                    value={formData.registrant}
+                    onChange={handleFormChange}
+                    disabled={!!formData.registrantId}
+                  />
+                </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
@@ -466,7 +477,7 @@ const Phones = () => {
                   id="notes"
                   name="notes"
                   placeholder="添加备注信息..."
-                  value={formData.notes || ""}
+                  value={formData.notes}
                   onChange={handleFormChange}
                 />
               </div>
@@ -645,13 +656,62 @@ const Phones = () => {
       {/* Assign Phone Dialog */}
       <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
         <DialogContent className="max-w-md">
-          {currentPhone && (
-            <PhoneAssignForm 
-              phone={currentPhone} 
-              onAssign={handleAssignSubmit} 
-              onCancel={() => setShowAssignDialog(false)}
-            />
-          )}
+          <DialogHeader>
+            <DialogTitle>分配号码</DialogTitle>
+            <DialogDescription>
+              将号码分配给员工使用
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAssignSubmit}>
+            <div className="space-y-4 py-2">
+              {currentPhone && (
+                <div className="p-3 bg-muted rounded-md text-sm mb-4">
+                  <p><span className="font-medium">号码:</span> {currentPhone.number}</p>
+                  <p><span className="font-medium">供应商:</span> {currentPhone.provider}</p>
+                  <p><span className="font-medium">状态:</span> <StatusBadge status={currentPhone.status} /></p>
+                </div>
+              )}
+              
+              <div className="space-y-2">
+                <Label htmlFor="employeeId">选择员工</Label>
+                <Select
+                  value={selectedEmployeeId}
+                  onValueChange={setSelectedEmployeeId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择一个员工" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeEmployees.length > 0 ? (
+                      activeEmployees.map(employee => (
+                        <SelectItem key={employee.id} value={employee.id}>
+                          {employee.name} ({employee.employeeId} - {employee.department})
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="none" disabled>
+                        无可用员工
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {selectedEmployeeId && (
+                <div className="p-3 bg-muted rounded-md text-sm">
+                  <p><span className="font-medium">员工姓名:</span> {employees.find(emp => emp.id === selectedEmployeeId)?.name}</p>
+                  <p><span className="font-medium">员工工号:</span> {employees.find(emp => emp.id === selectedEmployeeId)?.employeeId}</p>
+                  <p><span className="font-medium">所属部门:</span> {employees.find(emp => emp.id === selectedEmployeeId)?.department}</p>
+                </div>
+              )}
+            </div>
+            <DialogFooter className="mt-4">
+              <Button variant="outline" type="button" onClick={() => setShowAssignDialog(false)}>
+                取消
+              </Button>
+              <Button type="submit" disabled={!selectedEmployeeId}>分配</Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
       
