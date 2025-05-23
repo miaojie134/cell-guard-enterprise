@@ -1,3 +1,4 @@
+
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -46,20 +47,19 @@ export const Sidebar = () => {
 
   return (
     <div className="w-64 h-screen bg-sidebar border-r border-sidebar-border flex flex-col">
-      <div className="p-4">
+      <div className="px-6 py-6">
         <h2 className="text-xl font-bold text-sidebar-primary">企业号码管理</h2>
       </div>
 
-      
-      <nav className="flex-1 p-4 overflow-y-auto">
-        <ul className="space-y-2">
+      <nav className="flex-1 px-4 pb-4 overflow-y-auto">
+        <ul className="space-y-1">
           {navItems.map((item) => (
             <li key={item.path}>
               <NavLink
                 to={item.path}
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center px-4 py-2 rounded-md transition-colors",
+                    "flex items-center px-4 py-3 rounded-lg transition-colors",
                     isActive
                       ? "bg-sidebar-primary text-sidebar-primary-foreground"
                       : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -67,21 +67,21 @@ export const Sidebar = () => {
                 }
               >
                 {item.icon}
-                <span>{item.name}</span>
+                <span className="font-medium">{item.name}</span>
               </NavLink>
             </li>
           ))}
         </ul>
       </nav>
 
-      <div className="p-4 border-t border-sidebar-border mt-auto">
+      <div className="p-4 border-t border-sidebar-border">
         <Button
           variant="ghost"
-          className="w-full flex items-center text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          className="w-full flex items-center justify-start px-4 py-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg"
           onClick={logout}
         >
           <LogOut className="mr-2 h-5 w-5" />
-          <span>退出登录</span>
+          <span className="font-medium">退出登录</span>
         </Button>
       </div>
     </div>
