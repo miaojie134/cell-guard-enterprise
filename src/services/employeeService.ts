@@ -1,12 +1,12 @@
 
-import { 
-  API_CONFIG, 
-  EmployeeSearchParams, 
-  EmployeesListResponse, 
-  APIResponse, 
-  APIErrorResponse, 
+import {
+  API_CONFIG,
+  EmployeeSearchParams,
+  EmployeesListResponse,
+  APIResponse,
+  APIErrorResponse,
   ResponseStatus,
-  BackendEmployee
+  APIEmployee
 } from '@/config/api';
 
 class EmployeeService {
@@ -28,7 +28,7 @@ class EmployeeService {
   async getEmployees(params: EmployeeSearchParams = {}): Promise<EmployeesListResponse> {
     try {
       const queryParams = new URLSearchParams();
-      
+
       if (params.page) queryParams.append('page', params.page.toString());
       if (params.limit) queryParams.append('limit', params.limit.toString());
       if (params.sortBy) queryParams.append('sortBy', params.sortBy);
@@ -37,7 +37,7 @@ class EmployeeService {
       if (params.employmentStatus) queryParams.append('employmentStatus', params.employmentStatus);
 
       const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EMPLOYEES}?${queryParams.toString()}`;
-      
+
       console.log('Fetching employees from:', url);
 
       const response = await fetch(url, {
@@ -70,7 +70,7 @@ class EmployeeService {
     }
   }
 
-  async getEmployeeById(id: string): Promise<BackendEmployee> {
+  async getEmployeeById(id: string): Promise<APIEmployee> {
     try {
       console.log('Fetching employee by id:', id);
 
@@ -81,7 +81,7 @@ class EmployeeService {
 
       console.log('Employee response status:', response.status);
 
-      const data: APIResponse<BackendEmployee> | APIErrorResponse = await response.json();
+      const data: APIResponse<APIEmployee> | APIErrorResponse = await response.json();
       console.log('Employee response data:', data);
 
       if (!response.ok) {
@@ -89,7 +89,7 @@ class EmployeeService {
         throw new Error(errorData.error || errorData.details || '获取员工详情失败');
       }
 
-      const successData = data as APIResponse<BackendEmployee>;
+      const successData = data as APIResponse<APIEmployee>;
       if (successData.status !== ResponseStatus.SUCCESS || !successData.data) {
         throw new Error(successData.message || '员工详情响应格式错误');
       }

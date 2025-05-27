@@ -1,7 +1,7 @@
 
 // API配置
 export const API_CONFIG = {
-  BASE_URL: 'http://localhost:8081/api/v1', // 根据你的后端端口调整
+  BASE_URL: '/api/v1', // 使用代理，不需要完整URL
   ENDPOINTS: {
     LOGIN: '/auth/login',
     LOGOUT: '/auth/logout',
@@ -50,7 +50,7 @@ export interface EmployeeSearchParams {
   employmentStatus?: string;
 }
 
-export interface BackendEmployee {
+export interface APIEmployee {
   id: number;
   employeeId: string;
   fullName: string;
@@ -66,7 +66,7 @@ export interface BackendEmployee {
 }
 
 export interface EmployeesListResponse {
-  items: BackendEmployee[];
+  items: APIEmployee[];
   pagination: {
     currentPage: number;
     pageSize: number;
