@@ -10,6 +10,22 @@ export interface Employee {
   leaveDate?: string;
 }
 
+// Backend employee type mapping
+export interface BackendEmployee {
+  id: number;
+  employeeId: string;
+  fullName: string;
+  department: string;
+  email: string;
+  phoneNumber: string;
+  employmentStatus: string;
+  hireDate: string;
+  terminationDate?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}
+
 // Phone related types
 export interface PhoneNumber {
   id: string;
@@ -83,3 +99,16 @@ export interface ImportResult {
   failed: number;
   errors: string[];
 }
+
+// Employee utility functions
+export const mapBackendEmployeeToFrontend = (backendEmployee: BackendEmployee): Employee => {
+  return {
+    id: backendEmployee.id.toString(),
+    employeeId: backendEmployee.employeeId,
+    name: backendEmployee.fullName,
+    department: backendEmployee.department,
+    status: backendEmployee.employmentStatus === 'Active' ? 'active' : 'inactive',
+    joinDate: backendEmployee.hireDate,
+    leaveDate: backendEmployee.terminationDate || undefined,
+  };
+};

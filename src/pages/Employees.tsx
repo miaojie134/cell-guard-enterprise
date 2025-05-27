@@ -1,7 +1,7 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/layouts/MainLayout";
-import { useData } from "@/context/DataContext";
+import { useEmployees } from "@/hooks/useEmployees";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -25,10 +25,19 @@ import { Employee } from "@/types";
 import { SearchBar } from "@/components/SearchBar";
 import { Pagination } from "@/components/Pagination";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Plus, Edit, ExternalLink } from "lucide-react";
+import { Plus, Edit, ExternalLink, Loader2 } from "lucide-react";
 
 const Employees = () => {
-  const { getEmployees, getEmployeeById, addEmployee, updateEmployee } = useData();
+  const { 
+    employees, 
+    totalItems, 
+    totalPages, 
+    currentPage, 
+    isLoading, 
+    error, 
+    fetchEmployees, 
+    getEmployeeById 
+  } = useEmployees();
   
   // State
   const [searchParams, setSearchParams] = useState({
@@ -40,22 +49,24 @@ const Employees = () => {
     page: 1,
     pageSize: 10,
   });
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [currentEmployeeId, setCurrentEmployeeId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<Partial<Employee>>({
-    employeeId: "",
-    name: "",
-    department: "",
-    status: "active",
-    joinDate: new Date().toISOString().split("T")[0],
-  });
 
-  // Get employee data
-  const { data: employees, total } = getEmployees(searchParams);
-  const totalPages = Math.ceil(total / searchParams.pageSize);
+  // Get current employee
   const currentEmployee = currentEmployeeId ? getEmployeeById(currentEmployeeId) : null;
+
+  // Load employees on component mount and when search params change
+  useEffect(() => {
+    const apiParams = {
+      page: searchParams.page,
+      limit: searchParams.pageSize,
+      search: searchParams.query || undefined,
+      employmentStatus: searchParams.filters.status === 'active' ? 'Active' : 
+                       searchParams.filters.status === 'inactive' ? 'Departed' : undefined,
+    };
+    
+    fetchEmployees(apiParams);
+  }, [searchParams]);
 
   // Handle search and filters
   const handleSearch = (query: string) => {
@@ -78,87 +89,10 @@ const Employees = () => {
     setSearchParams(prev => ({ ...prev, pageSize, page: 1 }));
   };
 
-  // Form handlers
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
   // Dialog handlers
-  const openAddDialog = () => {
-    setFormData({
-      employeeId: "",
-      name: "",
-      department: "",
-      status: "active",
-      joinDate: new Date().toISOString().split("T")[0],
-    });
-    setShowAddDialog(true);
-  };
-
-  const openEditDialog = (id: string) => {
-    const employee = getEmployeeById(id);
-    if (employee) {
-      setCurrentEmployeeId(id);
-      setFormData({
-        employeeId: employee.employeeId,
-        name: employee.name,
-        department: employee.department,
-        status: employee.status,
-        joinDate: employee.joinDate,
-        leaveDate: employee.leaveDate,
-      });
-      setShowEditDialog(true);
-    }
-  };
-
   const openDetailsDialog = (id: string) => {
     setCurrentEmployeeId(id);
     setShowDetailsDialog(true);
-  };
-
-  // Submit handlers
-  const handleAddSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    addEmployee({
-      employeeId: formData.employeeId || "",
-      name: formData.name || "",
-      department: formData.department || "",
-      status: formData.status as "active" | "inactive",
-      joinDate: formData.joinDate || new Date().toISOString().split("T")[0],
-    });
-    setShowAddDialog(false);
-  };
-
-  const handleEditSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (currentEmployeeId) {
-      const updates: Partial<Employee> = {
-        department: formData.department,
-        status: formData.status as "active" | "inactive",
-      };
-      
-      // Only add leaveDate if status is inactive
-      if (formData.status === "inactive" && !formData.leaveDate) {
-        updates.leaveDate = new Date().toISOString().split("T")[0];
-      }
-      
-      updateEmployee(currentEmployeeId, updates);
-      setShowEditDialog(false);
-    }
-  };
-
-  const handleStatusChange = (value: string) => {
-    setFormData(prev => ({ 
-      ...prev, 
-      status: value as "active" | "inactive",
-      // If changing to inactive, set leaveDate to today if not already set
-      leaveDate: value === "inactive" ? (prev.leaveDate || new Date().toISOString().split("T")[0]) : prev.leaveDate,
-    }));
   };
 
   return (
@@ -166,7 +100,7 @@ const Employees = () => {
       <Card>
         <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
           <CardTitle>员工列表</CardTitle>
-          <Button onClick={openAddDialog}>
+          <Button disabled>
             <Plus className="h-4 w-4 mr-2" />
             添加员工
           </Button>
@@ -210,6 +144,12 @@ const Employees = () => {
             </div>
           </div>
           
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+              <p className="text-red-800 text-sm">{error}</p>
+            </div>
+          )}
+          
           <div className="overflow-x-auto">
             <table className="data-table">
               <thead>
@@ -224,45 +164,55 @@ const Employees = () => {
                 </tr>
               </thead>
               <tbody>
-                {employees.map((employee) => (
-                  <tr key={employee.id}>
-                    <td>{employee.employeeId}</td>
-                    <td>{employee.name}</td>
-                    <td>{employee.department}</td>
-                    <td>
-                      <StatusBadge 
-                        status={employee.status} 
-                        text={employee.status === "active" ? "在职" : "离职"}
-                      />
-                    </td>
-                    <td>{employee.joinDate}</td>
-                    <td>{employee.leaveDate || "-"}</td>
-                    <td>
-                      <div className="flex space-x-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => openDetailsDialog(employee.id)}
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => openEditDialog(employee.id)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-8">
+                      <div className="flex items-center justify-center space-x-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>加载中...</span>
                       </div>
                     </td>
                   </tr>
-                ))}
-                {employees.length === 0 && (
+                ) : employees.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="text-center py-4">
                       没有找到符合条件的员工
                     </td>
                   </tr>
+                ) : (
+                  employees.map((employee) => (
+                    <tr key={employee.id}>
+                      <td>{employee.employeeId}</td>
+                      <td>{employee.name}</td>
+                      <td>{employee.department}</td>
+                      <td>
+                        <StatusBadge 
+                          status={employee.status} 
+                          text={employee.status === "active" ? "在职" : "离职"}
+                        />
+                      </td>
+                      <td>{employee.joinDate}</td>
+                      <td>{employee.leaveDate || "-"}</td>
+                      <td>
+                        <div className="flex space-x-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => openDetailsDialog(employee.id)}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            disabled
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
@@ -274,174 +224,10 @@ const Employees = () => {
             pageSize={searchParams.pageSize}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
-            totalItems={total}
+            totalItems={totalItems}
           />
         </CardContent>
       </Card>
-      
-      {/* Add Employee Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>添加新员工</DialogTitle>
-            <DialogDescription>
-              请填写新员工的详细信息
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleAddSubmit}>
-            <div className="space-y-4 py-2">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="employeeId">工号</Label>
-                  <Input
-                    id="employeeId"
-                    name="employeeId"
-                    placeholder="请输入工号"
-                    value={formData.employeeId}
-                    onChange={handleFormChange}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="name">姓名</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    placeholder="请输入姓名"
-                    value={formData.name}
-                    onChange={handleFormChange}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="department">部门</Label>
-                  <Select
-                    value={formData.department}
-                    onValueChange={(value) => handleSelectChange("department", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="选择部门" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="市场部">市场部</SelectItem>
-                      <SelectItem value="销售部">销售部</SelectItem>
-                      <SelectItem value="财务部">财务部</SelectItem>
-                      <SelectItem value="IT部">IT部</SelectItem>
-                      <SelectItem value="人力资源部">人力资源部</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="joinDate">入职日期</Label>
-                  <Input
-                    id="joinDate"
-                    name="joinDate"
-                    type="date"
-                    value={formData.joinDate}
-                    onChange={handleFormChange}
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-            <DialogFooter className="mt-4">
-              <Button variant="outline" type="button" onClick={() => setShowAddDialog(false)}>
-                取消
-              </Button>
-              <Button type="submit">添加</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Edit Employee Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>编辑员工信息</DialogTitle>
-            <DialogDescription>
-              修改员工的部门和在职状态
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleEditSubmit}>
-            <div className="space-y-4 py-2">
-              <div className="space-y-2">
-                <Label>员工信息</Label>
-                <div className="p-2 bg-muted rounded-md">
-                  <p><span className="font-medium">工号:</span> {formData.employeeId}</p>
-                  <p><span className="font-medium">姓名:</span> {formData.name}</p>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="department">部门</Label>
-                <Select
-                  value={formData.department}
-                  onValueChange={(value) => handleSelectChange("department", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择部门" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="市场部">市场部</SelectItem>
-                    <SelectItem value="销售部">销售部</SelectItem>
-                    <SelectItem value="财务部">财务部</SelectItem>
-                    <SelectItem value="IT部">IT部</SelectItem>
-                    <SelectItem value="人力资源部">人力资源部</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="status">在职状态</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={handleStatusChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="选择状态" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">在职</SelectItem>
-                      <SelectItem value="inactive">离职</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {formData.status === "inactive" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="leaveDate">离职日期</Label>
-                    <Input
-                      id="leaveDate"
-                      name="leaveDate"
-                      type="date"
-                      value={formData.leaveDate}
-                      onChange={handleFormChange}
-                      required
-                    />
-                  </div>
-                )}
-              </div>
-              
-              {formData.status === "inactive" && (
-                <div className="p-2 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800">
-                  注意: 标记员工为离职状态后，系统将自动标记其办理的手机号码为风险状态。
-                </div>
-              )}
-            </div>
-            <DialogFooter className="mt-4">
-              <Button variant="outline" type="button" onClick={() => setShowEditDialog(false)}>
-                取消
-              </Button>
-              <Button type="submit">保存</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
       
       {/* Employee Details Dialog */}
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
@@ -486,49 +272,10 @@ const Employees = () => {
               </div>
               
               <div className="border-t pt-4">
-                <h3 className="text-lg font-medium mb-2">办理的手机号码</h3>
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>号码</th>
-                      <th>使用人</th>
-                      <th>状态</th>
-                      <th>办卡日期</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {/* This would normally come from phone data */}
-                    <tr>
-                      <td>13812345678</td>
-                      <td>{currentEmployee.name}</td>
-                      <td><StatusBadge status="active" /></td>
-                      <td>2023-01-15</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              
-              <div className="border-t pt-4">
-                <h3 className="text-lg font-medium mb-2">当前使用的手机号码</h3>
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>号码</th>
-                      <th>办卡人</th>
-                      <th>状态</th>
-                      <th>办卡日期</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {/* This would normally come from phone data */}
-                    <tr>
-                      <td>13812345678</td>
-                      <td>{currentEmployee.name}</td>
-                      <td><StatusBadge status="active" /></td>
-                      <td>2023-01-15</td>
-                    </tr>
-                  </tbody>
-                </table>
+                <h3 className="text-lg font-medium mb-2">关联的手机号码信息</h3>
+                <p className="text-sm text-muted-foreground">
+                  手机号码相关功能暂未实现，将在后续版本中添加。
+                </p>
               </div>
             </div>
           )}

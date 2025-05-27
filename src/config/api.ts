@@ -1,9 +1,11 @@
+
 // API配置
 export const API_CONFIG = {
   BASE_URL: 'http://localhost:8081/api/v1', // 根据你的后端端口调整
   ENDPOINTS: {
     LOGIN: '/auth/login',
     LOGOUT: '/auth/logout',
+    EMPLOYEES: '/employees',
   },
 };
 
@@ -36,4 +38,39 @@ export interface APIResponse<TData = any> {
 export interface APIErrorResponse {
   details?: string; // details 字段可选
   error: string;   // error 字段是主要的错误信息
+}
+
+// 员工API相关类型
+export interface EmployeeSearchParams {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  search?: string;
+  employmentStatus?: string;
+}
+
+export interface BackendEmployee {
+  id: number;
+  employeeId: string;
+  fullName: string;
+  department: string;
+  email: string;
+  phoneNumber: string;
+  employmentStatus: string;
+  hireDate: string;
+  terminationDate?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}
+
+export interface EmployeesListResponse {
+  items: BackendEmployee[];
+  pagination: {
+    currentPage: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+  };
 }
