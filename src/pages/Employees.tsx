@@ -25,9 +25,10 @@ import { SearchBar } from "@/components/SearchBar";
 import { Pagination } from "@/components/Pagination";
 import { StatusBadge } from "@/components/StatusBadge";
 import { AddEmployeeForm } from "@/components/AddEmployeeForm";
+import { UpdateEmployeeForm } from "@/components/UpdateEmployeeForm";
 import { employeeService } from "@/services/employeeService";
 import { useToast } from "@/hooks/use-toast";
-import { CreateEmployeeRequest } from "@/config/api";
+import { CreateEmployeeRequest, UpdateEmployeeRequest } from "@/config/api";
 import { Plus, Edit, ExternalLink, Loader2 } from "lucide-react";
 
 // 员工状态映射函数
@@ -64,8 +65,10 @@ const Employees = () => {
   });
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   const [currentEmployeeId, setCurrentEmployeeId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const { toast } = useToast();
 
@@ -83,7 +86,18 @@ const Employees = () => {
     };
     
     fetchEmployees(apiParams);
-  }, [searchParams]);
+  }, [searchParams.page, searchParams.pageSize, searchParams.query, searchParams.filters.status, searchParams.filters.department]);
+
+  // Handle error toast
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "获取员工列表失败",
+        description: error,
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
 
   // Handle search and filters
   const handleSearch = (query: string) => {
@@ -116,6 +130,24 @@ const Employees = () => {
     setShowAddDialog(true);
   };
 
+  const openUpdateDialog = (id: string) => {
+    setCurrentEmployeeId(id);
+    setShowUpdateDialog(true);
+  };
+
+  // 刷新员工列表的辅助函数
+  const refreshEmployeeList = () => {
+    const apiParams = {
+      page: searchParams.page,
+      limit: searchParams.pageSize,
+      search: searchParams.query || undefined,
+      employmentStatus: searchParams.filters.status === 'active' ? 'Active' : 
+                       searchParams.filters.status === 'inactive' ? 'Departed' : undefined,
+    };
+    
+    fetchEmployees(apiParams);
+  };
+
   const handleCreateEmployee = async (data: CreateEmployeeRequest) => {
     setIsCreating(true);
     try {
@@ -127,17 +159,7 @@ const Employees = () => {
       });
       
       setShowAddDialog(false);
-      
-      // 重新获取员工列表
-      const apiParams = {
-        page: searchParams.page,
-        limit: searchParams.pageSize,
-        search: searchParams.query || undefined,
-        employmentStatus: searchParams.filters.status === 'active' ? 'Active' : 
-                         searchParams.filters.status === 'inactive' ? 'Departed' : undefined,
-      };
-      
-      await fetchEmployees(apiParams);
+      refreshEmployeeList();
     } catch (error) {
       console.error('Failed to create employee:', error);
       const errorMessage = error instanceof Error ? error.message : '创建员工失败';
@@ -149,6 +171,36 @@ const Employees = () => {
       });
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleUpdateEmployee = async (data: UpdateEmployeeRequest) => {
+    if (!currentEmployeeId || !currentEmployee) return;
+
+    setIsUpdating(true);
+    try {
+      // 使用员工工号
+      await employeeService.updateEmployee(currentEmployee.employeeId, data);
+      
+      toast({
+        title: "更新成功",
+        description: "员工信息已成功更新",
+      });
+      
+      setShowUpdateDialog(false);
+      setCurrentEmployeeId(null);
+      refreshEmployeeList();
+    } catch (error) {
+      console.error('Failed to update employee:', error);
+      const errorMessage = error instanceof Error ? error.message : '更新员工失败';
+      
+      toast({
+        title: "更新失败",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -262,7 +314,7 @@ const Employees = () => {
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            disabled
+                            onClick={() => openUpdateDialog(employee.id)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -352,6 +404,25 @@ const Employees = () => {
             onSubmit={handleCreateEmployee}
             isLoading={isCreating}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Update Employee Dialog */}
+      <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>更新员工信息</DialogTitle>
+            <DialogDescription>
+              修改员工的基本信息。您可以更新部门、在职状态和入离职日期。
+            </DialogDescription>
+          </DialogHeader>
+          {currentEmployee && (
+            <UpdateEmployeeForm
+              employee={currentEmployee}
+              onSubmit={handleUpdateEmployee}
+              isLoading={isUpdating}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </MainLayout>

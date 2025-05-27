@@ -7,7 +7,9 @@ import {
   ResponseStatus,
   APIEmployee,
   CreateEmployeeRequest,
-  CreateEmployeeResponse
+  CreateEmployeeResponse,
+  UpdateEmployeeRequest,
+  UpdateEmployeeResponse
 } from '@/config/api';
 import { formatDateFromISO } from '@/lib/utils';
 
@@ -158,6 +160,52 @@ class EmployeeService {
       return formattedData;
     } catch (error) {
       console.error('Create employee error:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('网络连接失败，请检查后端服务是否正常运行');
+    }
+  }
+
+  async updateEmployee(employeeId: string, updateData: UpdateEmployeeRequest): Promise<UpdateEmployeeResponse> {
+    try {
+      console.log('Updating employee:', employeeId, updateData);
+
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EMPLOYEES}/${employeeId}/update`;
+      console.log('Update URL:', url);
+      console.log('Employee ID being used:', employeeId);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: this.getHeaders(true),
+        body: JSON.stringify(updateData),
+      });
+
+      console.log('Update employee response status:', response.status);
+
+      const data: APIResponse<UpdateEmployeeResponse> | APIErrorResponse = await response.json();
+      console.log('Update employee response data:', data);
+
+      if (!response.ok) {
+        const errorData = data as APIErrorResponse;
+        throw new Error(errorData.error || errorData.details || '更新员工失败');
+      }
+
+      const successData = data as APIResponse<UpdateEmployeeResponse>;
+      if (successData.status !== ResponseStatus.SUCCESS || !successData.data) {
+        throw new Error(successData.message || '更新员工响应格式错误');
+      }
+
+      // 格式化时间字段
+      const formattedData = {
+        ...successData.data,
+        hireDate: formatDateFromISO(successData.data.hireDate),
+        terminationDate: successData.data.terminationDate ? formatDateFromISO(successData.data.terminationDate) : undefined
+      };
+
+      return formattedData;
+    } catch (error) {
+      console.error('Update employee error:', error);
       if (error instanceof Error) {
         throw error;
       }

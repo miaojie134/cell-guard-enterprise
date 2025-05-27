@@ -1,45 +1,6 @@
-// API配置
-export const API_CONFIG = {
-  BASE_URL: '/api/v1', // 使用代理，不需要完整URL
-  ENDPOINTS: {
-    LOGIN: '/auth/login',
-    LOGOUT: '/auth/logout',
-    EMPLOYEES: '/employees',
-  },
-};
+// 员工相关API类型定义
 
-export enum ResponseStatus {
-  SUCCESS = "success",
-  // 可以根据需要添加其他状态
-}
-
-// API响应类型定义
-export interface LoginRequest {
-  username: string;
-  password: string;
-}
-
-export interface LoginResponsePayload { // 原LoginResponse，代表成功登录响应中的data部分
-  token: string;
-  user: {
-    id?: string; // id 字段可选
-    username: string;
-    role: string;
-  };
-}
-
-export interface APIResponse<TData = any> {
-  status: ResponseStatus; // 使用枚举
-  message: string;
-  data: TData; // 成功时data字段是必需的
-}
-
-export interface APIErrorResponse {
-  details?: string; // details 字段可选
-  error: string;   // error 字段是主要的错误信息
-}
-
-// 员工API相关类型
+// 员工搜索参数
 export interface EmployeeSearchParams {
   page?: number;
   limit?: number;
@@ -49,6 +10,7 @@ export interface EmployeeSearchParams {
   employmentStatus?: string;
 }
 
+// 后端员工数据结构
 export interface APIEmployee {
   id: number;
   employeeId: string;
@@ -64,6 +26,7 @@ export interface APIEmployee {
   deletedAt?: string;
 }
 
+// 员工列表响应
 export interface EmployeesListResponse {
   items: APIEmployee[];
   pagination: {
@@ -98,3 +61,27 @@ export interface CreateEmployeeResponse {
   updatedAt: string;
   deletedAt?: string;
 }
+
+// 更新员工请求类型
+export interface UpdateEmployeeRequest {
+  department?: string;
+  employmentStatus?: string;
+  hireDate?: string; // YYYY-MM-DD 格式
+  terminationDate?: string; // YYYY-MM-DD 格式
+}
+
+// 更新员工响应类型
+export interface UpdateEmployeeResponse {
+  id: number;
+  employeeId: string;
+  fullName: string;
+  department: string;
+  email: string;
+  phoneNumber: string;
+  employmentStatus: string;
+  hireDate: string;
+  terminationDate?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+} 

@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { employeeService } from '@/services/employeeService';
 import { EmployeeSearchParams } from '@/config/api';
 import { Employee, mapBackendEmployeeToFrontend, BackendEmployee } from '@/types';
-import { useToast } from '@/hooks/use-toast';
 
 export interface UseEmployeesReturn {
   employees: Employee[];
@@ -22,9 +21,8 @@ export const useEmployees = (): UseEmployeesReturn => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
 
-  const fetchEmployees = async (params: EmployeeSearchParams = {}) => {
+  const fetchEmployees = useCallback(async (params: EmployeeSearchParams = {}) => {
     setIsLoading(true);
     setError(null);
 
@@ -49,16 +47,10 @@ export const useEmployees = (): UseEmployeesReturn => {
       console.error('Failed to fetch employees:', error);
       const errorMessage = error instanceof Error ? error.message : '获取员工列表失败';
       setError(errorMessage);
-
-      toast({
-        title: "获取员工列表失败",
-        description: errorMessage,
-        variant: "destructive",
-      });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   const getEmployeeById = (id: string): Employee | null => {
     return employees.find(emp => emp.id === id) || null;
