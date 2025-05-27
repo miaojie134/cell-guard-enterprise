@@ -21,45 +21,45 @@ export const Sidebar = () => {
     {
       name: "仪表盘",
       path: "/dashboard",
-      icon: <LayoutDashboard className="mr-2 h-4 w-4" />,
+      icon: <LayoutDashboard className="mr-3 h-5 w-5" />,
     },
     {
       name: "号码管理",
       path: "/phones",
-      icon: <Phone className="mr-2 h-4 w-4" />,
+      icon: <Phone className="mr-3 h-5 w-5" />,
     },
     {
       name: "员工管理",
       path: "/employees",
-      icon: <User className="mr-2 h-4 w-4" />,
+      icon: <User className="mr-3 h-5 w-5" />,
     },
     {
       name: "风险号码",
       path: "/risk",
-      icon: <AlertTriangle className="mr-2 h-4 w-4" />,
+      icon: <AlertTriangle className="mr-3 h-5 w-5" />,
     },
     {
       name: "数据导入",
       path: "/import",
-      icon: <Upload className="mr-2 h-4 w-4" />,
+      icon: <Upload className="mr-3 h-5 w-5" />,
     },
   ];
 
   return (
-    <div className="w-56 h-screen bg-sidebar border-r border-sidebar-border flex flex-col">
-      <div className="px-4 py-4">
-        <h2 className="text-lg font-bold text-sidebar-primary">企业号码管理</h2>
+    <div className="w-64 h-screen bg-sidebar border-r border-sidebar-border flex flex-col">
+      <div className="px-5 py-5">
+        <h2 className="text-xl font-bold text-sidebar-primary">企业号码管理</h2>
       </div>
 
-      <nav className="flex-1 px-3 pb-3 overflow-y-auto">
-        <ul className="space-y-1">
+      <nav className="flex-1 px-4 pb-4 overflow-y-auto">
+        <ul className="space-y-2">
           {navItems.map((item) => (
             <li key={item.path}>
               <NavLink
                 to={item.path}
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center px-3 py-2 rounded-lg transition-colors text-sm",
+                    "flex items-center px-4 py-3 rounded-lg transition-colors text-sm",
                     isActive
                       ? "bg-sidebar-primary text-sidebar-primary-foreground"
                       : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -74,13 +74,13 @@ export const Sidebar = () => {
         </ul>
       </nav>
 
-      <div className="p-3 border-t border-sidebar-border">
+      <div className="p-4 border-t border-sidebar-border">
         <Button
           variant="ghost"
-          className="w-full flex items-center justify-start px-3 py-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg text-sm"
+          className="w-full flex items-center justify-start px-4 py-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg text-sm"
           onClick={logout}
         >
-          <LogOut className="mr-2 h-4 w-4" />
+          <LogOut className="mr-3 h-5 w-5" />
           <span className="font-medium">退出登录</span>
         </Button>
       </div>
