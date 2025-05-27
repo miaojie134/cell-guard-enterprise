@@ -1,3 +1,4 @@
+import { formatDateFromISO } from '@/lib/utils';
 
 // Employee related types
 export interface Employee {
@@ -108,7 +109,7 @@ export const mapBackendEmployeeToFrontend = (backendEmployee: BackendEmployee): 
     name: backendEmployee.fullName,
     department: backendEmployee.department,
     status: backendEmployee.employmentStatus === 'Active' ? 'active' : 'inactive',
-    joinDate: backendEmployee.hireDate,
-    leaveDate: backendEmployee.terminationDate || undefined,
+    joinDate: formatDateFromISO(backendEmployee.hireDate),
+    leaveDate: backendEmployee.terminationDate ? formatDateFromISO(backendEmployee.terminationDate) : undefined,
   };
 };

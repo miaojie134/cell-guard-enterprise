@@ -9,6 +9,7 @@ import {
   CreateEmployeeRequest,
   CreateEmployeeResponse
 } from '@/config/api';
+import { formatDateFromISO } from '@/lib/utils';
 
 class EmployeeService {
   private getHeaders(includeAuth: boolean = true): HeadersInit {
@@ -61,7 +62,17 @@ class EmployeeService {
         throw new Error(successData.message || '员工列表响应格式错误');
       }
 
-      return successData.data;
+      // 格式化员工列表中的时间字段
+      const formattedData = {
+        ...successData.data,
+        items: successData.data.items.map(employee => ({
+          ...employee,
+          hireDate: formatDateFromISO(employee.hireDate),
+          terminationDate: employee.terminationDate ? formatDateFromISO(employee.terminationDate) : undefined
+        }))
+      };
+
+      return formattedData;
     } catch (error) {
       console.error('Get employees error:', error);
       if (error instanceof Error) {
@@ -95,7 +106,14 @@ class EmployeeService {
         throw new Error(successData.message || '员工详情响应格式错误');
       }
 
-      return successData.data;
+      // 格式化时间字段
+      const formattedData = {
+        ...successData.data,
+        hireDate: formatDateFromISO(successData.data.hireDate),
+        terminationDate: successData.data.terminationDate ? formatDateFromISO(successData.data.terminationDate) : undefined
+      };
+
+      return formattedData;
     } catch (error) {
       console.error('Get employee by id error:', error);
       if (error instanceof Error) {
@@ -130,7 +148,14 @@ class EmployeeService {
         throw new Error(successData.message || '创建员工响应格式错误');
       }
 
-      return successData.data;
+      // 格式化时间字段
+      const formattedData = {
+        ...successData.data,
+        hireDate: formatDateFromISO(successData.data.hireDate),
+        terminationDate: successData.data.terminationDate ? formatDateFromISO(successData.data.terminationDate) : undefined
+      };
+
+      return formattedData;
     } catch (error) {
       console.error('Create employee error:', error);
       if (error instanceof Error) {
