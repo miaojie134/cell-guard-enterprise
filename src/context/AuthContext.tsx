@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { User } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { authService } from "@/services/authService";
 
 interface AuthContextType {
   user: User | null;
@@ -11,13 +12,6 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
 }
-
-// Mock admin user
-const MOCK_ADMIN: User = {
-  id: "1",
-  username: "admin",
-  role: "admin",
-};
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -28,39 +22,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check for saved user in local storage
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
+    // 检查本地存储中的用户信息和token
+    const initializeAuth = () => {
       try {
-        const parsedUser = JSON.parse(savedUser);
-        setUser(parsedUser);
-        console.log("User loaded from localStorage:", parsedUser);
-      } catch (e) {
-        // If there's an error parsing the saved user, clear it
-        console.error("Error parsing user from localStorage:", e);
+        const savedUser = localStorage.getItem("user");
+        const hasValidToken = authService.isTokenValid();
+        
+        console.log('Auth initialization:', { savedUser: !!savedUser, hasValidToken });
+        
+        if (savedUser && hasValidToken) {
+          const parsedUser = JSON.parse(savedUser);
+          setUser(parsedUser);
+          console.log("User loaded from localStorage:", parsedUser);
+        } else {
+          // 清除无效的数据
+          localStorage.removeItem("user");
+          localStorage.removeItem("token");
+          console.log("Cleared invalid auth data");
+        }
+      } catch (error) {
+        console.error("Error during auth initialization:", error);
         localStorage.removeItem("user");
+        localStorage.removeItem("token");
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (username: string, password: string) => {
     setIsLoading(true);
     try {
-      // In a real app, this would be an API call
-      if (username === "admin" && password === "password") {
-        setUser(MOCK_ADMIN);
-        localStorage.setItem("user", JSON.stringify(MOCK_ADMIN));
-        console.log("User logged in and saved to localStorage:", MOCK_ADMIN);
-        toast({
-          title: "登录成功",
-          description: "欢迎回来，管理员",
-        });
-        navigate("/dashboard");
-      } else {
-        throw new Error("用户名或密码不正确");
-      }
+      console.log('Starting login process for:', username);
+      
+      const loginResponse = await authService.login({ username, password });
+      
+      // 将后端返回的用户信息转换为前端User类型
+      const userData: User = {
+        id: loginResponse.user.id,
+        username: loginResponse.user.username,
+        role: loginResponse.user.role as "admin" | "user",
+      };
+
+      setUser(userData);
+      localStorage.setItem("user", JSON.stringify(userData));
+      
+      console.log("Login successful, user data:", userData);
+      
+      toast({
+        title: "登录成功",
+        description: `欢迎回来，${userData.username}`,
+      });
+      
+      navigate("/dashboard");
     } catch (error) {
+      console.error('Login failed:', error);
+      
       toast({
         title: "登录失败",
         description: error instanceof Error ? error.message : "未知错误",
@@ -71,15 +90,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
-    console.log("User logged out, localStorage cleared");
-    toast({
-      title: "退出成功",
-      description: "您已安全退出系统",
-    });
-    navigate("/login");
+  const logout = async () => {
+    try {
+      console.log('Starting logout process');
+      await authService.logout();
+      
+      setUser(null);
+      console.log("Logout successful");
+      
+      toast({
+        title: "退出成功",
+        description: "您已安全退出系统",
+      });
+      
+      navigate("/login");
+    } catch (error) {
+      console.error('Logout error:', error);
+      
+      // 即使API调用失败，也要清除前端状态
+      setUser(null);
+      
+      toast({
+        title: "退出登录",
+        description: error instanceof Error ? error.message : "已清除本地登录状态",
+        variant: "destructive",
+      });
+      
+      navigate("/login");
+    }
   };
 
   return (
