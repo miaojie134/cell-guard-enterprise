@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Employee } from "@/types";
+import { Employee, FrontendEmploymentStatus, FRONTEND_EMPLOYMENT_STATUS } from "@/types";
 import { SearchBar } from "@/components/SearchBar";
 import { Pagination } from "@/components/Pagination";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -29,6 +29,16 @@ import { employeeService } from "@/services/employeeService";
 import { useToast } from "@/hooks/use-toast";
 import { CreateEmployeeRequest } from "@/config/api";
 import { Plus, Edit, ExternalLink, Loader2 } from "lucide-react";
+
+// 员工状态映射函数
+const mapEmployeeStatusToBadgeStatus = (status: FrontendEmploymentStatus): "active" | "inactive" => {
+  return status === FRONTEND_EMPLOYMENT_STATUS.ACTIVE ? "active" : "inactive";
+};
+
+// 员工状态显示文本映射函数
+const getEmployeeStatusText = (status: FrontendEmploymentStatus): string => {
+  return status === FRONTEND_EMPLOYMENT_STATUS.ACTIVE ? "在职" : "离职";
+};
 
 const Employees = () => {
   const { 
@@ -234,8 +244,8 @@ const Employees = () => {
                       <td>{employee.department}</td>
                       <td>
                         <StatusBadge 
-                          status={employee.status} 
-                          text={employee.status === "active" ? "在职" : "离职"}
+                          status={mapEmployeeStatusToBadgeStatus(employee.status)} 
+                          text={getEmployeeStatusText(employee.status)}
                         />
                       </td>
                       <td>{employee.joinDate}</td>
@@ -301,8 +311,8 @@ const Employees = () => {
                   <h4 className="text-sm font-medium text-muted-foreground">状态</h4>
                   <p className="text-lg font-medium">
                     <StatusBadge 
-                      status={currentEmployee.status} 
-                      text={currentEmployee.status === "active" ? "在职" : "离职"} 
+                      status={mapEmployeeStatusToBadgeStatus(currentEmployee.status)} 
+                      text={getEmployeeStatusText(currentEmployee.status)} 
                     />
                   </p>
                 </div>
