@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User } from "@/types";
 import { useToast } from "@/hooks/use-toast";
@@ -61,7 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // 将后端返回的用户信息转换为前端User类型
       const userData: User = {
-        id: loginResponse.user.id,
+        id: loginResponse.user.id || loginResponse.user.username, // 如果没有id，使用username作为id
         username: loginResponse.user.username,
         role: loginResponse.user.role as "admin" | "user",
       };

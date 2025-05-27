@@ -1,5 +1,4 @@
-
-import { API_CONFIG, LoginRequest, LoginResponse, APIResponse, APIErrorResponse } from '@/config/api';
+import { API_CONFIG, LoginRequest, LoginResponsePayload, APIResponse, APIErrorResponse, ResponseStatus } from '@/config/api';
 
 class AuthService {
   private getHeaders(includeAuth: boolean = false): HeadersInit {
@@ -17,10 +16,10 @@ class AuthService {
     return headers;
   }
 
-  async login(credentials: LoginRequest): Promise<LoginResponse> {
+  async login(credentials: LoginRequest): Promise<LoginResponsePayload> {
     try {
       console.log('Attempting login with:', { username: credentials.username });
-      
+
       const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`, {
         method: 'POST',
         headers: this.getHeaders(),
@@ -29,17 +28,17 @@ class AuthService {
 
       console.log('Login response status:', response.status);
 
-      const data: APIResponse<LoginResponse> | APIErrorResponse = await response.json();
+      const data: APIResponse<LoginResponsePayload> | APIErrorResponse = await response.json();
       console.log('Login response data:', data);
 
       if (!response.ok) {
         const errorData = data as APIErrorResponse;
-        throw new Error(errorData.message || '登录失败');
+        throw new Error(errorData.error || errorData.details || '登录失败');
       }
 
-      const successData = data as APIResponse<LoginResponse>;
-      if (!successData.success || !successData.data) {
-        throw new Error('登录响应格式错误');
+      const successData = data as APIResponse<LoginResponsePayload>;
+      if (successData.status !== ResponseStatus.SUCCESS || !successData.data) {
+        throw new Error(successData.message || '登录响应格式错误');
       }
 
       // 存储token
@@ -59,7 +58,7 @@ class AuthService {
   async logout(): Promise<void> {
     try {
       console.log('Attempting logout');
-      
+
       const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGOUT}`, {
         method: 'POST',
         headers: this.getHeaders(true),
@@ -70,7 +69,7 @@ class AuthService {
       if (!response.ok) {
         const errorData: APIErrorResponse = await response.json();
         console.error('Logout error response:', errorData);
-        throw new Error(errorData.message || '退出登录失败');
+        throw new Error(errorData.error || errorData.details || '退出登录失败');
       }
 
       // 清除本地存储的token和用户信息
@@ -82,7 +81,7 @@ class AuthService {
       // 即使API调用失败，也要清除本地存储
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      
+
       if (error instanceof Error) {
         throw error;
       }

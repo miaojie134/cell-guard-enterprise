@@ -58,7 +58,7 @@ const Login = () => {
         <CardFooter className="text-sm text-center text-muted-foreground">
           <div className="w-full text-center">
             <p>请使用真实的后端账号登录</p>
-            <p>确保后端服务运行在 localhost:8080</p>
+            <p>确保后端服务运行在 localhost:8081</p>
           </div>
         </CardFooter>
       </Card>
