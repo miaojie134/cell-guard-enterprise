@@ -11,7 +11,9 @@ import {
   PhoneUsage,
   PhoneAssign,
   ImportResult,
-  PhoneUsageHistory
+  PhoneUsageHistory,
+  FRONTEND_EMPLOYMENT_STATUS,
+  FRONTEND_PHONE_STATUS,
 } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/components/ui/use-toast";
@@ -242,8 +244,11 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const getRiskPhones = useCallback(() => {
     // Filter phones where registrant is inactive but phone is still active
     return phoneNumbers.filter(phone => 
-      phone.registrantStatus === "inactive" && 
-      (phone.status === "active" || phone.status === "pending")
+      phone.registrantStatus === FRONTEND_EMPLOYMENT_STATUS.DEPARTED && 
+      (phone.status === FRONTEND_PHONE_STATUS.IN_USE || 
+       phone.status === FRONTEND_PHONE_STATUS.PENDING_CANCELLATION ||
+       phone.status === FRONTEND_PHONE_STATUS.PENDING_VERIFICATION_EMPLOYEE_LEFT ||
+       phone.status === FRONTEND_PHONE_STATUS.PENDING_VERIFICATION_USER_REPORT)
     );
   }, [phoneNumbers]);
 
@@ -324,7 +329,7 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       updatePhone(phoneId, { 
         currentUser: employee.name,
         currentUserId: employee.id,
-        status: "active" 
+        status: FRONTEND_PHONE_STATUS.IN_USE 
       });
       
       // Add to phone usage history
@@ -367,7 +372,7 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     
     // Update the phone status to inactive and clear current user
     updatePhone(phoneId, { 
-      status: "inactive", 
+      status: FRONTEND_PHONE_STATUS.IDLE, 
       currentUser: "",
       currentUserId: ""
     });
