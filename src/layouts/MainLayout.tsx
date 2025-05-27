@@ -26,8 +26,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-lg">加载中...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3"></div>
+          <p className="text-sm">加载中...</p>
         </div>
       </div>
     );
@@ -43,7 +43,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header title={title} />
-        <main className="flex-1 p-6 overflow-auto bg-gray-50">
+        <main className="flex-1 p-4 overflow-auto bg-gray-50">
           {children}
         </main>
       </div>

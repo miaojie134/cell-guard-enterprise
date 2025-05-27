@@ -37,53 +37,53 @@ const Dashboard = () => {
 
   return (
     <MainLayout title="仪表盘">
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Stats row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           <Card>
-            <CardContent className="p-6 flex items-center space-x-4">
-              <div className="rounded-full bg-blue-100 p-3">
-                <Phone className="h-6 w-6 text-blue-700" />
+            <CardContent className="p-4 flex items-center space-x-3">
+              <div className="rounded-full bg-blue-100 p-2">
+                <Phone className="h-5 w-5 text-blue-700" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">手机号码总数</p>
-                <p className="text-2xl font-bold">{stats.totalPhones}</p>
+                <p className="text-xs text-muted-foreground">手机号码总数</p>
+                <p className="text-xl font-bold">{stats.totalPhones}</p>
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-6 flex items-center space-x-4">
-              <div className="rounded-full bg-green-100 p-3">
-                <CheckCircle2 className="h-6 w-6 text-green-700" />
+            <CardContent className="p-4 flex items-center space-x-3">
+              <div className="rounded-full bg-green-100 p-2">
+                <CheckCircle2 className="h-5 w-5 text-green-700" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">在用号码</p>
-                <p className="text-2xl font-bold">{stats.activePhones}</p>
+                <p className="text-xs text-muted-foreground">在用号码</p>
+                <p className="text-xl font-bold">{stats.activePhones}</p>
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-6 flex items-center space-x-4">
-              <div className="rounded-full bg-orange-100 p-3">
-                <User className="h-6 w-6 text-orange-700" />
+            <CardContent className="p-4 flex items-center space-x-3">
+              <div className="rounded-full bg-orange-100 p-2">
+                <User className="h-5 w-5 text-orange-700" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">在职员工</p>
-                <p className="text-2xl font-bold">{stats.activeEmployees}</p>
+                <p className="text-xs text-muted-foreground">在职员工</p>
+                <p className="text-xl font-bold">{stats.activeEmployees}</p>
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-6 flex items-center space-x-4">
-              <div className="rounded-full bg-red-100 p-3">
-                <AlertTriangle className="h-6 w-6 text-red-700" />
+            <CardContent className="p-4 flex items-center space-x-3">
+              <div className="rounded-full bg-red-100 p-2">
+                <AlertTriangle className="h-5 w-5 text-red-700" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">风险号码</p>
-                <p className="text-2xl font-bold">{stats.riskPhones}</p>
+                <p className="text-xs text-muted-foreground">风险号码</p>
+                <p className="text-xl font-bold">{stats.riskPhones}</p>
               </div>
             </CardContent>
           </Card>
@@ -91,8 +91,8 @@ const Dashboard = () => {
         
         {/* Recent phones */}
         <Card>
-          <CardHeader>
-            <CardTitle>最近登记的号码</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">最近登记的号码</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -132,9 +132,9 @@ const Dashboard = () => {
         {/* Risk phones */}
         {riskPhones.length > 0 && (
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <AlertTriangle className="mr-2 h-5 w-5 text-red-600" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center text-lg">
+                <AlertTriangle className="mr-2 h-4 w-4 text-red-600" />
                 风险号码警示
               </CardTitle>
             </CardHeader>
@@ -170,9 +170,9 @@ const Dashboard = () => {
                   </tbody>
                 </table>
               </div>
-              <div className="mt-4 text-right">
+              <div className="mt-3 text-right">
                 <Link to="/risk">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="text-xs">
                     查看全部风险号码
                   </Button>
                 </Link>
