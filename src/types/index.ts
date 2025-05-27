@@ -3,13 +3,11 @@ import { formatDateFromISO } from '@/lib/utils';
 // Employment status constants
 export const BACKEND_EMPLOYMENT_STATUS = {
   ACTIVE: 'Active',
-  INACTIVE: 'Inactive',
   DEPARTED: 'Departed'
 } as const;
 
 export const FRONTEND_EMPLOYMENT_STATUS = {
   ACTIVE: 'active',
-  INACTIVE: 'inactive',
   DEPARTED: 'departed'
 } as const;
 
@@ -172,7 +170,6 @@ export interface ImportResult {
 // Status mapping utilities
 const EMPLOYMENT_STATUS_MAP: Record<BackendEmploymentStatus, FrontendEmploymentStatus> = {
   [BACKEND_EMPLOYMENT_STATUS.ACTIVE]: FRONTEND_EMPLOYMENT_STATUS.ACTIVE,
-  [BACKEND_EMPLOYMENT_STATUS.INACTIVE]: FRONTEND_EMPLOYMENT_STATUS.INACTIVE,
   [BACKEND_EMPLOYMENT_STATUS.DEPARTED]: FRONTEND_EMPLOYMENT_STATUS.DEPARTED,
 };
 
@@ -192,7 +189,7 @@ export const mapBackendEmployeeToFrontend = (backendEmployee: BackendEmployee): 
     employeeId: backendEmployee.employeeId,
     name: backendEmployee.fullName,
     department: backendEmployee.department,
-    status: EMPLOYMENT_STATUS_MAP[backendEmployee.employmentStatus] || FRONTEND_EMPLOYMENT_STATUS.INACTIVE,
+    status: EMPLOYMENT_STATUS_MAP[backendEmployee.employmentStatus] || FRONTEND_EMPLOYMENT_STATUS.DEPARTED,
     joinDate: formatDateFromISO(backendEmployee.hireDate),
     leaveDate: backendEmployee.terminationDate ? formatDateFromISO(backendEmployee.terminationDate) : undefined,
   };
