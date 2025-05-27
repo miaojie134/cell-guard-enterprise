@@ -1,4 +1,3 @@
-
 // API配置
 export const API_CONFIG = {
   BASE_URL: '/api/v1', // 使用代理，不需要完整URL
@@ -73,4 +72,29 @@ export interface EmployeesListResponse {
     totalItems: number;
     totalPages: number;
   };
+}
+
+// 新增员工请求类型
+export interface CreateEmployeeRequest {
+  fullName: string;
+  department: string;
+  email: string;
+  phoneNumber: string;
+  hireDate: string; // YYYY-MM-DD 格式
+}
+
+// 新增员工响应类型
+export interface CreateEmployeeResponse {
+  id: number;
+  employeeId: string;
+  fullName: string;
+  department: string;
+  email: string;
+  phoneNumber: string;
+  employmentStatus: string;
+  hireDate: string;
+  terminationDate?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
 }

@@ -1,4 +1,3 @@
-
 import {
   API_CONFIG,
   EmployeeSearchParams,
@@ -6,7 +5,9 @@ import {
   APIResponse,
   APIErrorResponse,
   ResponseStatus,
-  APIEmployee
+  APIEmployee,
+  CreateEmployeeRequest,
+  CreateEmployeeResponse
 } from '@/config/api';
 
 class EmployeeService {
@@ -97,6 +98,41 @@ class EmployeeService {
       return successData.data;
     } catch (error) {
       console.error('Get employee by id error:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('网络连接失败，请检查后端服务是否正常运行');
+    }
+  }
+
+  async createEmployee(employeeData: CreateEmployeeRequest): Promise<CreateEmployeeResponse> {
+    try {
+      console.log('Creating employee:', employeeData);
+
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EMPLOYEES}`, {
+        method: 'POST',
+        headers: this.getHeaders(true),
+        body: JSON.stringify(employeeData),
+      });
+
+      console.log('Create employee response status:', response.status);
+
+      const data: APIResponse<CreateEmployeeResponse> | APIErrorResponse = await response.json();
+      console.log('Create employee response data:', data);
+
+      if (!response.ok) {
+        const errorData = data as APIErrorResponse;
+        throw new Error(errorData.error || errorData.details || '创建员工失败');
+      }
+
+      const successData = data as APIResponse<CreateEmployeeResponse>;
+      if (successData.status !== ResponseStatus.SUCCESS || !successData.data) {
+        throw new Error(successData.message || '创建员工响应格式错误');
+      }
+
+      return successData.data;
+    } catch (error) {
+      console.error('Create employee error:', error);
       if (error instanceof Error) {
         throw error;
       }

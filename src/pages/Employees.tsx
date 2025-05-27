@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/layouts/MainLayout";
 import { useEmployees } from "@/hooks/useEmployees";
@@ -25,6 +24,10 @@ import { Employee } from "@/types";
 import { SearchBar } from "@/components/SearchBar";
 import { Pagination } from "@/components/Pagination";
 import { StatusBadge } from "@/components/StatusBadge";
+import { AddEmployeeForm } from "@/components/AddEmployeeForm";
+import { employeeService } from "@/services/employeeService";
+import { useToast } from "@/hooks/use-toast";
+import { CreateEmployeeRequest } from "@/config/api";
 import { Plus, Edit, ExternalLink, Loader2 } from "lucide-react";
 
 const Employees = () => {
@@ -50,7 +53,11 @@ const Employees = () => {
     pageSize: 10,
   });
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const [currentEmployeeId, setCurrentEmployeeId] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+
+  const { toast } = useToast();
 
   // Get current employee
   const currentEmployee = currentEmployeeId ? getEmployeeById(currentEmployeeId) : null;
@@ -95,12 +102,52 @@ const Employees = () => {
     setShowDetailsDialog(true);
   };
 
+  const openAddDialog = () => {
+    setShowAddDialog(true);
+  };
+
+  const handleCreateEmployee = async (data: CreateEmployeeRequest) => {
+    setIsCreating(true);
+    try {
+      await employeeService.createEmployee(data);
+      
+      toast({
+        title: "创建成功",
+        description: "员工已成功创建",
+      });
+      
+      setShowAddDialog(false);
+      
+      // 重新获取员工列表
+      const apiParams = {
+        page: searchParams.page,
+        limit: searchParams.pageSize,
+        search: searchParams.query || undefined,
+        employmentStatus: searchParams.filters.status === 'active' ? 'Active' : 
+                         searchParams.filters.status === 'inactive' ? 'Departed' : undefined,
+      };
+      
+      await fetchEmployees(apiParams);
+    } catch (error) {
+      console.error('Failed to create employee:', error);
+      const errorMessage = error instanceof Error ? error.message : '创建员工失败';
+      
+      toast({
+        title: "创建失败",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <MainLayout title="员工管理">
       <Card>
         <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
           <CardTitle>员工列表</CardTitle>
-          <Button disabled>
+          <Button onClick={openAddDialog}>
             <Plus className="h-4 w-4 mr-2" />
             添加员工
           </Button>
@@ -279,6 +326,22 @@ const Employees = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add Employee Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>添加新员工</DialogTitle>
+            <DialogDescription>
+              请填写员工的基本信息。所有标记为 * 的字段都是必填项。
+            </DialogDescription>
+          </DialogHeader>
+          <AddEmployeeForm
+            onSubmit={handleCreateEmployee}
+            isLoading={isCreating}
+          />
         </DialogContent>
       </Dialog>
     </MainLayout>
