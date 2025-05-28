@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -69,30 +70,33 @@ export const EmployeeDetailDialog: React.FC<EmployeeDetailDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-        {employeeDetail && (
-          <DialogHeader className="pb-4">
-            <DialogTitle className="text-xl font-semibold flex items-center gap-3">
-              <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
-                <User className="h-4 w-4 text-primary" />
-              </div>
-              <div className="flex flex-col">
-                <span>{employeeDetail.fullName}</span>
-                <span className="text-sm font-normal text-muted-foreground">{employeeDetail.employeeId}</span>
-              </div>
-            </DialogTitle>
-          </DialogHeader>
-        )}
-
-        {(isLoading || error) && (
-          <DialogHeader className="pb-4">
-            <DialogTitle className="text-xl font-semibold flex items-center gap-3">
-              <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
-                <User className="h-4 w-4 text-primary" />
-              </div>
-              员工详情
-            </DialogTitle>
-          </DialogHeader>
-        )}
+        <DialogHeader className="pb-4">
+          <DialogTitle className="text-xl font-semibold flex items-center gap-3">
+            {employeeDetail ? (
+              <>
+                <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
+                  <User className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex flex-col">
+                  <span>{employeeDetail.fullName}</span>
+                  <span className="text-sm font-normal text-muted-foreground">{employeeDetail.employeeId}</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
+                  <User className="h-4 w-4 text-primary" />
+                </div>
+                <span>员工详情</span>
+              </>
+            )}
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            {employeeDetail
+              ? `查看员工 ${employeeDetail.fullName} (${employeeDetail.employeeId}) 的详细信息，包括基本资料、当前使用的手机号码和曾办理的手机号码。`
+              : '加载员工详细信息中。'}
+          </DialogDescription>
+        </DialogHeader>
 
         {isLoading && (
           <div className="flex items-center justify-center py-12">
@@ -107,7 +111,7 @@ export const EmployeeDetailDialog: React.FC<EmployeeDetailDialogProps> = ({
           </div>
         )}
 
-        {employeeDetail && (
+        {employeeDetail && !isLoading && !error && (
           <div className="space-y-6">
             {/* 基本信息 */}
             <div className="space-y-4">
