@@ -13,6 +13,7 @@ import Employees from "./pages/Employees";
 import RiskPhones from "./pages/RiskPhones";
 import ImportData from "./pages/ImportData";
 import TestEmployeeDetail from "./pages/TestEmployeeDetail";
+import TestAPI from "./pages/TestAPI";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/risk" element={<RiskPhones />} />
               <Route path="/import" element={<ImportData />} />
               <Route path="/test-employee-detail" element={<TestEmployeeDetail />} />
+              <Route path="/test-api" element={<TestAPI />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </DataProvider>

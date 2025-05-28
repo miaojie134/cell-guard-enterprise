@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/layouts/MainLayout";
-import { useEmployees } from "@/hooks/useEmployees";
+import { useEmployees, useEmployeeCacheRefresh } from "@/hooks/useEmployees";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -54,6 +54,8 @@ const Employees = () => {
     getEmployeeById 
   } = useEmployees();
   
+  const { refreshAllEmployeeCaches } = useEmployeeCacheRefresh();
+
   // State
   const [searchParams, setSearchParams] = useState({
     query: "",
@@ -151,6 +153,10 @@ const Employees = () => {
 
   // 刷新员工列表的辅助函数
   const refreshEmployeeList = () => {
+    // 使用全局缓存刷新，这样会同时刷新员工列表和员工选择器的缓存
+    refreshAllEmployeeCaches();
+    
+    // 重新获取当前页面的员工数据
     const apiParams = {
       page: searchParams.page,
       limit: searchParams.pageSize,

@@ -80,32 +80,39 @@ export interface BackendEmployee {
 // Phone related types
 export interface PhoneNumber {
   id: string;
-  number: string;
-  registrant: string; // Name of the person who registered the number
-  registrantId: string; // Employee ID of the registrant
-  registrantStatus: FrontendEmploymentStatus; // Status of the registrant
-  registrationDate: string;
-  provider: string;
-  status: FrontendPhoneStatus;
-  currentUser?: string; // Name of the current user
-  currentUserId?: string; // Employee ID of the current user
-  notes?: string;
+  phoneNumber: string;
+  applicantEmployeeId: string; // 申请人员工ID
+  applicantName: string; // 申请人姓名
+  applicantStatus: string; // 申请人状态
+  applicationDate: string; // 申请日期
+  cancellationDate?: string; // 注销日期
+  currentEmployeeId?: string; // 当前使用人员工ID
+  currentUserName?: string; // 当前使用人姓名
+  purpose: string; // 用途
+  remarks?: string; // 备注
+  status: string; // 号码状态
+  vendor: string; // 运营商
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Backend phone number type mapping
 export interface BackendPhoneNumber {
   id: number;
-  number: string;
-  registrant: string;
-  registrantId: string;
-  registrationDate: string;
-  provider: string;
-  status: BackendPhoneStatus;
-  currentUser?: string;
-  currentUserId?: string;
-  notes?: string;
+  phoneNumber: string;
+  applicantEmployeeId: string;
+  applicantName: string;
+  applicantStatus: string;
+  applicationDate: string;
+  cancellationDate: string;
   createdAt: string;
+  currentEmployeeId: string;
+  currentUserName: string;
+  purpose: string;
+  remarks: string;
+  status: string;
   updatedAt: string;
+  vendor: string;
 }
 
 export interface PhoneUsage {
@@ -198,15 +205,19 @@ export const mapBackendEmployeeToFrontend = (backendEmployee: BackendEmployee): 
 export const mapBackendPhoneToFrontend = (backendPhone: BackendPhoneNumber): PhoneNumber => {
   return {
     id: backendPhone.id.toString(),
-    number: backendPhone.number,
-    registrant: backendPhone.registrant,
-    registrantId: backendPhone.registrantId,
-    registrantStatus: FRONTEND_EMPLOYMENT_STATUS.ACTIVE, // 需要从其他地方获取注册人状态
-    registrationDate: formatDateFromISO(backendPhone.registrationDate),
-    provider: backendPhone.provider,
-    status: PHONE_STATUS_MAP[backendPhone.status] || FRONTEND_PHONE_STATUS.IDLE,
-    currentUser: backendPhone.currentUser,
-    currentUserId: backendPhone.currentUserId,
-    notes: backendPhone.notes,
+    phoneNumber: backendPhone.phoneNumber,
+    applicantEmployeeId: backendPhone.applicantEmployeeId,
+    applicantName: backendPhone.applicantName,
+    applicantStatus: backendPhone.applicantStatus,
+    applicationDate: formatDateFromISO(backendPhone.applicationDate),
+    cancellationDate: backendPhone.cancellationDate ? formatDateFromISO(backendPhone.cancellationDate) : undefined,
+    currentEmployeeId: backendPhone.currentEmployeeId,
+    currentUserName: backendPhone.currentUserName,
+    purpose: backendPhone.purpose,
+    remarks: backendPhone.remarks,
+    status: backendPhone.status,
+    vendor: backendPhone.vendor,
+    createdAt: formatDateFromISO(backendPhone.createdAt),
+    updatedAt: formatDateFromISO(backendPhone.updatedAt),
   };
 };
