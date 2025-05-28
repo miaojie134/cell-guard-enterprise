@@ -1,3 +1,4 @@
+
 // 员工相关API类型定义
 
 // 员工搜索参数
@@ -25,6 +26,9 @@ export interface APIEmployee {
   updatedAt: string;
   deletedAt?: string;
 }
+
+// 后端员工数据结构别名 - 为了向后兼容
+export interface BackendEmployee extends APIEmployee {}
 
 // 员工列表响应
 export interface EmployeesListResponse {
@@ -84,4 +88,4 @@ export interface UpdateEmployeeResponse {
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;
-} 
+}
