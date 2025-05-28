@@ -26,6 +26,7 @@ import { Pagination } from "@/components/Pagination";
 import { StatusBadge } from "@/components/StatusBadge";
 import { AddEmployeeForm } from "@/components/AddEmployeeForm";
 import { UpdateEmployeeForm } from "@/components/UpdateEmployeeForm";
+import { EmployeeDetailDialog } from "@/components/EmployeeDetailDialog";
 import { employeeService } from "@/services/employeeService";
 import { useToast } from "@/hooks/use-toast";
 import { CreateEmployeeRequest, UpdateEmployeeRequest } from "@/config/api";
@@ -121,9 +122,22 @@ const Employees = () => {
   };
 
   // Dialog handlers
-  const openDetailsDialog = (id: string) => {
-    setCurrentEmployeeId(id);
-    setShowDetailsDialog(true);
+  const openDetailsDialog = (employeeId: string) => {
+    console.log('openDetailsDialog called with employeeId:', employeeId);
+    console.log('Available employees:', employees.map(emp => ({ id: emp.id, employeeId: emp.employeeId, name: emp.name })));
+    
+    // 直接使用传入的员工ID查找员工，然后使用员工工号
+    const employee = getEmployeeById(employeeId);
+    console.log('Found employee:', employee);
+    
+    if (employee) {
+      console.log('Setting currentEmployeeId to:', employee.employeeId);
+      setCurrentEmployeeId(employee.employeeId);
+      setShowDetailsDialog(true);
+    } else {
+      console.error('Employee not found with id:', employeeId);
+      console.error('Available employee IDs:', employees.map(emp => emp.id));
+    }
   };
 
   const openAddDialog = () => {
@@ -339,57 +353,11 @@ const Employees = () => {
       </Card>
       
       {/* Employee Details Dialog */}
-      <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>员工详情</DialogTitle>
-          </DialogHeader>
-          {currentEmployee && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground">工号</h4>
-                  <p className="text-lg font-medium">{currentEmployee.employeeId}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground">姓名</h4>
-                  <p className="text-lg font-medium">{currentEmployee.name}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground">部门</h4>
-                  <p className="text-lg font-medium">{currentEmployee.department}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground">状态</h4>
-                  <p className="text-lg font-medium">
-                    <StatusBadge 
-                      status={mapEmployeeStatusToBadgeStatus(currentEmployee.status)} 
-                      text={getEmployeeStatusText(currentEmployee.status)} 
-                    />
-                  </p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground">入职日期</h4>
-                  <p className="text-lg font-medium">{currentEmployee.joinDate}</p>
-                </div>
-                {currentEmployee.leaveDate && (
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">离职日期</h4>
-                    <p className="text-lg font-medium">{currentEmployee.leaveDate}</p>
-                  </div>
-                )}
-              </div>
-              
-              <div className="border-t pt-4">
-                <h3 className="text-lg font-medium mb-2">关联的手机号码信息</h3>
-                <p className="text-sm text-muted-foreground">
-                  手机号码相关功能暂未实现，将在后续版本中添加。
-                </p>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <EmployeeDetailDialog
+        open={showDetailsDialog}
+        onOpenChange={setShowDetailsDialog}
+        employeeId={currentEmployeeId}
+      />
       
       {/* Add Employee Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>

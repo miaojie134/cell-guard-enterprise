@@ -115,13 +115,12 @@
 
   body {
     @apply bg-background text-foreground text-sm;
-    font-size: 14px;
     line-height: 1.4;
     color-scheme: light;
   }
 
   html {
-    font-size: 14px;
+    font-size: 16px;
     color-scheme: light;
   }
 

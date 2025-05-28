@@ -6,6 +6,7 @@ import {
   APIErrorResponse,
   ResponseStatus,
   APIEmployee,
+  APIEmployeeDetail,
   CreateEmployeeRequest,
   CreateEmployeeResponse,
   UpdateEmployeeRequest,
@@ -206,6 +207,47 @@ class EmployeeService {
       return formattedData;
     } catch (error) {
       console.error('Update employee error:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('网络连接失败，请检查后端服务是否正常运行');
+    }
+  }
+
+  async getEmployeeDetail(employeeId: string): Promise<APIEmployeeDetail> {
+    try {
+      console.log('Fetching employee detail by employeeId:', employeeId);
+
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EMPLOYEES}/${employeeId}`, {
+        method: 'GET',
+        headers: this.getHeaders(true),
+      });
+
+      console.log('Employee detail response status:', response.status);
+
+      const data: APIResponse<APIEmployeeDetail> | APIErrorResponse = await response.json();
+      console.log('Employee detail response data:', data);
+
+      if (!response.ok) {
+        const errorData = data as APIErrorResponse;
+        throw new Error(errorData.error || errorData.details || '获取员工详情失败');
+      }
+
+      const successData = data as APIResponse<APIEmployeeDetail>;
+      if (successData.status !== ResponseStatus.SUCCESS || !successData.data) {
+        throw new Error(successData.message || '员工详情响应格式错误');
+      }
+
+      // 格式化时间字段
+      const formattedData = {
+        ...successData.data,
+        hireDate: formatDateFromISO(successData.data.hireDate),
+        terminationDate: successData.data.terminationDate ? formatDateFromISO(successData.data.terminationDate) : undefined
+      };
+
+      return formattedData;
+    } catch (error) {
+      console.error('Get employee detail error:', error);
       if (error instanceof Error) {
         throw error;
       }

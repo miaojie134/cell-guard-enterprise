@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -13,6 +12,7 @@ import Phones from "./pages/Phones";
 import Employees from "./pages/Employees";
 import RiskPhones from "./pages/RiskPhones";
 import ImportData from "./pages/ImportData";
+import TestEmployeeDetail from "./pages/TestEmployeeDetail";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 
@@ -41,6 +41,7 @@ const App = () => (
               <Route path="/employees" element={<Employees />} />
               <Route path="/risk" element={<RiskPhones />} />
               <Route path="/import" element={<ImportData />} />
+              <Route path="/test-employee-detail" element={<TestEmployeeDetail />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </DataProvider>

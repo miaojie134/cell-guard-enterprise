@@ -1,5 +1,11 @@
-
 // 员工相关API类型定义
+
+// 手机号码信息
+export interface MobileNumber {
+  id: number;
+  phoneNumber: string;
+  status: string;
+}
 
 // 员工搜索参数
 export interface EmployeeSearchParams {
@@ -27,8 +33,23 @@ export interface APIEmployee {
   deletedAt?: string;
 }
 
+// 员工详情数据结构（包含手机号码信息）
+export interface APIEmployeeDetail {
+  id: number;
+  employeeId: string;
+  fullName: string;
+  department: string;
+  employmentStatus: string;
+  hireDate: string;
+  terminationDate?: string;
+  createdAt: string;
+  updatedAt: string;
+  handledMobileNumbers: MobileNumber[]; // 作为办卡人的手机号码列表
+  usingMobileNumbers: MobileNumber[];   // 作为当前使用人的手机号码列表
+}
+
 // 后端员工数据结构别名 - 为了向后兼容
-export interface BackendEmployee extends APIEmployee {}
+export interface BackendEmployee extends APIEmployee { }
 
 // 员工列表响应
 export interface EmployeesListResponse {
