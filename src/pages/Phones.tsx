@@ -24,12 +24,12 @@ import { SearchBar } from "@/components/SearchBar";
 import { Pagination } from "@/components/Pagination";
 import { StatusBadge } from "@/components/StatusBadge";
 import { EmployeeSelector, type Employee } from "@/components/EmployeeSelector";
-import { Plus, FileText, Pencil, Loader2, AlertCircle, RefreshCw } from "lucide-react";
+import { Plus, FileText, Pencil, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { usePhoneNumbers, usePhoneNumber } from "@/hooks/usePhoneNumbers";
 import { useEmployeesForSelector } from "@/hooks/useEmployees";
-import { CreatePhoneRequest } from "@/config/api/phone";
+import { CreatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest } from "@/config/api/phone";
 import { Link } from "react-router-dom";
 
 const Phones = () => {
@@ -48,7 +48,10 @@ const Phones = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
+  const [showUnassignDialog, setShowUnassignDialog] = useState(false);
   const [currentPhoneId, setCurrentPhoneId] = useState<string | null>(null);
+  const [currentPhoneNumber, setCurrentPhoneNumber] = useState<string>("");
   
   // 表单状态
   const [formData, setFormData] = useState({
@@ -63,6 +66,14 @@ const Phones = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
+  // 分配表单状态
+  const [assignFormData, setAssignFormData] = useState({
+    assignmentDate: new Date().toISOString().split('T')[0],
+    purpose: "",
+  });
+  const [assignSelectedEmployee, setAssignSelectedEmployee] = useState<Employee | null>(null);
+  const [assignFormErrors, setAssignFormErrors] = useState<Record<string, string>>({});
+
   // 使用API hook获取数据
   const {
     phoneNumbers,
@@ -72,13 +83,17 @@ const Phones = () => {
     createPhone,
     updatePhone,
     deletePhone,
+    assignPhone,
+    unassignPhone,
     isCreating,
     isUpdating,
     isDeleting,
+    isAssigning,
+    isUnassigning,
   } = usePhoneNumbers(searchParams);
 
   // 获取员工列表
-  const { activeEmployees, isLoading: isLoadingEmployees, refreshEmployees } = useEmployeesForSelector({
+  const { activeEmployees, isLoading: isLoadingEmployees } = useEmployeesForSelector({
     employmentStatus: 'Active',
     limit: 100,
   });
@@ -207,6 +222,22 @@ const Phones = () => {
     setShowDetailsDialog(true);
   };
 
+  const openAssignDialog = (phoneNumber: string) => {
+    setCurrentPhoneNumber(phoneNumber);
+    setAssignFormData({
+      assignmentDate: new Date().toISOString().split('T')[0],
+      purpose: "",
+    });
+    setAssignSelectedEmployee(null);
+    setAssignFormErrors({});
+    setShowAssignDialog(true);
+  };
+
+  const openUnassignDialog = (phoneNumber: string) => {
+    setCurrentPhoneNumber(phoneNumber);
+    setShowUnassignDialog(true);
+  };
+
   // Submit handlers
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -252,6 +283,54 @@ const Phones = () => {
     if (window.confirm('确认删除此手机号码吗？')) {
       deletePhone(id);
     }
+  };
+
+  // 分配表单验证
+  const validateAssignForm = (): boolean => {
+    const errors: Record<string, string> = {};
+    
+    if (!assignSelectedEmployee) {
+      errors.employee = '请选择使用人';
+    }
+    
+    if (!assignFormData.purpose.trim()) {
+      errors.purpose = '请输入使用用途';
+    }
+    
+    if (!assignFormData.assignmentDate) {
+      errors.assignmentDate = '请选择分配日期';
+    }
+    
+    setAssignFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // 处理分配提交
+  const handleAssignSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateAssignForm()) {
+      return;
+    }
+    
+    const assignRequest: AssignPhoneRequest = {
+      assignmentDate: assignFormData.assignmentDate,
+      employeeId: assignSelectedEmployee!.employeeId,
+      purpose: assignFormData.purpose,
+    };
+    
+    assignPhone({ phoneNumber: currentPhoneNumber, data: assignRequest });
+    setShowAssignDialog(false);
+  };
+
+  // 处理回收提交
+  const handleUnassignSubmit = () => {
+    const unassignRequest: UnassignPhoneRequest = {
+      reclaimDate: new Date().toISOString().split('T')[0],
+    };
+    
+    unassignPhone({ phoneNumber: currentPhoneNumber, data: unassignRequest });
+    setShowUnassignDialog(false);
   };
 
   // 状态映射
@@ -400,6 +479,36 @@ const Phones = () => {
                             )}
                             <span className="sr-only">编辑</span>
                           </Button>
+                          {/* 分配/回收按钮 */}
+                          {phone.currentUserName ? (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => openUnassignDialog(phone.phoneNumber)}
+                              disabled={isUnassigning}
+                              className="h-8 px-2 text-xs"
+                            >
+                              {isUnassigning ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                "回收"
+                              )}
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => openAssignDialog(phone.phoneNumber)}
+                              disabled={isAssigning}
+                              className="h-8 px-2 text-xs"
+                            >
+                              {isAssigning ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                "分配"
+                              )}
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -431,7 +540,7 @@ const Phones = () => {
       
       {/* Add Phone Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>添加新手机号码</DialogTitle>
             <DialogDescription>
@@ -458,33 +567,16 @@ const Phones = () => {
               
               <div className="space-y-2">
                 <Label>申请人 *</Label>
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <EmployeeSelector
-                      value={selectedEmployee}
-                      onChange={setSelectedEmployee}
-                      employees={activeEmployees}
-                      isLoading={isLoadingEmployees}
-                      placeholder="搜索员工姓名或工号..."
-                      required
-                      error={formErrors.employee}
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={refreshEmployees}
-                    disabled={isLoadingEmployees}
-                    title="刷新员工列表"
-                  >
-                    {isLoadingEmployees ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
+                <EmployeeSelector
+                  value={selectedEmployee}
+                  onChange={setSelectedEmployee}
+                  employees={activeEmployees}
+                  isLoading={isLoadingEmployees}
+                  placeholder="搜索员工姓名或工号..."
+                  required
+                  error={formErrors.employee}
+                  compact={true}
+                />
               </div>
               
               <div className="space-y-2">
@@ -740,6 +832,128 @@ const Phones = () => {
           <DialogFooter>
             <Button onClick={() => setShowDetailsDialog(false)}>
               关闭
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Phone Dialog */}
+      <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>分配手机号码</DialogTitle>
+            <DialogDescription>
+              将手机号码 {currentPhoneNumber} 分配给员工使用
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAssignSubmit}>
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label>使用人 *</Label>
+                <EmployeeSelector
+                  value={assignSelectedEmployee}
+                  onChange={setAssignSelectedEmployee}
+                  employees={activeEmployees}
+                  isLoading={isLoadingEmployees}
+                  placeholder="搜索员工姓名或工号..."
+                  required
+                  error={assignFormErrors.employee}
+                  compact={true}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="assignmentDate">分配日期</Label>
+                <Input
+                  id="assignmentDate"
+                  name="assignmentDate"
+                  type="date"
+                  value={assignFormData.assignmentDate}
+                  onChange={(e) => {
+                    setAssignFormData(prev => ({ ...prev, assignmentDate: e.target.value }));
+                    if (assignFormErrors.assignmentDate) {
+                      setAssignFormErrors(prev => ({ ...prev, assignmentDate: '' }));
+                    }
+                  }}
+                  required
+                  className={assignFormErrors.assignmentDate ? "border-red-500" : ""}
+                />
+                {assignFormErrors.assignmentDate && (
+                  <p className="text-sm text-red-500">{assignFormErrors.assignmentDate}</p>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="assignPurpose">使用用途</Label>
+                <Input
+                  id="assignPurpose"
+                  name="purpose"
+                  placeholder="请输入使用用途"
+                  value={assignFormData.purpose}
+                  onChange={(e) => {
+                    setAssignFormData(prev => ({ ...prev, purpose: e.target.value }));
+                    if (assignFormErrors.purpose) {
+                      setAssignFormErrors(prev => ({ ...prev, purpose: '' }));
+                    }
+                  }}
+                  required
+                  className={assignFormErrors.purpose ? "border-red-500" : ""}
+                />
+                {assignFormErrors.purpose && (
+                  <p className="text-sm text-red-500">{assignFormErrors.purpose}</p>
+                )}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowAssignDialog(false)}>
+                取消
+              </Button>
+              <Button type="submit" disabled={isAssigning}>
+                {isAssigning ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    分配中...
+                  </>
+                ) : (
+                  "确认分配"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unassign Phone Dialog */}
+      <Dialog open={showUnassignDialog} onOpenChange={setShowUnassignDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>回收手机号码</DialogTitle>
+            <DialogDescription>
+              确认要回收手机号码 {currentPhoneNumber} 吗？
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              回收后，该号码将变为闲置状态，当前使用人信息将被清空。此操作不可撤销。
+            </p>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setShowUnassignDialog(false)}>
+              取消
+            </Button>
+            <Button 
+              onClick={handleUnassignSubmit} 
+              disabled={isUnassigning}
+              variant="destructive"
+            >
+              {isUnassigning ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  回收中...
+                </>
+              ) : (
+                "确认回收"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

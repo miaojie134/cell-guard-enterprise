@@ -62,14 +62,14 @@ export interface PhoneListResponse {
   };
 }
 
-// 手机号码分配请求
+// 手机号码分配请求（根据后端assignPayload结构）
 export interface AssignPhoneRequest {
-  phoneId: string;
-  employeeId: string;
+  assignmentDate: string; // YYYY-MM-DD 格式
+  employeeId: string; // 员工工号
+  purpose: string; // 用途
 }
 
-// 手机号码回收请求
-export interface RecoverPhoneRequest {
-  phoneId: string;
-  reason?: string;
+// 手机号码回收请求（根据后端unassignPayload结构）
+export interface UnassignPhoneRequest {
+  reclaimDate: string; // YYYY-MM-DD 格式，可选
 } 

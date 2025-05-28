@@ -24,6 +24,7 @@ interface EmployeeSelectorProps {
   disabled?: boolean;
   onSearch?: (query: string) => void;
   error?: string;
+  compact?: boolean;
 }
 
 export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
@@ -36,6 +37,7 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
   disabled = false,
   onSearch,
   error,
+  compact = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -48,7 +50,7 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
   // 过滤员工列表
   useEffect(() => {
     if (!searchTerm.trim()) {
-      setFilteredEmployees(employees.slice(0, 10)); // 默认显示前10个
+      setFilteredEmployees([]);
       return;
     }
 
@@ -56,17 +58,19 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
       emp.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       emp.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       emp.department.toLowerCase().includes(searchTerm.toLowerCase())
-    ).slice(0, 10); // 限制显示数量
+    ).slice(0, compact ? 5 : 8); // 紧凑模式显示更少结果
 
     setFilteredEmployees(filtered);
     setHighlightedIndex(-1);
-  }, [searchTerm, employees]);
+  }, [searchTerm, employees, compact]);
 
   // 处理搜索输入
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchTerm(query);
-    setShowDropdown(true);
+    
+    // 只有在输入内容时才显示下拉框
+    setShowDropdown(query.trim().length > 0);
     
     // 如果有搜索回调，调用它
     if (onSearch) {
@@ -77,7 +81,7 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
   // 选择员工
   const handleEmployeeSelect = (employee: Employee) => {
     onChange(employee);
-    setSearchTerm(employee.fullName);
+    setSearchTerm(`${employee.fullName} (${employee.employeeId})`);
     setShowDropdown(false);
     setHighlightedIndex(-1);
   };
@@ -92,7 +96,7 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
 
   // 键盘导航
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!showDropdown) return;
+    if (!showDropdown || filteredEmployees.length === 0) return;
 
     switch (e.key) {
       case 'ArrowDown':
@@ -143,7 +147,7 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
   // 当value变化时更新搜索框
   useEffect(() => {
     if (value) {
-      setSearchTerm(value.fullName);
+      setSearchTerm(`${value.fullName} (${value.employeeId})`);
     } else {
       setSearchTerm('');
     }
@@ -166,7 +170,6 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
             type="text"
             value={searchTerm}
             onChange={handleSearchChange}
-            onFocus={() => setShowDropdown(true)}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             disabled={disabled}
@@ -199,39 +202,26 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
         {error && (
           <p className="text-sm text-red-500 mt-1">{error}</p>
         )}
-        
-        {value && (
-          <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-green-800">{value.fullName}</p>
-                <p className="text-sm text-green-600">
-                  工号: {value.employeeId} | {value.department} | 
-                  <span className={getStatusColor(value.employmentStatus)}>
-                    {" "}{getStatusText(value.employmentStatus)}
-                  </span>
-                </p>
-              </div>
-              <Check className="h-5 w-5 text-green-600" />
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* 下拉选项 */}
-      {showDropdown && (
+      {/* 搜索结果下拉框 - 只在有搜索内容时显示 */}
+      {showDropdown && searchTerm.trim() && (
         <Card 
           ref={dropdownRef}
-          className="absolute z-50 w-full mt-1 max-h-64 overflow-y-auto border shadow-lg"
+          className={cn(
+            "absolute z-50 w-full mt-1 border shadow-lg",
+            compact ? "max-h-48" : "max-h-64"
+          )}
         >
           <CardContent className="p-0">
             {filteredEmployees.length > 0 ? (
-              <div className="py-1">
+              <div className="py-1 max-h-full overflow-y-auto">
                 {filteredEmployees.map((employee, index) => (
                   <div
                     key={employee.id}
                     className={cn(
-                      "px-3 py-2 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0",
+                      "cursor-pointer transition-colors border-b border-gray-100 last:border-b-0",
+                      compact ? "px-2 py-1.5" : "px-3 py-2",
                       highlightedIndex === index && "bg-blue-50",
                       "hover:bg-gray-50"
                     )}
@@ -239,14 +229,23 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
                     onMouseEnter={() => setHighlightedIndex(index)}
                   >
                     <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{employee.fullName}</p>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="min-w-0 flex-1">
+                        <p className={cn(
+                          "font-medium truncate",
+                          compact && "text-sm"
+                        )}>
+                          {employee.fullName}
+                        </p>
+                        <p className={cn(
+                          "text-muted-foreground truncate",
+                          compact ? "text-xs" : "text-sm"
+                        )}>
                           工号: {employee.employeeId} | {employee.department}
                         </p>
                       </div>
                       <span className={cn(
-                        "text-xs px-2 py-1 rounded-full",
+                        "ml-2 px-2 py-1 rounded-full flex-shrink-0",
+                        compact ? "text-xs px-1.5 py-0.5" : "text-xs",
                         employee.employmentStatus === 'Active' 
                           ? "bg-green-100 text-green-700" 
                           : "bg-red-100 text-red-700"
@@ -256,14 +255,21 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
                     </div>
                   </div>
                 ))}
-              </div>
-            ) : searchTerm ? (
-              <div className="p-3 text-center text-muted-foreground">
-                {isLoading ? "搜索中..." : "未找到匹配的员工"}
+                {employees.length > filteredEmployees.length && (
+                  <div className={cn(
+                    "text-center text-muted-foreground border-t",
+                    compact ? "py-1 text-xs" : "py-2 text-sm"
+                  )}>
+                    继续输入以缩小搜索范围...
+                  </div>
+                )}
               </div>
             ) : (
-              <div className="p-3 text-center text-muted-foreground">
-                请输入员工姓名或工号进行搜索
+              <div className={cn(
+                "text-center text-muted-foreground",
+                compact ? "p-2 text-xs" : "p-3 text-sm"
+              )}>
+                {isLoading ? "搜索中..." : "未找到匹配的员工"}
               </div>
             )}
           </CardContent>
@@ -273,4 +279,4 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
   );
 };
 
-export default EmployeeSelector; 
+export default EmployeeSelector;

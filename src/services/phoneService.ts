@@ -1,5 +1,5 @@
 import { API_CONFIG, APIResponse, APIErrorResponse } from '@/config/api/base';
-import { PhoneSearchParams, PhoneListResponse, APIPhone, CreatePhoneRequest } from '@/config/api/phone';
+import { PhoneSearchParams, PhoneListResponse, APIPhone, CreatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest } from '@/config/api/phone';
 
 // 获取认证头
 const getAuthHeaders = (): HeadersInit => {
@@ -131,6 +131,62 @@ export const deletePhone = async (id: string): Promise<APIResponse<void>> => {
     return data;
   } catch (error) {
     console.error('删除手机号码失败:', error);
+    throw error;
+  }
+};
+
+// 分配手机号码
+export const assignPhone = async (phoneNumber: string, assignData: AssignPhoneRequest): Promise<APIResponse<APIPhone>> => {
+  try {
+    console.log('Assigning phone:', phoneNumber, 'with data:', assignData);
+
+    const response = await fetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${phoneNumber}/assign`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(assignData),
+    });
+
+    console.log('Assign phone response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Assign phone error response:', errorData);
+      throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Assign phone success response:', data);
+    return data;
+  } catch (error) {
+    console.error('分配手机号码失败:', error);
+    throw error;
+  }
+};
+
+// 回收手机号码
+export const unassignPhone = async (phoneNumber: string, unassignData: UnassignPhoneRequest): Promise<APIResponse<APIPhone>> => {
+  try {
+    console.log('Unassigning phone:', phoneNumber, 'with data:', unassignData);
+
+    const response = await fetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${phoneNumber}/unassign`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(unassignData),
+    });
+
+    console.log('Unassign phone response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Unassign phone error response:', errorData);
+      throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Unassign phone success response:', data);
+    return data;
+  } catch (error) {
+    console.error('回收手机号码失败:', error);
     throw error;
   }
 }; 

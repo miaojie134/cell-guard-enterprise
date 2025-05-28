@@ -2,8 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/context/AuthContext';
-import { getPhoneNumbers, getPhoneById, createPhone, updatePhone, deletePhone } from '@/services/phoneService';
-import { PhoneSearchParams, APIPhone, CreatePhoneRequest } from '@/config/api/phone';
+import { getPhoneNumbers, getPhoneById, createPhone, updatePhone, deletePhone, assignPhone, unassignPhone } from '@/services/phoneService';
+import { PhoneSearchParams, APIPhone, CreatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest } from '@/config/api/phone';
 import { PhoneNumber, mapBackendPhoneToFrontend } from '@/types';
 
 export interface UsePhoneNumbersOptions {
@@ -144,6 +144,64 @@ export const usePhoneNumbers = (options: UsePhoneNumbersOptions = {}) => {
     },
   });
 
+  // 分配手机号码
+  const assignMutation = useMutation({
+    mutationFn: ({ phoneNumber, data }: { phoneNumber: string; data: AssignPhoneRequest }) =>
+      assignPhone(phoneNumber, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['phoneNumbers'] });
+      toast({
+        title: '成功',
+        description: '手机号码分配成功',
+      });
+    },
+    onError: (error: any) => {
+      const errorMessage = error.message || '分配手机号码失败';
+      if (error.message?.includes('401')) {
+        toast({
+          title: '认证失败',
+          description: '请重新登录',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: '错误',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+      }
+    },
+  });
+
+  // 回收手机号码
+  const unassignMutation = useMutation({
+    mutationFn: ({ phoneNumber, data }: { phoneNumber: string; data: UnassignPhoneRequest }) =>
+      unassignPhone(phoneNumber, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['phoneNumbers'] });
+      toast({
+        title: '成功',
+        description: '手机号码回收成功',
+      });
+    },
+    onError: (error: any) => {
+      const errorMessage = error.message || '回收手机号码失败';
+      if (error.message?.includes('401')) {
+        toast({
+          title: '认证失败',
+          description: '请重新登录',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: '错误',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+      }
+    },
+  });
+
   return {
     phoneNumbers,
     pagination,
@@ -153,9 +211,13 @@ export const usePhoneNumbers = (options: UsePhoneNumbersOptions = {}) => {
     createPhone: createMutation.mutate,
     updatePhone: updateMutation.mutate,
     deletePhone: deleteMutation.mutate,
+    assignPhone: assignMutation.mutate,
+    unassignPhone: unassignMutation.mutate,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
+    isAssigning: assignMutation.isPending,
+    isUnassigning: unassignMutation.isPending,
   };
 };
 
