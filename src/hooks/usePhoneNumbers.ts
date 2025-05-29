@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { getPhoneNumbers, getPhoneByNumber, createPhone, updatePhone, deletePhone, assignPhone, unassignPhone } from '@/services/phoneService';
-import { PhoneSearchParams, APIPhone, CreatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest } from '@/config/api/phone';
+import { PhoneSearchParams, APIPhone, CreatePhoneRequest, UpdatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest } from '@/config/api/phone';
 import { PhoneNumber, mapBackendPhoneToFrontend } from '@/types';
 
 export interface UsePhoneNumbersOptions {
@@ -89,10 +89,11 @@ export const usePhoneNumbers = (options: UsePhoneNumbersOptions = {}) => {
 
   // 更新手机号码
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<APIPhone> }) =>
-      updatePhone(id, data),
+    mutationFn: ({ phoneNumber, data }: { phoneNumber: string; data: UpdatePhoneRequest }) =>
+      updatePhone(phoneNumber, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phoneNumbers'] });
+      queryClient.invalidateQueries({ queryKey: ['phoneNumber'] });
       toast({
         title: '成功',
         description: '手机号码更新成功',

@@ -29,7 +29,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { usePhoneNumbers, usePhoneNumber } from "@/hooks/usePhoneNumbers";
 import { useEmployeesForSelector } from "@/hooks/useEmployees";
-import { CreatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest } from "@/config/api/phone";
+import { CreatePhoneRequest, UpdatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest } from "@/config/api/phone";
 import { Link } from "react-router-dom";
 
 const Phones = () => {
@@ -50,7 +50,6 @@ const Phones = () => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [showUnassignDialog, setShowUnassignDialog] = useState(false);
-  const [currentPhoneId, setCurrentPhoneId] = useState<string | null>(null);
   const [currentPhoneNumber, setCurrentPhoneNumber] = useState<string>("");
   
   // 表单状态
@@ -166,7 +165,7 @@ const Phones = () => {
     }
     
     if (!selectedEmployee) {
-      errors.employee = '请选择申请人';
+      errors.employee = '请选择办卡人';
     }
     
     if (!formData.purpose.trim()) {
@@ -178,7 +177,7 @@ const Phones = () => {
     }
     
     if (!formData.applicationDate) {
-      errors.applicationDate = '请选择申请日期';
+      errors.applicationDate = '请选择办卡日期';
     }
     
     setFormErrors(errors);
@@ -200,10 +199,10 @@ const Phones = () => {
     setShowAddDialog(true);
   };
 
-  const openEditDialog = (id: string) => {
-    const phone = phoneNumbers.find(p => p.id === id);
+  const openEditDialog = (phoneNumber: string) => {
+    const phone = phoneNumbers.find(p => p.phoneNumber === phoneNumber);
     if (phone) {
-      setCurrentPhoneId(id);
+      setCurrentPhoneNumber(phoneNumber);
       setFormData({
         phoneNumber: phone.phoneNumber,
         purpose: phone.purpose,
@@ -212,7 +211,9 @@ const Phones = () => {
         status: phone.status as "闲置" | "在用" | "待注销" | "已注销" | "待核实-办卡人离职",
         applicationDate: phone.applicationDate,
       });
-      // 对于编辑，我们不需要员工选择器，因为申请人不应该被修改
+      // 清除之前的错误信息
+      setFormErrors({});
+      // 对于编辑，我们不需要员工选择器，因为办卡人不应该被修改
       setShowEditDialog(true);
     }
   };
@@ -260,22 +261,69 @@ const Phones = () => {
     setShowAddDialog(false);
   };
 
+  // 编辑表单验证
+  const validateEditForm = (): boolean => {
+    const errors: Record<string, string> = {};
+    
+    // 获取原始数据
+    const originalPhone = phoneNumbers.find(p => p.phoneNumber === currentPhoneNumber);
+    if (!originalPhone) {
+      errors.general = '找不到要编辑的手机号码';
+      setFormErrors(errors);
+      return false;
+    }
+    
+    // 检查是否有字段被修改
+    const hasChanges = 
+      formData.purpose !== originalPhone.purpose ||
+      formData.vendor !== originalPhone.vendor ||
+      formData.remarks !== (originalPhone.remarks || "") ||
+      formData.status !== originalPhone.status;
+    
+    if (!hasChanges) {
+      errors.general = '请至少修改一个字段';
+      setFormErrors(errors);
+      return false;
+    }
+    
+    setFormErrors({});
+    return true;
+  };
+
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (currentPhoneId) {
+    
+    if (!validateEditForm()) {
+      return;
+    }
+    
+    if (currentPhoneNumber) {
+      // 获取原始数据以比较变化
+      const originalPhone = phoneNumbers.find(p => p.phoneNumber === currentPhoneNumber);
+      if (!originalPhone) return;
+      
+      // 只发送已修改的字段
+      const updateRequest: UpdatePhoneRequest = {};
+      
+      if (formData.purpose !== originalPhone.purpose) {
+        updateRequest.purpose = formData.purpose;
+      }
+      if (formData.vendor !== originalPhone.vendor) {
+        updateRequest.vendor = formData.vendor;
+      }
+      if (formData.remarks !== (originalPhone.remarks || "")) {
+        updateRequest.remarks = formData.remarks;
+      }
+      if (formData.status !== originalPhone.status) {
+        updateRequest.status = formData.status;
+      }
+      
       updatePhone({
-        id: currentPhoneId,
-        data: {
-          phoneNumber: formData.phoneNumber,
-          purpose: formData.purpose,
-          vendor: formData.vendor,
-          remarks: formData.remarks,
-          status: formData.status,
-          updatedAt: new Date().toISOString(),
-        },
+        phoneNumber: currentPhoneNumber,
+        data: updateRequest,
       });
       setShowEditDialog(false);
-      setCurrentPhoneId(null);
+      setCurrentPhoneNumber("");
     }
   };
 
@@ -392,6 +440,7 @@ const Phones = () => {
                   <SelectItem value="在用">在用</SelectItem>
                   <SelectItem value="待注销">待注销</SelectItem>
                   <SelectItem value="已注销">已注销</SelectItem>
+                  <SelectItem value="待核实-办卡人离职">待核实-办卡人离职</SelectItem>
                 </SelectContent>
               </Select>
               <Select
@@ -468,7 +517,7 @@ const Phones = () => {
                           <Button 
                             variant="outline" 
                             size="icon" 
-                            onClick={() => openEditDialog(phone.id)}
+                            onClick={() => openEditDialog(phone.phoneNumber)}
                             className="h-8 w-8"
                             disabled={isUpdating}
                           >
@@ -566,7 +615,7 @@ const Phones = () => {
               </div>
               
               <div className="space-y-2">
-                <Label>申请人 *</Label>
+                <Label>办卡人 *</Label>
                 <EmployeeSelector
                   value={selectedEmployee}
                   onChange={setSelectedEmployee}
@@ -580,7 +629,7 @@ const Phones = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="applicationDate">申请日期</Label>
+                <Label htmlFor="applicationDate">办卡日期</Label>
                 <Input
                   id="applicationDate"
                   name="applicationDate"
@@ -653,6 +702,7 @@ const Phones = () => {
                     <SelectItem value="在用">在用</SelectItem>
                     <SelectItem value="待注销">待注销</SelectItem>
                     <SelectItem value="已注销">已注销</SelectItem>
+                    <SelectItem value="待核实-办卡人离职">待核实-办卡人离职</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -697,6 +747,11 @@ const Phones = () => {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditSubmit}>
+            {formErrors.general && (
+              <div className="mb-4 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                {formErrors.general}
+              </div>
+            )}
             <div className="space-y-4 py-2">
               <div className="space-y-2">
                 <Label htmlFor="phoneNumber">手机号码</Label>
@@ -706,7 +761,7 @@ const Phones = () => {
                   placeholder="请输入手机号码"
                   value={formData.phoneNumber}
                   onChange={handleFormChange}
-                  required
+                  disabled
                 />
               </div>
               <div className="space-y-2">
@@ -730,7 +785,6 @@ const Phones = () => {
                   placeholder="请输入号码用途"
                   value={formData.purpose}
                   onChange={handleFormChange}
-                  required
                 />
               </div>
               <div className="space-y-2">
@@ -747,9 +801,9 @@ const Phones = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="闲置">闲置</SelectItem>
-                    <SelectItem value="在用">在用</SelectItem>
                     <SelectItem value="待注销">待注销</SelectItem>
                     <SelectItem value="已注销">已注销</SelectItem>
+                    <SelectItem value="待核实-办卡人离职">待核实-办卡人离职</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -820,7 +874,7 @@ const Phones = () => {
                     <p>{currentPhone.vendor}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">申请日期</Label>
+                    <Label className="text-sm font-medium text-muted-foreground">办卡日期</Label>
                     <p>{currentPhone.applicationDate}</p>
                   </div>
                   <div>

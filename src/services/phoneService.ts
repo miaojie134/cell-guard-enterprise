@@ -1,5 +1,5 @@
 import { API_CONFIG, APIResponse, APIErrorResponse } from '@/config/api/base';
-import { PhoneSearchParams, PhoneListResponse, APIPhone, CreatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest } from '@/config/api/phone';
+import { PhoneSearchParams, PhoneListResponse, APIPhone, CreatePhoneRequest, UpdatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest } from '@/config/api/phone';
 
 // 获取认证头
 const getAuthHeaders = (): HeadersInit => {
@@ -95,19 +95,26 @@ export const createPhone = async (phoneData: CreatePhoneRequest): Promise<APIRes
 };
 
 // 更新手机号码
-export const updatePhone = async (id: string, phoneData: Partial<APIPhone>): Promise<APIResponse<APIPhone>> => {
+export const updatePhone = async (phoneNumber: string, phoneData: UpdatePhoneRequest): Promise<APIResponse<APIPhone>> => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${id}`, {
-      method: 'PUT',
+    console.log('Updating phone:', phoneNumber, 'with data:', phoneData);
+
+    const response = await fetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${phoneNumber}/update`, {
+      method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(phoneData),
     });
 
+    console.log('Update phone response status:', response.status);
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorData = await response.json();
+      console.error('Update phone error response:', errorData);
+      throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log('Update phone success response:', data);
     return data;
   } catch (error) {
     console.error('更新手机号码失败:', error);

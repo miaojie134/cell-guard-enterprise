@@ -72,4 +72,12 @@ export interface AssignPhoneRequest {
 // 手机号码回收请求（根据后端unassignPayload结构）
 export interface UnassignPhoneRequest {
   reclaimDate: string; // YYYY-MM-DD 格式，可选
+}
+
+// 更新手机号码请求（匹配后端mobileNumberUpdate结构）
+export interface UpdatePhoneRequest {
+  purpose?: string;
+  remarks?: string;
+  status?: '闲置' | '在用' | '待注销' | '已注销' | '待核实-办卡人离职';
+  vendor?: string;
 } 
