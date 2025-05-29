@@ -47,9 +47,9 @@ export const getPhoneNumbers = async (params: PhoneSearchParams = {}): Promise<A
 };
 
 // 获取单个手机号码详情
-export const getPhoneById = async (id: string): Promise<APIResponse<APIPhone>> => {
+export const getPhoneByNumber = async (phoneNumber: string): Promise<APIResponse<APIPhone>> => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${id}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${phoneNumber}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });

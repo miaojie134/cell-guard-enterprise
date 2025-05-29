@@ -94,6 +94,7 @@ export interface PhoneNumber {
   vendor: string; // 运营商
   createdAt: string;
   updatedAt: string;
+  usageHistory?: PhoneUsageHistory[]; // 使用历史记录
 }
 
 // Backend phone number type mapping
@@ -113,6 +114,12 @@ export interface BackendPhoneNumber {
   status: string;
   updatedAt: string;
   vendor: string;
+  usageHistory?: Array<{
+    employeeId: string;
+    startDate: string;
+    endDate: string;
+    createdAt: string;
+  }>; // 后端使用历史记录格式
 }
 
 export interface PhoneUsage {
@@ -134,12 +141,10 @@ export interface PhoneAssign {
 }
 
 export interface PhoneUsageHistory {
-  id: string;
-  phoneId: string;
-  userId: string;
-  userName: string;
+  employeeId: string;
   startDate: string;
-  endDate?: string;
+  endDate: string;
+  createdAt: string;
 }
 
 // Authentication types
@@ -219,5 +224,11 @@ export const mapBackendPhoneToFrontend = (backendPhone: BackendPhoneNumber): Pho
     vendor: backendPhone.vendor,
     createdAt: formatDateFromISO(backendPhone.createdAt),
     updatedAt: formatDateFromISO(backendPhone.updatedAt),
+    usageHistory: backendPhone.usageHistory?.map(usage => ({
+      employeeId: usage.employeeId,
+      startDate: formatDateFromISO(usage.startDate),
+      endDate: formatDateFromISO(usage.endDate),
+      createdAt: formatDateFromISO(usage.createdAt),
+    })),
   };
 };

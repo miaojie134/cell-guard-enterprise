@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/context/AuthContext';
-import { getPhoneNumbers, getPhoneById, createPhone, updatePhone, deletePhone, assignPhone, unassignPhone } from '@/services/phoneService';
+import { getPhoneNumbers, getPhoneByNumber, createPhone, updatePhone, deletePhone, assignPhone, unassignPhone } from '@/services/phoneService';
 import { PhoneSearchParams, APIPhone, CreatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest } from '@/config/api/phone';
 import { PhoneNumber, mapBackendPhoneToFrontend } from '@/types';
 
@@ -222,7 +222,7 @@ export const usePhoneNumbers = (options: UsePhoneNumbersOptions = {}) => {
 };
 
 // 获取单个手机号码详情的hook
-export const usePhoneNumber = (id: string) => {
+export const usePhoneNumber = (phoneNumber: string) => {
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
 
@@ -231,9 +231,9 @@ export const usePhoneNumber = (id: string) => {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['phoneNumber', id],
-    queryFn: () => getPhoneById(id),
-    enabled: !!id && isAuthenticated, // 只有在有ID且已认证时才执行查询
+    queryKey: ['phoneNumber', phoneNumber],
+    queryFn: () => getPhoneByNumber(phoneNumber),
+    enabled: !!phoneNumber && isAuthenticated, // 只有在有phoneNumber且已认证时才执行查询
     refetchOnWindowFocus: false,
     retry: (failureCount, error: any) => {
       if (error?.message?.includes('401') || error?.message?.includes('Authorization')) {
@@ -243,13 +243,13 @@ export const usePhoneNumber = (id: string) => {
     },
   });
 
-  const phoneNumber = useMemo(() => {
+  const phoneNumberData = useMemo(() => {
     if (!phoneResponse?.data) return null;
     return mapBackendPhoneToFrontend(phoneResponse.data);
   }, [phoneResponse]);
 
   return {
-    phoneNumber,
+    phoneNumber: phoneNumberData,
     isLoading,
     error,
   };

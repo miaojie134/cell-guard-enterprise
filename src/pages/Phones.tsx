@@ -99,7 +99,7 @@ const Phones = () => {
   });
 
   // 获取当前选中的手机号码详情
-  const { phoneNumber: currentPhone } = usePhoneNumber(currentPhoneId || "");
+  const { phoneNumber: currentPhone } = usePhoneNumber(currentPhoneNumber || "");
 
   // 检查认证状态
   if (!isAuthenticated) {
@@ -217,8 +217,8 @@ const Phones = () => {
     }
   };
 
-  const openDetailsDialog = (id: string) => {
-    setCurrentPhoneId(id);
+  const openDetailsDialog = (phoneNumber: string) => {
+    setCurrentPhoneNumber(phoneNumber);
     setShowDetailsDialog(true);
   };
 
@@ -459,7 +459,7 @@ const Phones = () => {
                           <Button 
                             variant="outline" 
                             size="icon" 
-                            onClick={() => openDetailsDialog(phone.id)}
+                            onClick={() => openDetailsDialog(phone.phoneNumber)}
                             className="h-8 w-8"
                           >
                             <FileText className="h-4 w-4" />
@@ -785,48 +785,99 @@ const Phones = () => {
 
       {/* Details Phone Dialog */}
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>手机号码详情</DialogTitle>
           </DialogHeader>
           {currentPhone && (
-            <div className="space-y-4 py-2">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">手机号码</Label>
-                  <p>{currentPhone.phoneNumber}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">状态</Label>
-                  <p>{getStatusText(currentPhone.status)}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">办卡人</Label>
-                  <p>{currentPhone.applicantName}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">办卡人工号</Label>
-                  <p>{currentPhone.applicantEmployeeId}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">当前使用人</Label>
-                  <p>{currentPhone.currentUserName || "-"}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">运营商</Label>
-                  <p>{currentPhone.vendor}</p>
-                </div>
-                <div className="col-span-2">
-                  <Label className="text-sm font-medium text-muted-foreground">用途</Label>
-                  <p>{currentPhone.purpose}</p>
-                </div>
-                {currentPhone.remarks && (
-                  <div className="col-span-2">
-                    <Label className="text-sm font-medium text-muted-foreground">备注</Label>
-                    <p>{currentPhone.remarks}</p>
+            <div className="space-y-6 py-2">
+              {/* 基本信息 */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">基本信息</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">手机号码</Label>
+                    <p className="font-medium">{currentPhone.phoneNumber}</p>
                   </div>
-                )}
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">状态</Label>
+                    <p>{getStatusText(currentPhone.status)}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">办卡人</Label>
+                    <p>{currentPhone.applicantName}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">办卡人工号</Label>
+                    <p>{currentPhone.applicantEmployeeId}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">当前使用人</Label>
+                    <p>{currentPhone.currentUserName || "-"}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">运营商</Label>
+                    <p>{currentPhone.vendor}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">申请日期</Label>
+                    <p>{currentPhone.applicationDate}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">创建时间</Label>
+                    <p>{currentPhone.createdAt}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-sm font-medium text-muted-foreground">用途</Label>
+                    <p>{currentPhone.purpose}</p>
+                  </div>
+                  {currentPhone.remarks && (
+                    <div className="col-span-2">
+                      <Label className="text-sm font-medium text-muted-foreground">备注</Label>
+                      <p>{currentPhone.remarks}</p>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* 使用历史记录 */}
+              {currentPhone.usageHistory && currentPhone.usageHistory.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-medium mb-3">使用历史记录</h3>
+                  <div className="border rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium text-gray-900">员工工号</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-900">开始日期</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-900">结束日期</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {currentPhone.usageHistory
+                          .sort((a, b) => {
+                            // 首先按使用状态排序：正在使用中的(endDate为空)排在前面
+                            const aIsActive = !a.endDate || a.endDate === '';
+                            const bIsActive = !b.endDate || b.endDate === '';
+                            
+                            if (aIsActive && !bIsActive) return -1;
+                            if (!aIsActive && bIsActive) return 1;
+                            
+                            // 相同状态下，按开始时间降序排序（最新的在前）
+                            return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
+                          })
+                          .map((usage, index) => (
+                          <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                            <td className="px-3 py-2">{usage.employeeId}</td>
+                            <td className="px-3 py-2">{usage.startDate}</td>
+                            <td className="px-3 py-2">{usage.endDate || '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           <DialogFooter>

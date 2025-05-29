@@ -23,6 +23,14 @@ export interface CreatePhoneRequest {
   remarks: string;
 }
 
+// 使用历史记录项
+export interface UsageHistoryItem {
+  employeeId: string;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+}
+
 // 后端手机号码数据结构（根据实际API响应格式）
 export interface APIPhone {
   id: number;
@@ -40,15 +48,7 @@ export interface APIPhone {
   status: string;
   updatedAt: string;
   vendor: string;
-  // usageHistory?: Array<{
-  //   createdAt: string;
-  //   deletedAt: string;
-  //   employeeId: string;
-  //   endDate: string;
-  //   id: number;
-  //   mobileNumberId: string;
-  //   startDate: string;
-  // }>;
+  usageHistory?: UsageHistoryItem[]; // 使用历史记录
 }
 
 // 手机号码列表响应
