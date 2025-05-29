@@ -1,4 +1,3 @@
-
 import React from "react";
 import { FrontendEmploymentStatus, FrontendPhoneStatus } from "@/types";
 
@@ -21,11 +20,12 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
       case "departed":
         return "status-inactive";
       case "pending":
-      case "pending_cancellation":
-      case "pending_verification_employee_left":
-      case "pending_verification_user_report":
+      case "pending_deactivation":
+      case "risk_pending":
+      case "user_reported":
         return "status-pending";
       case "cancelled":
+      case "deactivated":
         return "status-inactive";
       case "risk":
         return "status-risk";
@@ -39,9 +39,9 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
     
     switch (status) {
       case "active":
-        return "在用";
+        return "使用中";
       case "in_use":
-        return "在用";
+        return "使用中";
       case "inactive":
         return "闲置";
       case "idle":
@@ -49,14 +49,16 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
       case "departed":
         return "已离职";
       case "pending":
-        return "待开通";
-      case "pending_cancellation":
+        return "待处理";
+      case "pending_deactivation":
         return "待注销";
-      case "pending_verification_employee_left":
+      case "risk_pending":
         return "待核实-办卡人离职";
-      case "pending_verification_user_report":
+      case "user_reported":
         return "待核实-用户报告";
       case "cancelled":
+        return "已注销";
+      case "deactivated":
         return "已注销";
       case "risk":
         return "风险";

@@ -1,6 +1,15 @@
 // 手机号码相关API类型定义
 // 根据后端/mobilenumbers接口格式定义
 
+// 手机号码状态类型定义（匹配后端NumberStatus常量）
+export type PhoneStatus =
+  | 'idle'                 // 闲置
+  | 'in_use'               // 使用中
+  | 'pending_deactivation' // 待注销
+  | 'deactivated'          // 已注销
+  | 'risk_pending'         // 待核实-办卡人离职
+  | 'user_reported';       // 待核实-用户报告
+
 // 手机号码搜索参数
 export interface PhoneSearchParams {
   page?: number;
@@ -17,7 +26,7 @@ export interface CreatePhoneRequest {
   phoneNumber: string;
   applicantEmployeeId: string; // 员工工号
   applicationDate: string; // 格式: YYYY-MM-DD
-  status: '闲置' | '在用' | '待注销' | '已注销' | '待核实-办卡人离职';
+  status: PhoneStatus;
   purpose?: string; // 可选
   vendor: string;
   remarks: string;
@@ -78,6 +87,6 @@ export interface UnassignPhoneRequest {
 export interface UpdatePhoneRequest {
   purpose?: string;
   remarks?: string;
-  status?: '闲置' | '在用' | '待注销' | '已注销' | '待核实-办卡人离职';
+  status?: PhoneStatus;
   vendor?: string;
 } 

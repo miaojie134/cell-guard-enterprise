@@ -29,7 +29,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { usePhoneNumbers, usePhoneNumber } from "@/hooks/usePhoneNumbers";
 import { useEmployeesForSelector } from "@/hooks/useEmployees";
-import { CreatePhoneRequest, UpdatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest } from "@/config/api/phone";
+import { CreatePhoneRequest, UpdatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest, PhoneStatus } from "@/config/api/phone";
 import { Link } from "react-router-dom";
 
 const Phones = () => {
@@ -58,7 +58,7 @@ const Phones = () => {
     purpose: "",
     vendor: "",
     remarks: "",
-    status: "闲置" as "闲置" | "在用" | "待注销" | "已注销" | "待核实-办卡人离职",
+    status: "idle" as PhoneStatus,
     applicationDate: new Date().toISOString().split('T')[0],
   });
   
@@ -168,10 +168,6 @@ const Phones = () => {
       errors.employee = '请选择办卡人';
     }
     
-    if (!formData.purpose.trim()) {
-      errors.purpose = '请输入号码用途';
-    }
-    
     if (!formData.vendor.trim()) {
       errors.vendor = '请选择运营商';
     }
@@ -191,7 +187,7 @@ const Phones = () => {
       purpose: "",
       vendor: "",
       remarks: "",
-      status: "闲置",
+      status: "idle",
       applicationDate: new Date().toISOString().split('T')[0],
     });
     setSelectedEmployee(null);
@@ -208,7 +204,7 @@ const Phones = () => {
         purpose: phone.purpose,
         vendor: phone.vendor,
         remarks: phone.remarks || "",
-        status: phone.status as "闲置" | "在用" | "待注销" | "已注销" | "待核实-办卡人离职",
+        status: phone.status as PhoneStatus,
         applicationDate: phone.applicationDate,
       });
       // 清除之前的错误信息
@@ -384,24 +380,24 @@ const Phones = () => {
   // 状态映射
   const getStatusText = (status: string) => {
     const statusMap: Record<string, string> = {
-      '闲置': '闲置',
-      '在用': '在用', 
-      '待注销': '待注销',
-      '已注销': '已注销',
-      '待核实-办卡人离职': '待核实',
-      '待核实-用户报告': '待核实',
+      'idle': '闲置',
+      'in_use': '使用中', 
+      'pending_deactivation': '待注销',
+      'deactivated': '已注销',
+      'risk_pending': '待核实-办卡人离职',
+      'user_reported': '待核实-用户报告',
     };
     return statusMap[status] || status;
   };
 
   const getStatusVariant = (status: string): "active" | "inactive" | "pending" | "cancelled" | "risk" => {
     const variantMap: Record<string, "active" | "inactive" | "pending" | "cancelled" | "risk"> = {
-      '闲置': 'inactive',
-      '在用': 'active',
-      '待注销': 'pending',
-      '已注销': 'cancelled',
-      '待核实-办卡人离职': 'risk',
-      '待核实-用户报告': 'risk',
+      'idle': 'inactive',
+      'in_use': 'active',
+      'pending_deactivation': 'pending',
+      'deactivated': 'cancelled',
+      'risk_pending': 'risk',
+      'user_reported': 'risk',
     };
     return variantMap[status] || 'inactive';
   };
@@ -436,11 +432,12 @@ const Phones = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部状态</SelectItem>
-                  <SelectItem value="闲置">闲置</SelectItem>
-                  <SelectItem value="在用">在用</SelectItem>
-                  <SelectItem value="待注销">待注销</SelectItem>
-                  <SelectItem value="已注销">已注销</SelectItem>
-                  <SelectItem value="待核实-办卡人离职">待核实-办卡人离职</SelectItem>
+                  <SelectItem value="idle">闲置</SelectItem>
+                  <SelectItem value="in_use">使用中</SelectItem>
+                  <SelectItem value="pending_deactivation">待注销</SelectItem>
+                  <SelectItem value="deactivated">已注销</SelectItem>
+                  <SelectItem value="risk_pending">待核实-办卡人离职</SelectItem>
+                  <SelectItem value="user_reported">待核实-用户报告</SelectItem>
                 </SelectContent>
               </Select>
               <Select
@@ -677,12 +674,7 @@ const Phones = () => {
                   placeholder="请输入号码用途"
                   value={formData.purpose}
                   onChange={handleFormChange}
-                  required
-                  className={formErrors.purpose ? "border-red-500" : ""}
                 />
-                {formErrors.purpose && (
-                  <p className="text-sm text-red-500">{formErrors.purpose}</p>
-                )}
               </div>
               
               <div className="space-y-2">
@@ -691,18 +683,19 @@ const Phones = () => {
                   value={formData.status} 
                   onValueChange={(value) => setFormData(prev => ({ 
                     ...prev, 
-                    status: value as "闲置" | "在用" | "待注销" | "已注销" | "待核实-办卡人离职"
+                    status: value as PhoneStatus
                   }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="选择状态" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="闲置">闲置</SelectItem>
-                    <SelectItem value="在用">在用</SelectItem>
-                    <SelectItem value="待注销">待注销</SelectItem>
-                    <SelectItem value="已注销">已注销</SelectItem>
-                    <SelectItem value="待核实-办卡人离职">待核实-办卡人离职</SelectItem>
+                    <SelectItem value="idle">闲置</SelectItem>
+                    <SelectItem value="in_use">使用中</SelectItem>
+                    <SelectItem value="pending_deactivation">待注销</SelectItem>
+                    <SelectItem value="deactivated">已注销</SelectItem>
+                    <SelectItem value="risk_pending">待核实-办卡人离职</SelectItem>
+                    <SelectItem value="user_reported">待核实-用户报告</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -793,17 +786,17 @@ const Phones = () => {
                   value={formData.status} 
                   onValueChange={(value) => setFormData(prev => ({ 
                     ...prev, 
-                    status: value as "闲置" | "在用" | "待注销" | "已注销" | "待核实-办卡人离职"
+                    status: value as PhoneStatus
                   }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="选择状态" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="闲置">闲置</SelectItem>
-                    <SelectItem value="待注销">待注销</SelectItem>
-                    <SelectItem value="已注销">已注销</SelectItem>
-                    <SelectItem value="待核实-办卡人离职">待核实-办卡人离职</SelectItem>
+                    <SelectItem value="idle">闲置</SelectItem>
+                    <SelectItem value="pending_deactivation">待注销</SelectItem>
+                    <SelectItem value="deactivated">已注销</SelectItem>
+                    <SelectItem value="risk_pending">待核实-办卡人离职</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

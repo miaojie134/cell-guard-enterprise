@@ -13,21 +13,21 @@ export const FRONTEND_EMPLOYMENT_STATUS = {
 
 // Phone status constants
 export const BACKEND_PHONE_STATUS = {
-  IDLE: '闲置',
-  IN_USE: '在用',
-  PENDING_CANCELLATION: '待注销',
-  CANCELLED: '已注销',
-  PENDING_VERIFICATION_EMPLOYEE_LEFT: '待核实-办卡人离职',
-  PENDING_VERIFICATION_USER_REPORT: '待核实-用户报告'
+  IDLE: 'idle',
+  IN_USE: 'in_use',
+  PENDING_CANCELLATION: 'pending_deactivation',
+  CANCELLED: 'deactivated',
+  PENDING_VERIFICATION_EMPLOYEE_LEFT: 'risk_pending',
+  PENDING_VERIFICATION_USER_REPORT: 'user_reported'
 } as const;
 
 export const FRONTEND_PHONE_STATUS = {
   IDLE: 'idle',
   IN_USE: 'in_use',
-  PENDING_CANCELLATION: 'pending_cancellation',
-  CANCELLED: 'cancelled',
-  PENDING_VERIFICATION_EMPLOYEE_LEFT: 'pending_verification_employee_left',
-  PENDING_VERIFICATION_USER_REPORT: 'pending_verification_user_report'
+  PENDING_CANCELLATION: 'pending_deactivation',
+  CANCELLED: 'deactivated',
+  PENDING_VERIFICATION_EMPLOYEE_LEFT: 'risk_pending',
+  PENDING_VERIFICATION_USER_REPORT: 'user_reported'
 } as const;
 
 // User role constants

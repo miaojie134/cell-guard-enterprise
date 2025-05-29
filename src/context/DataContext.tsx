@@ -243,13 +243,11 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const getRiskPhones = useCallback(() => {
     // Filter phones where registrant is inactive but phone is still active
-    return phoneNumbers.filter(phone => 
-      phone.registrantStatus === FRONTEND_EMPLOYMENT_STATUS.DEPARTED && 
-      (phone.status === FRONTEND_PHONE_STATUS.IN_USE || 
-       phone.status === FRONTEND_PHONE_STATUS.PENDING_CANCELLATION ||
-       phone.status === FRONTEND_PHONE_STATUS.PENDING_VERIFICATION_EMPLOYEE_LEFT ||
-       phone.status === FRONTEND_PHONE_STATUS.PENDING_VERIFICATION_USER_REPORT)
-    );
+    const riskPhones = phoneNumbers.filter(phone => 
+      phone.status === FRONTEND_PHONE_STATUS.PENDING_CANCELLATION ||
+      phone.status === FRONTEND_PHONE_STATUS.PENDING_VERIFICATION_EMPLOYEE_LEFT ||
+      phone.status === FRONTEND_PHONE_STATUS.PENDING_VERIFICATION_USER_REPORT)
+    return riskPhones;
   }, [phoneNumbers]);
 
   const addEmployee = (employee: Omit<Employee, "id">) => {

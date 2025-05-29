@@ -45,10 +45,10 @@ export const EmployeeDetailDialog: React.FC<EmployeeDetailDialogProps> = ({
 
   const getPhoneStatusBadgeVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (status.toLowerCase()) {
-      case '待注销':
+      case 'pending_deactivation':
         return 'outline';
-      case '待核实-办卡人离职':
-      case '待核实-用户报告':
+      case 'risk_pending':
+      case 'user_reported':
         return 'destructive';
       default:
         return 'secondary';
@@ -57,10 +57,10 @@ export const EmployeeDetailDialog: React.FC<EmployeeDetailDialogProps> = ({
 
   const getUsingPhoneStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case '待注销':
+      case 'pending_deactivation':
         return 'text-amber-600 bg-amber-50 border-amber-200';
-      case '待核实-办卡人离职':
-      case '待核实-用户报告':
+      case 'risk_pending':
+      case 'user_reported':
         return 'text-red-600 bg-red-50 border-red-200';
       default:
         return 'border hover:bg-muted/20';

@@ -197,7 +197,7 @@ export const samplePhoneNumbers: PhoneNumber[] = [
     registrantStatus: "active",
     registrationDate: "2023-01-15",
     provider: "中国电信",
-    status: "pending_cancellation",
+    status: "pending_deactivation",
     notes: "待开通",
   },
   {
@@ -281,7 +281,7 @@ export const samplePhoneNumbers: PhoneNumber[] = [
     registrantStatus: "active",
     registrationDate: "2023-04-20",
     provider: "中国电信",
-    status: "pending_cancellation",
+    status: "pending_deactivation",
     notes: "新卡待开通",
   },
   {
