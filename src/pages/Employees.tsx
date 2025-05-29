@@ -55,7 +55,7 @@ const Employees = () => {
   } = useEmployees();
   
   const { refreshAllEmployeeCaches } = useEmployeeCacheRefresh();
-
+  
   // State
   const [searchParams, setSearchParams] = useState({
     query: "",

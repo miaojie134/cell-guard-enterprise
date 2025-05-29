@@ -436,7 +436,6 @@ const Phones = () => {
                   <SelectItem value="in_use">使用中</SelectItem>
                   <SelectItem value="pending_deactivation">待注销</SelectItem>
                   <SelectItem value="deactivated">已注销</SelectItem>
-                  <SelectItem value="risk_pending">待核实-办卡人离职</SelectItem>
                   <SelectItem value="user_reported">待核实-用户报告</SelectItem>
                 </SelectContent>
               </Select>
@@ -694,7 +693,6 @@ const Phones = () => {
                     <SelectItem value="in_use">使用中</SelectItem>
                     <SelectItem value="pending_deactivation">待注销</SelectItem>
                     <SelectItem value="deactivated">已注销</SelectItem>
-                    <SelectItem value="risk_pending">待核实-办卡人离职</SelectItem>
                     <SelectItem value="user_reported">待核实-用户报告</SelectItem>
                   </SelectContent>
                 </Select>
@@ -796,7 +794,7 @@ const Phones = () => {
                     <SelectItem value="idle">闲置</SelectItem>
                     <SelectItem value="pending_deactivation">待注销</SelectItem>
                     <SelectItem value="deactivated">已注销</SelectItem>
-                    <SelectItem value="risk_pending">待核实-办卡人离职</SelectItem>
+                    <SelectItem value="user_reported">待核实-用户报告</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -21,6 +21,16 @@ export interface PhoneSearchParams {
   applicantStatus?: string;
 }
 
+// 风险号码搜索参数（专门用于风险号码列表接口）
+export interface RiskPhoneSearchParams {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  search?: string;
+  applicantStatus?: string;
+}
+
 // 创建手机号码请求（匹配后端CreateMobileNumberPayload）
 export interface CreatePhoneRequest {
   phoneNumber: string;
@@ -89,4 +99,18 @@ export interface UpdatePhoneRequest {
   remarks?: string;
   status?: PhoneStatus;
   vendor?: string;
+}
+
+// 风险号码处理操作类型（匹配后端RiskHandleAction枚举）
+export type RiskHandleAction =
+  | 'change_applicant'  // 变更办卡人
+  | 'reclaim'           // 回收号码
+  | 'deactivate';       // 注销号码
+
+// 处理风险号码请求（匹配后端handleRisk结构）
+export interface HandleRiskPhoneRequest {
+  action: RiskHandleAction;
+  changeReason?: string;           // 变更原因（可选）
+  newApplicantEmployeeId?: string; // 新办卡人员工ID（变更办卡人时使用）
+  remarks?: string;                // 备注（可选）
 } 

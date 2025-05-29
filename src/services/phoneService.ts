@@ -1,5 +1,5 @@
 import { API_CONFIG, APIResponse, APIErrorResponse } from '@/config/api/base';
-import { PhoneSearchParams, PhoneListResponse, APIPhone, CreatePhoneRequest, UpdatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest } from '@/config/api/phone';
+import { PhoneSearchParams, RiskPhoneSearchParams, PhoneListResponse, APIPhone, CreatePhoneRequest, UpdatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest, HandleRiskPhoneRequest } from '@/config/api/phone';
 
 // 获取认证头
 const getAuthHeaders = (): HeadersInit => {
@@ -42,6 +42,36 @@ export const getPhoneNumbers = async (params: PhoneSearchParams = {}): Promise<A
     return data;
   } catch (error) {
     console.error('获取手机号码列表失败:', error);
+    throw error;
+  }
+};
+
+// 获取风险号码列表
+export const getRiskPhoneNumbers = async (params: RiskPhoneSearchParams = {}): Promise<APIResponse<PhoneListResponse>> => {
+  const url = new URL(`${API_CONFIG.BASE_URL}/mobilenumbers/risk-pending`, window.location.origin);
+
+  // 添加查询参数
+  if (params.page) url.searchParams.append('page', params.page.toString());
+  if (params.limit) url.searchParams.append('limit', params.limit.toString());
+  if (params.sortBy) url.searchParams.append('sortBy', params.sortBy);
+  if (params.sortOrder) url.searchParams.append('sortOrder', params.sortOrder);
+  if (params.search) url.searchParams.append('search', params.search);
+  if (params.applicantStatus) url.searchParams.append('applicantStatus', params.applicantStatus);
+
+  try {
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('获取风险号码列表失败:', error);
     throw error;
   }
 };
@@ -194,6 +224,34 @@ export const unassignPhone = async (phoneNumber: string, unassignData: UnassignP
     return data;
   } catch (error) {
     console.error('回收手机号码失败:', error);
+    throw error;
+  }
+};
+
+// 处理风险号码
+export const handleRiskPhone = async (phoneNumber: string, handleData: HandleRiskPhoneRequest): Promise<APIResponse<APIPhone>> => {
+  try {
+    console.log('Handling risk phone:', phoneNumber, 'with data:', handleData);
+
+    const response = await fetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${phoneNumber}/handle-risk`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(handleData),
+    });
+
+    console.log('Handle risk phone response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Handle risk phone error response:', errorData);
+      throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Handle risk phone success response:', data);
+    return data;
+  } catch (error) {
+    console.error('处理风险号码失败:', error);
     throw error;
   }
 }; 
