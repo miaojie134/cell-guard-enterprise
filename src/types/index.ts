@@ -232,3 +232,138 @@ export const mapBackendPhoneToFrontend = (backendPhone: BackendPhoneNumber): Pho
     })),
   };
 };
+
+// 盘点验证相关类型定义
+export interface VerificationInitiateRequest {
+  scope: 'all_users' | 'department_ids' | 'employee_ids';
+  scopeValues?: string[];
+  durationDays: number;
+}
+
+export interface VerificationBatchTask {
+  id: string;
+  status: 'Pending' | 'InProgress' | 'Completed' | 'CompletedWithErrors' | 'Failed';
+  totalEmployeesToProcess: number;
+  tokensGeneratedCount: number;
+  emailsAttemptedCount: number;
+  emailsSucceededCount: number;
+  emailsFailedCount: number;
+  errorSummary?: string;
+  requestedScopeType: string;
+  requestedScopeValues?: string;
+  requestedDurationDays: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VerificationPhoneInfo {
+  id: number;
+  phoneNumber: string;
+  department: string;
+  purpose: string;
+  status: 'pending' | 'confirmed' | 'reported';
+  userComment?: string;
+}
+
+export interface VerificationEmployeeInfo {
+  employeeId: string;
+  employeeName: string;
+  phoneNumbers: VerificationPhoneInfo[];
+  previouslyReportedUnlisted: UnlistedPhone[];
+  expiresAt: string;
+}
+
+export interface VerifiedNumber {
+  mobileNumberId: number;
+  action: 'confirm_usage' | 'report_issue';
+  purpose: string;
+  userComment?: string;
+}
+
+export interface UnlistedPhone {
+  phoneNumber: string;
+  purpose: string;
+  userComment?: string;
+  reportedAt?: string;
+}
+
+export interface VerificationSubmitRequest {
+  verifiedNumbers: VerifiedNumber[];
+  unlistedNumbersReported: UnlistedPhone[];
+}
+
+export interface ConfirmedPhone {
+  id: number;
+  phoneNumber: string;
+  department: string;
+  currentUser: string;
+  purpose: string;
+  confirmedBy: string;
+  confirmedAt: string;
+}
+
+export interface PendingUser {
+  employeeId: string;
+  fullName: string;
+  email: string;
+  tokenId: number;
+  expiresAt: string;
+}
+
+export interface ReportedIssue {
+  issueId: number;
+  phoneNumber: string;
+  reportedBy: string;
+  comment: string;
+  purpose: string;
+  originalStatus: string;
+  reportedAt: string;
+  adminActionStatus: string;
+}
+
+export interface VerificationResultSummary {
+  totalPhonesCount: number;
+  confirmedPhonesCount: number;
+  reportedIssuesCount: number;
+  pendingPhonesCount: number;
+  newlyReportedPhonesCount: number;
+}
+
+export interface VerificationResults {
+  summary: VerificationResultSummary;
+  confirmedPhones: ConfirmedPhone[];
+  pendingUsers: PendingUser[];
+  reportedIssues: ReportedIssue[];
+  unlistedNumbers: UnlistedPhone[];
+}
+
+// 盘点状态常量
+export const VERIFICATION_STATUS = {
+  PENDING: 'Pending',
+  IN_PROGRESS: 'InProgress',
+  COMPLETED: 'Completed',
+  COMPLETED_WITH_ERRORS: 'CompletedWithErrors',
+  FAILED: 'Failed'
+} as const;
+
+export const VERIFICATION_SCOPE = {
+  ALL_USERS: 'all_users',
+  DEPARTMENT_IDS: 'department_ids',
+  EMPLOYEE_IDS: 'employee_ids'
+} as const;
+
+export const VERIFICATION_ACTION = {
+  CONFIRM_USAGE: 'confirm_usage',
+  REPORT_ISSUE: 'report_issue'
+} as const;
+
+export const PHONE_VERIFICATION_STATUS = {
+  PENDING: 'pending',
+  CONFIRMED: 'confirmed',
+  REPORTED: 'reported'
+} as const;
+
+export type VerificationScopeType = typeof VERIFICATION_SCOPE[keyof typeof VERIFICATION_SCOPE];
+export type VerificationStatusType = typeof VERIFICATION_STATUS[keyof typeof VERIFICATION_STATUS];
+export type VerificationActionType = typeof VERIFICATION_ACTION[keyof typeof VERIFICATION_ACTION];
+export type PhoneVerificationStatusType = typeof PHONE_VERIFICATION_STATUS[keyof typeof PHONE_VERIFICATION_STATUS];

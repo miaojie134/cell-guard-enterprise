@@ -17,6 +17,14 @@ import TestEmployeeDetail from "./pages/TestEmployeeDetail";
 import TestAPI from "./pages/TestAPI";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
+import { lazy } from "react";
+
+// 盘点验证相关页面 - 先定义占位组件，后续实现
+const VerificationManagement = lazy(() => import('@/pages/verification/VerificationManagement'));
+const VerificationCreate = lazy(() => import('@/pages/verification/VerificationCreate'));
+const VerificationBatchStatus = lazy(() => import('@/pages/verification/VerificationBatchStatus'));
+const VerificationResults = lazy(() => import('@/pages/verification/VerificationResults'));
+const VerificationVerification = lazy(() => import('@/pages/verification/EmployeeVerification'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,19 +43,31 @@ const App = () => (
           <DataProvider>
             <Toaster />
             <Sonner />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/phones" element={<Phones />} />
-              <Route path="/employees" element={<Employees />} />
-              <Route path="/departments" element={<Departments />} />
-              <Route path="/risk" element={<RiskPhones />} />
-              <Route path="/import" element={<ImportData />} />
-              <Route path="/test-employee-detail" element={<TestEmployeeDetail />} />
-              <Route path="/test-api" element={<TestAPI />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen">加载中...</div>}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/phones" element={<Phones />} />
+                <Route path="/employees" element={<Employees />} />
+                <Route path="/departments" element={<Departments />} />
+                <Route path="/risk" element={<RiskPhones />} />
+                <Route path="/import" element={<ImportData />} />
+                <Route path="/test-employee-detail" element={<TestEmployeeDetail />} />
+                <Route path="/test-api" element={<TestAPI />} />
+                
+                {/* 验证相关路由 */}
+                <Route path="/verification" element={<VerificationManagement />} />
+                <Route path="/verification/create" element={<VerificationCreate />} />
+                <Route path="/verification/batch/:batchId" element={<VerificationBatchStatus />} />
+                <Route path="/verification/results" element={<VerificationResults />} />
+                
+                {/* 员工验证路由（不需要登录） */}
+                <Route path="/verification/verify/:token" element={<VerificationVerification />} />
+                
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </React.Suspense>
           </DataProvider>
         </AuthProvider>
       </BrowserRouter>

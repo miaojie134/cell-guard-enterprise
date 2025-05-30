@@ -9,7 +9,8 @@ import {
   LayoutDashboard, 
   Upload, 
   LogOut,
-  Building2
+  Building2,
+  ClipboardCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -32,6 +33,11 @@ export const Sidebar = () => {
       name: "风险号码",
       path: "/risk",
       icon: <AlertTriangle className="mr-2 h-4 w-4" />,
+    },
+    {
+      name: "盘点管理",
+      path: "/verification",
+      icon: <ClipboardCheck className="mr-2 h-4 w-4" />,
     },
     {
       name: "数据导入",
