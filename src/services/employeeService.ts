@@ -40,6 +40,7 @@ class EmployeeService {
       if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
       if (params.search) queryParams.append('search', params.search);
       if (params.employmentStatus) queryParams.append('employmentStatus', params.employmentStatus);
+      if (params.departmentId) queryParams.append('departmentId', params.departmentId.toString());
 
       const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EMPLOYEES}?${queryParams.toString()}`;
 

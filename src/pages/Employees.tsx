@@ -88,7 +88,7 @@ const Employees = () => {
   const [searchParams, setSearchParams] = useState({
     query: "",
     filters: {
-      status: "",
+      status: "all",
       departmentId: undefined as number | undefined,
     },
     page: 1,
@@ -109,6 +109,16 @@ const Employees = () => {
   // 获取当前选中的部门
   const selectedDepartment = departmentOptions.find(opt => opt.id === searchParams.filters.departmentId);
 
+  // Handle department filter change
+  const handleDepartmentFilterChange = (department: any) => {
+    console.log('Department filter changed:', department);
+    setSearchParams(prev => ({
+      ...prev,
+      filters: { ...prev.filters, departmentId: department?.id },
+      page: 1
+    }));
+  };
+
   // Load employees on component mount and when search params change
   useEffect(() => {
     const apiParams = {
@@ -120,8 +130,9 @@ const Employees = () => {
       departmentId: searchParams.filters.departmentId,
     };
     
+    console.log('Fetching employees with API params:', apiParams);
     fetchEmployees(apiParams);
-  }, [searchParams.page, searchParams.pageSize, searchParams.query, searchParams.filters.status, searchParams.filters.departmentId]);
+  }, [searchParams.page, searchParams.pageSize, searchParams.query, searchParams.filters.status, searchParams.filters.departmentId, fetchEmployees]);
 
   // Handle error toast
   useEffect(() => {
@@ -143,15 +154,6 @@ const Employees = () => {
     setSearchParams(prev => ({
       ...prev,
       filters: { ...prev.filters, [key]: value },
-      page: 1
-    }));
-  };
-
-  // Handle department filter change
-  const handleDepartmentFilterChange = (department: any) => {
-    setSearchParams(prev => ({
-      ...prev,
-      filters: { ...prev.filters, departmentId: department?.id },
       page: 1
     }));
   };
@@ -277,17 +279,19 @@ const Employees = () => {
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0 mb-4">
-            <SearchBar
-              onSearch={handleSearch}
-              placeholder="搜索员工姓名、工号..."
-            />
-            <div className="flex space-x-2">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-4">
+            <div className="w-full lg:w-auto">
+              <SearchBar
+                onSearch={handleSearch}
+                placeholder="搜索员工姓名、工号..."
+              />
+            </div>
+            <div className="flex items-center gap-2 w-full lg:w-auto">
               <Select
                 value={searchParams.filters.status}
                 onValueChange={(value) => handleFilterChange("status", value)}
               >
-                <SelectTrigger className="w-[120px]">
+                <SelectTrigger className="w-[120px] h-10">
                   <SelectValue placeholder="状态" />
                 </SelectTrigger>
                 <SelectContent>
@@ -309,14 +313,15 @@ const Employees = () => {
               {(searchParams.filters.departmentId || searchParams.filters.status !== "all") && (
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="default"
+                  className="h-10 whitespace-nowrap"
                   onClick={() => setSearchParams(prev => ({
                     ...prev,
                     filters: { status: "all", departmentId: undefined },
                     page: 1
                   }))}
                 >
-                  <X className="h-3 w-3 mr-1" />
+                  <X className="h-4 w-4 mr-1" />
                   清除筛选
                 </Button>
               )}

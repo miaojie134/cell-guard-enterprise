@@ -184,9 +184,9 @@ export const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
             placeholder={placeholder}
             disabled={disabled || isLoading}
             className={cn(
-              "pr-20",
+              "pr-20 h-10",
               error && "border-red-500 focus-visible:ring-red-500",
-              compact && "h-8 text-sm"
+              compact && "text-sm"
             )}
             onClick={handleInputClick}
           />

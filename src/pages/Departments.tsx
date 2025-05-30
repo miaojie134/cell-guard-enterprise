@@ -126,7 +126,7 @@ const Departments = () => {
           <div>
             <h2 className="text-3xl font-bold tracking-tight">部门管理</h2>
             <p className="text-muted-foreground">
-              管理公司的组织架构和部门信息
+              管理组织架构和部门信息
             </p>
           </div>
           <div className="flex items-center gap-2">

@@ -32,7 +32,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           placeholder={placeholder}
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
-          className="pr-8"
+          className="pr-8 h-10"
         />
         {searchValue && (
           <Button
@@ -46,7 +46,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           </Button>
         )}
       </div>
-      <Button type="submit" size="icon">
+      <Button type="submit" size="icon" className="h-10 w-10">
         <Search className="h-4 w-4" />
       </Button>
     </form>

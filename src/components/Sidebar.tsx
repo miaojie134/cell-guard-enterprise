@@ -9,7 +9,7 @@ import {
   LayoutDashboard, 
   Upload, 
   LogOut,
-  Building
+  Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -34,11 +34,6 @@ export const Sidebar = () => {
       icon: <User className="mr-2 h-4 w-4" />,
     },
     {
-      name: "部门管理",
-      path: "/departments",
-      icon: <Building className="mr-2 h-4 w-4" />,
-    },
-    {
       name: "风险号码",
       path: "/risk",
       icon: <AlertTriangle className="mr-2 h-4 w-4" />,
@@ -47,6 +42,11 @@ export const Sidebar = () => {
       name: "数据导入",
       path: "/import",
       icon: <Upload className="mr-2 h-4 w-4" />,
+    },
+    {
+      name: "部门管理",
+      path: "/departments",
+      icon: <Building2 className="mr-2 h-4 w-4" />,
     },
   ];
 
