@@ -1,26 +1,11 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { CreateEmployeeRequest } from '@/config/api';
-import { Loader2 } from 'lucide-react';
+import { DepartmentSelector } from '@/components/DepartmentSelector';
+import { useDepartmentOptions } from '@/hooks/useDepartments';
 
 interface AddEmployeeFormProps {
   onSubmit: (data: CreateEmployeeRequest) => Promise<void>;
@@ -31,10 +16,12 @@ export const AddEmployeeForm: React.FC<AddEmployeeFormProps> = ({
   onSubmit,
   isLoading,
 }) => {
+  const { options: departmentOptions } = useDepartmentOptions();
+  
   const form = useForm<CreateEmployeeRequest>({
     defaultValues: {
       fullName: '',
-      department: '',
+      departmentId: undefined,
       email: '',
       phoneNumber: '',
       hireDate: '',
@@ -45,16 +32,8 @@ export const AddEmployeeForm: React.FC<AddEmployeeFormProps> = ({
     await onSubmit(data);
   };
 
-  const departments = [
-    '市场部',
-    '销售部',
-    '财务部',
-    'IT部',
-    '人力资源部',
-    '运营部',
-    '产品部',
-    '技术部',
-  ];
+  // 获取当前选中的部门
+  const selectedDepartment = departmentOptions.find(opt => opt.id === form.watch('departmentId'));
 
   return (
     <Form {...form}>
@@ -79,25 +58,19 @@ export const AddEmployeeForm: React.FC<AddEmployeeFormProps> = ({
 
         <FormField
           control={form.control}
-          name="department"
+          name="departmentId"
           rules={{ required: '请选择部门' }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>部门 *</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="请选择部门" />
-                  </SelectTrigger>
+                <DepartmentSelector
+                  value={selectedDepartment || null}
+                  onChange={(dept) => field.onChange(dept?.id || undefined)}
+                  placeholder="请选择部门"
+                  required
+                />
                 </FormControl>
-                <SelectContent>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept} value={dept}>
-                      {dept}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -132,7 +105,7 @@ export const AddEmployeeForm: React.FC<AddEmployeeFormProps> = ({
           control={form.control}
           name="phoneNumber"
           rules={{ 
-            required: '请输入手机号',
+            required: '请输入手机号码',
             pattern: {
               value: /^1[3-9]\d{9}$/,
               message: '请输入有效的手机号码'
@@ -140,7 +113,7 @@ export const AddEmployeeForm: React.FC<AddEmployeeFormProps> = ({
           }}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>手机号 *</FormLabel>
+              <FormLabel>手机号码 *</FormLabel>
               <FormControl>
                 <Input
                   placeholder="请输入手机号码"
@@ -170,10 +143,9 @@ export const AddEmployeeForm: React.FC<AddEmployeeFormProps> = ({
           )}
         />
 
-        <div className="flex justify-end space-x-2 pt-4">
+        <div className="flex justify-end gap-2 pt-4">
           <Button type="submit" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            创建员工
+            {isLoading ? '创建中...' : '创建员工'}
           </Button>
         </div>
       </form>

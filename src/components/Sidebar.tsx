@@ -1,4 +1,3 @@
-
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -9,7 +8,8 @@ import {
   AlertTriangle, 
   LayoutDashboard, 
   Upload, 
-  LogOut 
+  LogOut,
+  Building
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -32,6 +32,11 @@ export const Sidebar = () => {
       name: "员工管理",
       path: "/employees",
       icon: <User className="mr-2 h-4 w-4" />,
+    },
+    {
+      name: "部门管理",
+      path: "/departments",
+      icon: <Building className="mr-2 h-4 w-4" />,
     },
     {
       name: "风险号码",

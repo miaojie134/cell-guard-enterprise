@@ -5,13 +5,17 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmployeeDetailDialog } from '@/components/EmployeeDetailDialog';
 import { useEmployeeDetail } from '@/hooks/useEmployeeDetail';
+import { useDepartmentOptions } from '@/hooks/useDepartments';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Phone, User, Calendar, Building } from 'lucide-react';
 
 const TestEmployeeDetail = () => {
   const [employeeId, setEmployeeId] = useState('');
   const [showDialog, setShowDialog] = useState(false);
-  const { employeeDetail, isLoading, error, fetchEmployeeDetail } = useEmployeeDetail();
+  
+  // 获取部门选项数据
+  const { options: departmentOptions } = useDepartmentOptions();
+  const { employeeDetail, isLoading, error, fetchEmployeeDetail } = useEmployeeDetail(departmentOptions);
 
   const handleFetchDetail = async () => {
     if (!employeeId.trim()) {

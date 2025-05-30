@@ -1,7 +1,12 @@
 import React from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { UpdateEmployeeRequest } from '@/config/api';
+import { Employee } from '@/types';
+import { DepartmentSelector } from '@/components/DepartmentSelector';
+import { useDepartmentOptions } from '@/hooks/useDepartments';
 import {
   Select,
   SelectContent,
@@ -9,17 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { UpdateEmployeeRequest } from '@/config/api';
-import { Employee } from '@/types';
-import { Loader2 } from 'lucide-react';
 
 interface UpdateEmployeeFormProps {
   employee: Employee;
@@ -32,14 +26,43 @@ export const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({
   onSubmit,
   isLoading,
 }) => {
+  const { options: departmentOptions } = useDepartmentOptions();
+  
   const form = useForm<UpdateEmployeeRequest>({
     defaultValues: {
-      department: employee.department,
+      departmentId: undefined, // 将根据部门名称查找对应的ID
       employmentStatus: employee.status === 'active' ? 'Active' : 'Departed',
-      hireDate: employee.joinDate,
+      hireDate: employee.joinDate || '',
       terminationDate: employee.leaveDate || '',
     },
   });
+
+  // 根据员工当前部门名称查找对应的部门选项
+  const currentDepartment = departmentOptions.find(opt => 
+    opt.name === employee.department || opt.path === employee.department
+  );
+
+  // 如果找到了对应的部门，设置默认值
+  React.useEffect(() => {
+    if (currentDepartment && !form.getValues('departmentId')) {
+      form.setValue('departmentId', currentDepartment.id);
+    }
+  }, [currentDepartment, form]);
+
+  // 当员工数据变化时，更新表单的所有字段值
+  React.useEffect(() => {
+    form.setValue('employmentStatus', employee.status === 'active' ? 'Active' : 'Departed');
+    form.setValue('hireDate', employee.joinDate || '');
+    form.setValue('terminationDate', employee.leaveDate || '');
+    
+    // 重新查找并设置部门
+    const dept = departmentOptions.find(opt => 
+      opt.name === employee.department || opt.path === employee.department
+    );
+    if (dept) {
+      form.setValue('departmentId', dept.id);
+    }
+  }, [employee, departmentOptions, form]);
 
   const handleSubmit = async (data: UpdateEmployeeRequest) => {
     // 如果离职日期为空，从数据中移除
@@ -50,16 +73,8 @@ export const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({
     await onSubmit(submitData);
   };
 
-  const departments = [
-    '市场部',
-    '销售部',
-    '财务部',
-    'IT部',
-    '人力资源部',
-    '运营部',
-    '产品部',
-    '技术部',
-  ];
+  // 获取当前选中的部门
+  const selectedDepartment = departmentOptions.find(opt => opt.id === form.watch('departmentId'));
 
   return (
     <Form {...form}>
@@ -77,24 +92,17 @@ export const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({
 
         <FormField
           control={form.control}
-          name="department"
+          name="departmentId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>部门</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择部门" />
-                  </SelectTrigger>
+                <DepartmentSelector
+                  value={selectedDepartment || null}
+                  onChange={(dept) => field.onChange(dept?.id || undefined)}
+                  placeholder="选择部门"
+                />
                 </FormControl>
-                <SelectContent>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept} value={dept}>
-                      {dept}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -109,7 +117,7 @@ export const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="选择状态" />
+                    <SelectValue placeholder="选择在职状态" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -131,7 +139,6 @@ export const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({
               <FormControl>
                 <Input
                   type="date"
-                  placeholder="选择入职日期"
                   {...field}
                 />
               </FormControl>
@@ -140,16 +147,15 @@ export const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({
           )}
         />
 
-        <Controller
+        <FormField
           control={form.control}
           name="terminationDate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>离职日期（可选）</FormLabel>
+              <FormLabel>离职日期</FormLabel>
               <FormControl>
                 <Input
                   type="date"
-                  placeholder="选择离职日期"
                   {...field}
                 />
               </FormControl>
@@ -158,10 +164,9 @@ export const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({
           )}
         />
 
-        <div className="flex justify-end space-x-2 pt-4">
+        <div className="flex justify-end gap-2 pt-4">
           <Button type="submit" disabled={isLoading}>
-            {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            更新员工信息
+            {isLoading ? '更新中...' : '更新员工'}
           </Button>
         </div>
       </form>

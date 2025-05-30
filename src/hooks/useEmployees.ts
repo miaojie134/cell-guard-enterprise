@@ -1,7 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { employeeService } from '@/services/employeeService';
 import { EmployeeSearchParams } from '@/config/api';
 import { Employee, mapBackendEmployeeToFrontend, BackendEmployee } from '@/types';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/context/AuthContext';
+import { useDepartmentOptions } from '@/hooks/useDepartments';
+import type { Employee as SelectorEmployee } from '@/components/EmployeeSelector';
+import React from 'react';
 
 export interface UseEmployeesReturn {
   employees: Employee[];
@@ -15,31 +20,83 @@ export interface UseEmployeesReturn {
 }
 
 export const useEmployees = (): UseEmployeesReturn => {
+  const [rawEmployees, setRawEmployees] = useState<any[]>([]); // 保存原始后端数据
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingEmployees, setIsLoadingEmployees] = useState(false); // 员工数据加载状态
   const [error, setError] = useState<string | null>(null);
 
+  // 获取部门选项数据来映射部门名称
+  const { options: departmentOptions, isLoading: isDepartmentLoading } = useDepartmentOptions();
+
+  // 综合loading状态：员工数据加载中 OR 部门数据加载中 OR 有员工数据但还没有部门数据
+  const isLoading = isLoadingEmployees || isDepartmentLoading || (rawEmployees.length > 0 && departmentOptions.length === 0);
+
+  // 映射员工数据的函数
+  const mapEmployeesWithDepartments = useCallback((rawEmployeeData: any[]) => {
+    return rawEmployeeData.map(emp => {
+      // 通过departmentId查找部门路径（显示层级结构）
+      const departmentInfo = emp.departmentId
+        ? departmentOptions.find(dept => dept.id === emp.departmentId)
+        : null;
+
+      const departmentDisplay = departmentInfo
+        ? departmentInfo.path  // 使用完整路径，如"研发中心 / 前端组"
+        : emp.departmentId
+          ? `部门ID: ${emp.departmentId}`
+          : '未分配部门';
+
+      // 直接创建Employee对象，避免类型转换问题
+      return {
+        id: emp.id.toString(),
+        employeeId: emp.employeeId,
+        name: emp.fullName,
+        department: departmentDisplay,
+        status: emp.employmentStatus === 'Active' ? 'active' : 'departed',
+        joinDate: emp.hireDate ? new Date(emp.hireDate).toISOString().split('T')[0] : '',
+        leaveDate: emp.terminationDate ? new Date(emp.terminationDate).toISOString().split('T')[0] : undefined,
+      } as Employee;
+    });
+  }, [departmentOptions]);
+
+  // 当部门选项数据变化时，重新映射员工数据
+  React.useEffect(() => {
+    if (rawEmployees.length > 0 && departmentOptions.length > 0) {
+      console.log('Department options loaded, remapping employees with proper department names...');
+      const mappedEmployees = mapEmployeesWithDepartments(rawEmployees);
+      setEmployees(mappedEmployees);
+    } else if (rawEmployees.length > 0 && departmentOptions.length === 0) {
+      // 有员工数据但部门数据还没加载完，清空employees确保loading状态
+      setEmployees([]);
+    }
+  }, [rawEmployees, departmentOptions, mapEmployeesWithDepartments]);
+
   const fetchEmployees = useCallback(async (params: EmployeeSearchParams = {}) => {
-    setIsLoading(true);
+    setIsLoadingEmployees(true);
     setError(null);
 
     try {
       console.log('Fetching employees with params:', params);
       const response = await employeeService.getEmployees(params);
 
-      // 映射后端数据到前端格式
-      const mappedEmployees = response.items.map(mapBackendEmployeeToFrontend);
+      // 保存原始数据
+      setRawEmployees(response.items);
 
-      setEmployees(mappedEmployees);
+      // 只有在部门选项已经加载的情况下才立即映射和显示数据
+      if (departmentOptions.length > 0) {
+        const mappedEmployees = mapEmployeesWithDepartments(response.items);
+        setEmployees(mappedEmployees);
+      }
+      // 如果部门数据还没加载，不设置employees，保持空数组，让loading状态继续
+
       setTotalItems(response.pagination.totalItems);
       setTotalPages(response.pagination.totalPages);
       setCurrentPage(response.pagination.currentPage);
 
       console.log('Employees fetched successfully:', {
-        count: mappedEmployees.length,
+        count: response.items.length,
         totalItems: response.pagination.totalItems,
         currentPage: response.pagination.currentPage
       });
@@ -48,9 +105,9 @@ export const useEmployees = (): UseEmployeesReturn => {
       const errorMessage = error instanceof Error ? error.message : '获取员工列表失败';
       setError(errorMessage);
     } finally {
-      setIsLoading(false);
+      setIsLoadingEmployees(false);
     }
-  }, []);
+  }, [departmentOptions, mapEmployeesWithDepartments]);
 
   const getEmployeeById = (id: string): Employee | null => {
     return employees.find(emp => emp.id === id) || null;
@@ -69,10 +126,6 @@ export const useEmployees = (): UseEmployeesReturn => {
 };
 
 // 新增：专门为EmployeeSelector组件使用的hook
-import { useMemo } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/context/AuthContext';
-import type { Employee as SelectorEmployee } from '@/components/EmployeeSelector';
 
 // 全局员工缓存刷新函数
 export const useEmployeeCacheRefresh = () => {
@@ -98,6 +151,9 @@ export const useEmployeesForSelector = (options: UseEmployeesForSelectorOptions 
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
+  // 获取部门选项数据来映射部门名称
+  const { options: departmentOptions, isLoading: isDepartmentLoading } = useDepartmentOptions();
+
   const searchParams = {
     search: options.search,
     employmentStatus: options.employmentStatus,
@@ -107,7 +163,7 @@ export const useEmployeesForSelector = (options: UseEmployeesForSelectorOptions 
 
   const {
     data: employeesResponse,
-    isLoading,
+    isLoading: isEmployeeDataLoading,
     error,
     refetch
   } = useQuery({
@@ -119,17 +175,38 @@ export const useEmployeesForSelector = (options: UseEmployeesForSelectorOptions 
     gcTime: 5 * 60 * 1000, // 5分钟后清理缓存
   });
 
+  // 综合loading状态：员工数据加载中 OR 部门数据加载中
+  const isLoading = isEmployeeDataLoading || isDepartmentLoading || (employeesResponse?.items?.length > 0 && departmentOptions.length === 0);
+
   // 转换为EmployeeSelector需要的格式
   const employees: SelectorEmployee[] = useMemo(() => {
-    if (!employeesResponse?.items) return [];
-    return employeesResponse.items.map(emp => ({
-      id: emp.id,
-      employeeId: emp.employeeId,
-      fullName: emp.fullName,
-      department: emp.department,
-      employmentStatus: emp.employmentStatus,
-    }));
-  }, [employeesResponse]);
+    // 如果员工数据还在加载，或者部门数据还在加载，返回空数组
+    if (!employeesResponse?.items || departmentOptions.length === 0) return [];
+
+    return employeesResponse.items.map(emp => {
+      // 通过departmentId查找部门路径（显示层级结构）
+      const departmentInfo = emp.departmentId
+        ? departmentOptions.find(dept => dept.id === emp.departmentId)
+        : null;
+
+      const departmentDisplay = departmentInfo
+        ? departmentInfo.path  // 使用完整路径，如"研发中心 / 前端组"
+        : emp.departmentId
+          ? `部门ID: ${emp.departmentId}`
+          : '未分配部门';
+
+      return {
+        id: emp.id,
+        employeeId: emp.employeeId,
+        fullName: emp.fullName,
+        department: departmentDisplay,
+        employmentStatus: emp.employmentStatus,
+        email: emp.email,
+        phone: emp.phoneNumber,
+        position: undefined, // 如果后端有职位字段，这里可以映射
+      };
+    });
+  }, [employeesResponse, departmentOptions]);
 
   // 在职员工
   const activeEmployees = useMemo(() => {

@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Phones from "./pages/Phones";
 import Employees from "./pages/Employees";
+import Departments from "./pages/Departments";
 import RiskPhones from "./pages/RiskPhones";
 import ImportData from "./pages/ImportData";
 import TestEmployeeDetail from "./pages/TestEmployeeDetail";
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/phones" element={<Phones />} />
               <Route path="/employees" element={<Employees />} />
+              <Route path="/departments" element={<Departments />} />
               <Route path="/risk" element={<RiskPhones />} />
               <Route path="/import" element={<ImportData />} />
               <Route path="/test-employee-detail" element={<TestEmployeeDetail />} />

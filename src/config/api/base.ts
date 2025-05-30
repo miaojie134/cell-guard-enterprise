@@ -6,6 +6,7 @@ export const API_CONFIG = {
     LOGOUT: '/auth/logout',
     EMPLOYEES: '/employees',
     PHONES: '/phones',
+    DEPARTMENTS: '/departments',
   },
 };
 

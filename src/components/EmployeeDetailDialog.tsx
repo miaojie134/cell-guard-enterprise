@@ -9,6 +9,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useEmployeeDetail } from '@/hooks/useEmployeeDetail';
+import { useDepartmentOptions } from '@/hooks/useDepartments';
 import { Loader2, Phone, User, Calendar, Building, CreditCard, UserCheck } from 'lucide-react';
 
 interface EmployeeDetailDialogProps {
@@ -22,7 +23,10 @@ export const EmployeeDetailDialog: React.FC<EmployeeDetailDialogProps> = ({
   onOpenChange,
   employeeId,
 }) => {
-  const { employeeDetail, isLoading, error, fetchEmployeeDetail, clearEmployeeDetail } = useEmployeeDetail();
+  // 获取部门选项数据
+  const { options: departmentOptions } = useDepartmentOptions();
+  
+  const { employeeDetail, isLoading, error, fetchEmployeeDetail, clearEmployeeDetail } = useEmployeeDetail(departmentOptions);
 
   useEffect(() => {
     if (open && employeeId) {

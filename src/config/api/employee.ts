@@ -15,14 +15,17 @@ export interface EmployeeSearchParams {
   sortOrder?: 'asc' | 'desc';
   search?: string;
   employmentStatus?: string;
+  departmentId?: number;
 }
 
-// 后端员工数据结构
+// 后端员工数据结构（新版本 - 支持部门ID）
 export interface APIEmployee {
   id: number;
   employeeId: string;
   fullName: string;
   department: string;
+  departmentId?: number;
+  departmentPath?: string;
   email: string;
   phoneNumber: string;
   employmentStatus: string;
@@ -39,13 +42,15 @@ export interface APIEmployeeDetail {
   employeeId: string;
   fullName: string;
   department: string;
+  departmentId?: number;
+  departmentPath?: string;
   employmentStatus: string;
   hireDate: string;
   terminationDate?: string;
   createdAt: string;
   updatedAt: string;
-  handledMobileNumbers: MobileNumber[]; // 作为办卡人的手机号码列表
-  usingMobileNumbers: MobileNumber[];   // 作为当前使用人的手机号码列表
+  handledMobileNumbers: MobileNumber[];
+  usingMobileNumbers: MobileNumber[];
 }
 
 // 后端员工数据结构别名 - 为了向后兼容
@@ -62,13 +67,14 @@ export interface EmployeesListResponse {
   };
 }
 
-// 新增员工请求类型
+// 新增员工请求类型（新版本 - 支持部门ID）
 export interface CreateEmployeeRequest {
   fullName: string;
-  department: string;
+  department?: string;
+  departmentId?: number;
   email: string;
   phoneNumber: string;
-  hireDate: string; // YYYY-MM-DD 格式
+  hireDate: string;
 }
 
 // 新增员工响应类型
@@ -77,6 +83,8 @@ export interface CreateEmployeeResponse {
   employeeId: string;
   fullName: string;
   department: string;
+  departmentId?: number;
+  departmentPath?: string;
   email: string;
   phoneNumber: string;
   employmentStatus: string;
@@ -87,12 +95,13 @@ export interface CreateEmployeeResponse {
   deletedAt?: string;
 }
 
-// 更新员工请求类型
+// 更新员工请求类型（新版本 - 支持部门ID）
 export interface UpdateEmployeeRequest {
   department?: string;
+  departmentId?: number;
   employmentStatus?: string;
-  hireDate?: string; // YYYY-MM-DD 格式
-  terminationDate?: string; // YYYY-MM-DD 格式
+  hireDate?: string;
+  terminationDate?: string;
 }
 
 // 更新员工响应类型
@@ -101,6 +110,8 @@ export interface UpdateEmployeeResponse {
   employeeId: string;
   fullName: string;
   department: string;
+  departmentId?: number;
+  departmentPath?: string;
   email: string;
   phoneNumber: string;
   employmentStatus: string;

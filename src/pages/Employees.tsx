@@ -31,6 +31,23 @@ import { employeeService } from "@/services/employeeService";
 import { useToast } from "@/hooks/use-toast";
 import { CreateEmployeeRequest, UpdateEmployeeRequest } from "@/config/api";
 import { Plus, Edit, ExternalLink, Loader2 } from "lucide-react";
+import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Search,
+  Trash2,
+  Eye,
+  MoreHorizontal,
+  Filter,
+  X
+} from 'lucide-react';
+import { DepartmentSelector } from '@/components/DepartmentSelector';
+import { useDepartmentOptions } from '@/hooks/useDepartments';
 
 // 员工状态映射函数
 const mapEmployeeStatusToBadgeStatus = (status: FrontendEmploymentStatus): "active" | "inactive" => {
@@ -40,6 +57,16 @@ const mapEmployeeStatusToBadgeStatus = (status: FrontendEmploymentStatus): "acti
 // 员工状态显示文本映射函数
 const getEmployeeStatusText = (status: FrontendEmploymentStatus): string => {
   return status === FRONTEND_EMPLOYMENT_STATUS.ACTIVE ? "在职" : "离职";
+};
+
+// 日期格式化函数 - 将YYYY-MM-DD格式转换为用户友好的格式
+const formatDisplayDate = (isoDate: string): string => {
+  if (!isoDate) return '';
+  try {
+    return new Date(isoDate).toLocaleDateString('zh-CN');
+  } catch {
+    return isoDate;
+  }
 };
 
 const Employees = () => {
@@ -55,13 +82,14 @@ const Employees = () => {
   } = useEmployees();
   
   const { refreshAllEmployeeCaches } = useEmployeeCacheRefresh();
+  const { options: departmentOptions } = useDepartmentOptions();
   
   // State
   const [searchParams, setSearchParams] = useState({
     query: "",
     filters: {
       status: "",
-      department: "",
+      departmentId: undefined as number | undefined,
     },
     page: 1,
     pageSize: 10,
@@ -78,6 +106,9 @@ const Employees = () => {
   // Get current employee
   const currentEmployee = currentEmployeeId ? getEmployeeById(currentEmployeeId) : null;
 
+  // 获取当前选中的部门
+  const selectedDepartment = departmentOptions.find(opt => opt.id === searchParams.filters.departmentId);
+
   // Load employees on component mount and when search params change
   useEffect(() => {
     const apiParams = {
@@ -86,10 +117,11 @@ const Employees = () => {
       search: searchParams.query || undefined,
       employmentStatus: searchParams.filters.status === 'active' ? 'Active' : 
                        searchParams.filters.status === 'inactive' ? 'Departed' : undefined,
+      departmentId: searchParams.filters.departmentId,
     };
     
     fetchEmployees(apiParams);
-  }, [searchParams.page, searchParams.pageSize, searchParams.query, searchParams.filters.status, searchParams.filters.department]);
+  }, [searchParams.page, searchParams.pageSize, searchParams.query, searchParams.filters.status, searchParams.filters.departmentId]);
 
   // Handle error toast
   useEffect(() => {
@@ -107,11 +139,20 @@ const Employees = () => {
     setSearchParams(prev => ({ ...prev, query, page: 1 }));
   };
 
-  const handleFilterChange = (key: string, value: string) => {
+  const handleFilterChange = (key: string, value: any) => {
     setSearchParams(prev => ({
       ...prev,
       filters: { ...prev.filters, [key]: value },
-      page: 1,
+      page: 1
+    }));
+  };
+
+  // Handle department filter change
+  const handleDepartmentFilterChange = (department: any) => {
+    setSearchParams(prev => ({
+      ...prev,
+      filters: { ...prev.filters, departmentId: department?.id },
+      page: 1
     }));
   };
 
@@ -163,6 +204,7 @@ const Employees = () => {
       search: searchParams.query || undefined,
       employmentStatus: searchParams.filters.status === 'active' ? 'Active' : 
                        searchParams.filters.status === 'inactive' ? 'Departed' : undefined,
+      departmentId: searchParams.filters.departmentId,
     };
     
     fetchEmployees(apiParams);
@@ -245,8 +287,8 @@ const Employees = () => {
                 value={searchParams.filters.status}
                 onValueChange={(value) => handleFilterChange("status", value)}
               >
-                <SelectTrigger className="w-[130px]">
-                  <SelectValue placeholder="在职状态" />
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="状态" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部状态</SelectItem>
@@ -254,22 +296,30 @@ const Employees = () => {
                   <SelectItem value="inactive">离职</SelectItem>
                 </SelectContent>
               </Select>
-              <Select
-                value={searchParams.filters.department}
-                onValueChange={(value) => handleFilterChange("department", value)}
-              >
-                <SelectTrigger className="w-[130px]">
-                  <SelectValue placeholder="部门" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">全部部门</SelectItem>
-                  <SelectItem value="市场部">市场部</SelectItem>
-                  <SelectItem value="销售部">销售部</SelectItem>
-                  <SelectItem value="财务部">财务部</SelectItem>
-                  <SelectItem value="IT部">IT部</SelectItem>
-                  <SelectItem value="人力资源部">人力资源部</SelectItem>
-                </SelectContent>
-              </Select>
+              
+              <div className="w-[180px]">
+                <DepartmentSelector
+                  value={selectedDepartment || null}
+                  onChange={handleDepartmentFilterChange}
+                  placeholder="选择部门"
+                  compact
+                />
+              </div>
+              
+              {(searchParams.filters.departmentId || searchParams.filters.status !== "all") && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSearchParams(prev => ({
+                    ...prev,
+                    filters: { status: "all", departmentId: undefined },
+                    page: 1
+                  }))}
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  清除筛选
+                </Button>
+              )}
             </div>
           </div>
           
@@ -320,8 +370,8 @@ const Employees = () => {
                           text={getEmployeeStatusText(employee.status)}
                         />
                       </td>
-                      <td>{employee.joinDate}</td>
-                      <td>{employee.leaveDate || "-"}</td>
+                      <td>{formatDisplayDate(employee.joinDate)}</td>
+                      <td>{employee.leaveDate ? formatDisplayDate(employee.leaveDate) : "-"}</td>
                       <td>
                         <div className="flex space-x-2">
                           <Button 
