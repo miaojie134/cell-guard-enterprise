@@ -222,6 +222,62 @@ class VerificationService {
       throw error;
     }
   }
+
+  // 补发失败的验证邮件
+  async resendFailedEmails(batchId: string, employeeIds?: string[]): Promise<{
+    totalAttempted: number;
+    successCount: number;
+    failedCount: number;
+    successEmails: Array<{
+      employeeId: string;
+      employeeName: string;
+      emailAddress: string;
+    }>;
+    failedEmails: Array<{
+      employeeId: string;
+      employeeName: string;
+      emailAddress: string;
+      reason: string;
+    }>;
+  }> {
+    try {
+      console.log('补发失败邮件:', batchId, employeeIds);
+
+      const requestBody: { employeeIds?: string[] } = {};
+      if (employeeIds && employeeIds.length > 0) {
+        requestBody.employeeIds = employeeIds;
+      }
+
+      const response = await fetch(`${API_CONFIG.BASE_URL}/verification/batch/${batchId}/resend`, {
+        method: 'POST',
+        headers: this.getHeaders(true),
+        body: JSON.stringify(requestBody),
+      });
+
+      return await this.handleResponse<{
+        totalAttempted: number;
+        successCount: number;
+        failedCount: number;
+        successEmails: Array<{
+          employeeId: string;
+          employeeName: string;
+          emailAddress: string;
+        }>;
+        failedEmails: Array<{
+          employeeId: string;
+          employeeName: string;
+          emailAddress: string;
+          reason: string;
+        }>;
+      }>(response);
+    } catch (error) {
+      console.error('补发邮件失败:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('补发邮件失败，请稍后重试');
+    }
+  }
 }
 
 export const verificationService = new VerificationService(); 
