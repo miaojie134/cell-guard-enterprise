@@ -40,10 +40,10 @@ const VerificationBatchStatus: React.FC = () => {
     },
     enabled: !!batchId,
     refetchInterval: (query) => {
-      // 如果任务还在进行中，每5秒刷新一次
+      // 如果任务还在进行中，每10秒刷新一次
       const data = query.state.data;
       if (data?.status === VERIFICATION_STATUS.PENDING || data?.status === VERIFICATION_STATUS.IN_PROGRESS) {
-        return 5000;
+        return 10000;
       }
       return false; // 任务完成后停止轮询
     },

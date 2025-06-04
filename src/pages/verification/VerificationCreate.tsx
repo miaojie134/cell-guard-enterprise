@@ -398,7 +398,12 @@ const VerificationCreate: React.FC = () => {
                   </div>
                   <Alert className="py-2">
                     <AlertDescription className="text-sm">
-                      截止时间：{new Date(Date.now() + form.durationDays * 24 * 60 * 60 * 1000).toLocaleString('zh-CN')}
+                      截止时间：{(() => {
+                        const expireDate = new Date();
+                        expireDate.setDate(expireDate.getDate() + form.durationDays);
+                        expireDate.setHours(23, 59, 59, 999);
+                        return expireDate.toLocaleString('zh-CN');
+                      })()}
                     </AlertDescription>
                   </Alert>
                 </CardContent>

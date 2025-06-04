@@ -258,7 +258,10 @@ const EmployeeVerification: React.FC = () => {
               <div className="flex items-center">
                 <Clock className="h-4 w-4 mr-1" />
                 <span className="font-medium">截止时间：</span>
-                {new Date(employeeInfo.expiresAt).toLocaleString('zh-CN')}
+                <span className="ml-1">
+                  {new Date(employeeInfo.expiresAt).toLocaleDateString('zh-CN')} 23:59
+                  <span className="text-xs text-gray-500 ml-1">（当天结束前有效）</span>
+                </span>
               </div>
             </div>
           </CardContent>

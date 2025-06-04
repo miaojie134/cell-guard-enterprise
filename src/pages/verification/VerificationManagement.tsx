@@ -97,7 +97,17 @@ const VerificationManagement = () => {
         ...( createdBefore && { createdBefore })
       });
     },
-    refetchInterval: 5000
+    refetchInterval: (query) => {
+      // 只有当存在进行中的任务时才轮询
+      const data = query.state.data;
+      if (data && data.some(task => 
+        task.status === VERIFICATION_STATUS.PENDING || 
+        task.status === VERIFICATION_STATUS.IN_PROGRESS
+      )) {
+        return 10000; // 改为10秒轮询，减少频率
+      }
+      return false; // 没有进行中的任务时停止轮询
+    }
   });
 
   // 计算统计数据

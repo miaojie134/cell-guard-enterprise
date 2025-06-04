@@ -337,7 +337,9 @@ const VerificationResults: React.FC = () => {
                                 {new Date(user.expiresAt) > new Date() ? '有效' : '已过期'}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-sm">{new Date(user.expiresAt).toLocaleString('zh-CN')}</TableCell>
+                            <TableCell className="text-sm">
+                              {new Date(user.expiresAt).toLocaleDateString('zh-CN')} 23:59
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
