@@ -44,6 +44,8 @@ export interface APIEmployeeDetail {
   department: string;
   departmentId?: number;
   departmentPath?: string;
+  email: string;
+  phoneNumber: string;
   employmentStatus: string;
   hireDate: string;
   terminationDate?: string;
@@ -99,6 +101,8 @@ export interface CreateEmployeeResponse {
 export interface UpdateEmployeeRequest {
   department?: string;
   departmentId?: number;
+  email?: string;
+  phoneNumber?: string;
   employmentStatus?: string;
   hireDate?: string;
   terminationDate?: string;

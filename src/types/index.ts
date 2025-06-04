@@ -56,6 +56,8 @@ export interface Employee {
   employeeId: string;
   name: string;
   department: string;
+  email?: string;
+  phoneNumber?: string;
   status: FrontendEmploymentStatus;
   joinDate: string;
   leaveDate?: string;
@@ -201,6 +203,8 @@ export const mapBackendEmployeeToFrontend = (backendEmployee: BackendEmployee): 
     employeeId: backendEmployee.employeeId,
     name: backendEmployee.fullName,
     department: backendEmployee.department,
+    email: backendEmployee.email,
+    phoneNumber: backendEmployee.phoneNumber,
     status: EMPLOYMENT_STATUS_MAP[backendEmployee.employmentStatus] || FRONTEND_EMPLOYMENT_STATUS.DEPARTED,
     joinDate: formatDateFromISO(backendEmployee.hireDate),
     leaveDate: backendEmployee.terminationDate ? formatDateFromISO(backendEmployee.terminationDate) : undefined,

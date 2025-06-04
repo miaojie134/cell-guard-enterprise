@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useEmployeeDetail } from '@/hooks/useEmployeeDetail';
 import { useDepartmentOptions } from '@/hooks/useDepartments';
-import { Loader2, Phone, User, Calendar, Building, CreditCard, UserCheck } from 'lucide-react';
+import { Loader2, Phone, User, Calendar, Building, CreditCard, UserCheck, Mail } from 'lucide-react';
 
 interface EmployeeDetailDialogProps {
   open: boolean;
@@ -138,6 +138,22 @@ export const EmployeeDetailDialog: React.FC<EmployeeDetailDialogProps> = ({
                   <Badge variant={getStatusBadgeVariant(employeeDetail.employmentStatus)} className="w-fit">
                     {employeeDetail.employmentStatus === 'Active' ? '在职' : '离职'}
                   </Badge>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-xs text-muted-foreground">邮箱</div>
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-3 w-3 text-muted-foreground" />
+                    <span className="font-medium">{employeeDetail.email || '未设置'}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-xs text-muted-foreground">手机号</div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-3 w-3 text-muted-foreground" />
+                    <span className="font-medium">{employeeDetail.phoneNumber || '未设置'}</span>
+                  </div>
                 </div>
                 
                 <div className="space-y-1">

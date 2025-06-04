@@ -54,6 +54,8 @@ export const useEmployees = (): UseEmployeesReturn => {
         employeeId: emp.employeeId,
         name: emp.fullName,
         department: departmentDisplay,
+        email: emp.email,
+        phoneNumber: emp.phoneNumber,
         status: emp.employmentStatus === 'Active' ? 'active' : 'departed',
         joinDate: emp.hireDate ? new Date(emp.hireDate).toISOString().split('T')[0] : '',
         leaveDate: emp.terminationDate ? new Date(emp.terminationDate).toISOString().split('T')[0] : undefined,

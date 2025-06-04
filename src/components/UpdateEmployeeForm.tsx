@@ -31,6 +31,8 @@ export const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({
   const form = useForm<UpdateEmployeeRequest>({
     defaultValues: {
       departmentId: undefined, // 将根据部门名称查找对应的ID
+      email: '',
+      phoneNumber: '',
       employmentStatus: employee.status === 'active' ? 'Active' : 'Departed',
       hireDate: employee.joinDate || '',
       terminationDate: employee.leaveDate || '',
@@ -51,6 +53,8 @@ export const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({
 
   // 当员工数据变化时，更新表单的所有字段值
   React.useEffect(() => {
+    form.setValue('email', employee.email || '');
+    form.setValue('phoneNumber', employee.phoneNumber || '');
     form.setValue('employmentStatus', employee.status === 'active' ? 'Active' : 'Departed');
     form.setValue('hireDate', employee.joinDate || '');
     form.setValue('terminationDate', employee.leaveDate || '');
@@ -69,6 +73,13 @@ export const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({
     const submitData = { ...data };
     if (!submitData.terminationDate) {
       delete submitData.terminationDate;
+    }
+    // 如果邮箱或手机号为空，设置为空字符串以便清空
+    if (!submitData.email) {
+      submitData.email = '';
+    }
+    if (!submitData.phoneNumber) {
+      submitData.phoneNumber = '';
     }
     await onSubmit(submitData);
   };
@@ -103,6 +114,54 @@ export const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({
                   placeholder="选择部门"
                 />
                 </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="email"
+          rules={{
+            pattern: {
+              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+              message: '请输入有效的邮箱地址'
+            }
+          }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>邮箱</FormLabel>
+              <FormControl>
+                <Input
+                  type="email"
+                  placeholder="请输入邮箱地址（可留空）"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="phoneNumber"
+          rules={{
+            pattern: {
+              value: /^1[3-9]\d{9}$/,
+              message: '请输入有效的11位手机号码'
+            }
+          }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>手机号</FormLabel>
+              <FormControl>
+                <Input
+                  type="tel"
+                  placeholder="请输入11位手机号码（可留空）"
+                  {...field}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
