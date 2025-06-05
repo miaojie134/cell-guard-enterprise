@@ -29,6 +29,14 @@ const EmployeeVerification: React.FC = () => {
   
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  // 报告号码有问题时，选择的问题类型
+  const issueOptions = [
+    { value: '封号/停机', label: '封号/停机' },
+    { value: '丢失/遗失', label: '丢失/遗失' },
+    { value: '号码已注销', label: '号码已注销' },
+    { value: '其他', label: '其他' },
+  ];
+
   // 使用Zustand store
   const useStore = useMemo(() => {
     if (!token) return null;
@@ -124,11 +132,11 @@ const EmployeeVerification: React.FC = () => {
           return false;
         }
       } else if (verified.action === VERIFICATION_ACTION.REPORT_ISSUE) {
-        // 报告问题时需要填写问题说明
-        if (!verified.userComment?.trim()) {
+        // 报告问题时需要选择问题类型
+        if (!verified.userComment) {
           toast({
             title: "表单验证失败", 
-            description: "请填写问题说明",
+            description: "请选择问题类型",
             variant: "destructive",
           });
           return false;
@@ -358,11 +366,10 @@ const EmployeeVerification: React.FC = () => {
                         <Label className="text-xs font-medium text-red-700 mb-2 block">
                           问题说明 <span className="text-red-500">*</span>
                         </Label>
-                        <Input
+                        <PurposeSelector
                           value={verifiedNumbers[index]?.userComment || ''}
-                          onChange={(e) => updateVerifiedNumber(index, { userComment: e.target.value })}
-                          placeholder="请说明该号码的异常情况"
-                          className="h-9 bg-white border-red-200 focus:border-red-400 text-sm"
+                          onValueChange={(value) => updateVerifiedNumber(index, { userComment: value })}
+                          options={issueOptions}
                         />
                       </>
                     ) : (
