@@ -58,8 +58,15 @@ export const Sidebar = () => {
 
   return (
     <div className="w-56 h-screen bg-sidebar border-r border-sidebar-border flex flex-col">
-      <div className="px-4 py-4">
-        <h2 className="text-lg font-bold text-sidebar-primary">企业号码管理</h2>
+      <div className="px-4 py-4 ">
+        <div className="flex flex-col items-center space-y-3">
+          <img 
+            src="https://kael.knowbox.cn/html/static/media/xiaohe-logo.c6f6c06b.png" 
+            alt="logo"
+            className="h-12 w-auto object-contain"
+          />
+          {/* <h2 className="text-lg font-bold text-sidebar-primary text-center">小盒手机号码管理</h2> */}
+        </div>
       </div>
 
       <nav className="flex-1 px-3 pb-3 overflow-y-auto">
