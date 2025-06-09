@@ -9,11 +9,11 @@ import {
   TabsTrigger 
 } from "@/components/ui/tabs";
 import { ImportForm } from "@/components/ImportForm";
+import { EmployeeImportForm } from "@/components/EmployeeImportForm";
 
 const ImportData = () => {
-  const { importEmployees, importPhones } = useData();
+  const { importPhones } = useData();
   
-  const employeeFields = ["employeeId", "name", "department", "joinDate"];
   const phoneFields = ["number", "registrant", "registrationDate", "provider", "status"];
   
   return (
@@ -25,12 +25,7 @@ const ImportData = () => {
         </TabsList>
         
         <TabsContent value="employees">
-          <ImportForm
-            title="员工数据批量导入"
-            description="从Excel或CSV文件批量导入员工数据，请确保文件格式正确"
-            templateFields={employeeFields}
-            onImport={importEmployees}
-          />
+          <EmployeeImportForm />
         </TabsContent>
         
         <TabsContent value="phones">

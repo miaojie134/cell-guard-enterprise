@@ -40,11 +40,6 @@ export const Sidebar = () => {
       icon: <ClipboardCheck className="mr-2 h-4 w-4" />,
     },
     {
-      name: "数据导入",
-      path: "/import",
-      icon: <Upload className="mr-2 h-4 w-4" />,
-    },
-    {
       name: "员工管理",
       path: "/employees",
       icon: <User className="mr-2 h-4 w-4" />,
@@ -53,6 +48,11 @@ export const Sidebar = () => {
       name: "部门管理",
       path: "/departments",
       icon: <Building2 className="mr-2 h-4 w-4" />,
+    },
+    {
+      name: "数据导入",
+      path: "/import",
+      icon: <Upload className="mr-2 h-4 w-4" />,
     },
   ];
 
