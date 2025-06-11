@@ -11,6 +11,25 @@ import {
 } from '@/config/api';
 import { useAuth } from '@/context/AuthContext';
 
+// 自然排序函数，正确处理包含数字的字符串
+const naturalSort = (a: string, b: string): number => {
+  const collator = new Intl.Collator(undefined, {
+    numeric: true,
+    sensitivity: 'base'
+  });
+  return collator.compare(a, b);
+};
+
+// 递归排序部门树
+const sortDepartmentTree = (nodes: DepartmentTreeNode[]): DepartmentTreeNode[] => {
+  return nodes
+    .sort((a, b) => naturalSort(a.name, b.name))
+    .map(node => ({
+      ...node,
+      children: node.children ? sortDepartmentTree(node.children) : []
+    }));
+};
+
 // 部门列表 Hook
 export interface UseDepartmentsReturn {
   departments: Department[];
@@ -52,22 +71,25 @@ export interface UseDepartmentOptionsReturn {
   refetch: () => void;
 }
 
-export const useDepartmentOptions = (): UseDepartmentOptionsReturn => {
+export const useDepartmentOptions = (params: DepartmentSearchParams = {}): UseDepartmentOptionsReturn => {
   const { isAuthenticated } = useAuth();
 
   const {
-    data: options = [],
+    data,
     isLoading,
     error,
     refetch
   } = useQuery({
-    queryKey: ['departmentOptions'],
+    queryKey: ['departmentOptions', params],
     queryFn: () => departmentService.getDepartmentOptions(),
     enabled: isAuthenticated,
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5分钟缓存
     gcTime: 10 * 60 * 1000, // 10分钟后清理缓存
   });
+
+  // 对部门选项进行自然排序
+  const options = data ? data.sort((a, b) => naturalSort(a.name, b.name)) : [];
 
   return {
     options,
@@ -89,7 +111,7 @@ export const useDepartmentTree = (): UseDepartmentTreeReturn => {
   const { isAuthenticated } = useAuth();
 
   const {
-    data: tree = [],
+    data,
     isLoading,
     error,
     refetch
@@ -101,6 +123,9 @@ export const useDepartmentTree = (): UseDepartmentTreeReturn => {
     staleTime: 5 * 60 * 1000, // 5分钟缓存
     gcTime: 10 * 60 * 1000, // 10分钟后清理缓存
   });
+
+  // 对部门树进行自然排序
+  const tree = data ? sortDepartmentTree(data) : [];
 
   return {
     tree,
