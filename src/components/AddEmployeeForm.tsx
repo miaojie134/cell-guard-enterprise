@@ -107,8 +107,8 @@ export const AddEmployeeForm: React.FC<AddEmployeeFormProps> = ({
           rules={{ 
             required: '请输入手机号码',
             pattern: {
-              value: /^1[3-9]\d{9}$/,
-              message: '请输入有效的手机号码'
+              value: /^1[3-9]\d{1,2}\*{4}\d{4}$/,
+              message: '请输入脱敏手机号格式（如：138****7890）'
             }
           }}
           render={({ field }) => (
@@ -116,7 +116,7 @@ export const AddEmployeeForm: React.FC<AddEmployeeFormProps> = ({
               <FormLabel>手机号码 *</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="请输入手机号码"
+                  placeholder="请输入脱敏手机号（如：138****7890）"
                   {...field}
                 />
               </FormControl>

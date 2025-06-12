@@ -148,8 +148,8 @@ export const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({
           name="phoneNumber"
           rules={{
             pattern: {
-              value: /^1[3-9]\d{9}$/,
-              message: '请输入有效的11位手机号码'
+              value: /^1[3-9]\d{1,2}\*{4}\d{4}$/,
+              message: '请输入脱敏手机号格式（如：138****7890）'
             }
           }}
           render={({ field }) => (
@@ -158,7 +158,7 @@ export const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({
               <FormControl>
                 <Input
                   type="tel"
-                  placeholder="请输入11位手机号码（可留空）"
+                  placeholder="请输入脱敏手机号（如：138****7890）"
                   {...field}
                 />
               </FormControl>
