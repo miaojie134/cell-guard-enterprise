@@ -825,6 +825,9 @@ const Phones = () => {
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>手机号码详情</DialogTitle>
+            <DialogDescription>
+              查看手机号码的完整信息和使用历史记录
+            </DialogDescription>
           </DialogHeader>
           {currentPhone && (
             <div className="space-y-6 py-2">
