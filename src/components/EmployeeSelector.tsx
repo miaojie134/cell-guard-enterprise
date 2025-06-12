@@ -83,8 +83,8 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // 防抖搜索词，减少API调用频率（增加到1000ms，适合中文输入）
-  const debouncedSearchTerm = useDebounce(searchTerm, 1000);
+  // 防抖搜索词，减少API调用频率（增加到500ms，适合中文输入）
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   // 动态搜索：根据搜索词调用API（只有在非中文输入状态下才搜索）
   const {

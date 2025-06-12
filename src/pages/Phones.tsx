@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+
 import { SearchBar } from "@/components/SearchBar";
 import { Pagination } from "@/components/Pagination";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -137,7 +137,7 @@ const Phones = () => {
   };
 
   // Form handlers
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     
@@ -578,15 +578,15 @@ const Phones = () => {
       
       {/* Add Phone Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[95vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>添加新手机号码</DialogTitle>
-            <DialogDescription>
+            {/* <DialogDescription>
               请填写新手机号码的详细信息
-            </DialogDescription>
+            </DialogDescription> */}
           </DialogHeader>
           <form onSubmit={handleAddSubmit}>
-            <div className="space-y-4 py-2">
+            <div className="space-y-3 py-1">
               <div className="space-y-2">
                 <Label htmlFor="phoneNumber">手机号码</Label>
                 <Input
@@ -692,7 +692,7 @@ const Phones = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="remarks">备注</Label>
-                <Textarea
+                <Input
                   id="remarks"
                   name="remarks"
                   placeholder="请输入备注信息"
@@ -792,7 +792,7 @@ const Phones = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="remarks">备注</Label>
-                <Textarea
+                <Input
                   id="remarks"
                   name="remarks"
                   placeholder="请输入备注信息"
