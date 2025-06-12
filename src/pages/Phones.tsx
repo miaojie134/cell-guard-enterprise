@@ -608,7 +608,7 @@ const Phones = () => {
                 <EmployeeSelector
                   value={selectedEmployee}
                   onChange={setSelectedEmployee}
-                  placeholder="搜索员工姓名或工号..."
+                  placeholder="搜索员工姓名..."
                   required
                   error={formErrors.employee}
                   compact={true}
@@ -888,7 +888,7 @@ const Phones = () => {
                     <table className="w-full text-sm">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-3 py-2 text-left font-medium text-gray-900">员工工号</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-900">员工</th>
                           <th className="px-3 py-2 text-left font-medium text-gray-900">开始日期</th>
                           <th className="px-3 py-2 text-left font-medium text-gray-900">结束日期</th>
                         </tr>
@@ -944,7 +944,7 @@ const Phones = () => {
                 <EmployeeSelector
                   value={assignSelectedEmployee}
                   onChange={setAssignSelectedEmployee}
-                  placeholder="搜索员工姓名或工号..."
+                  placeholder="搜索员工姓名..."
                   required
                   error={assignFormErrors.employee}
                   compact={true}

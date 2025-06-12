@@ -65,7 +65,7 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
   onChange,
   employees: staticEmployees = [],
   isLoading: externalIsLoading = false,
-  placeholder = "搜索员工姓名、工号或部门...",
+  placeholder = "搜索员工姓名或部门...",
   required = false,
   disabled = false,
   onSearch,
@@ -217,7 +217,7 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
   // 选择员工
   const handleEmployeeSelect = (employee: Employee) => {
     onChange(employee);
-    setSearchTerm(`${employee.fullName} (${employee.employeeId})`);
+    setSearchTerm(`${employee.fullName}`);
     setShowDropdown(false);
     setHighlightedIndex(-1);
     
@@ -291,7 +291,7 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
   // 当value变化时更新搜索框
   useEffect(() => {
     if (value) {
-      setSearchTerm(`${value.fullName} (${value.employeeId})`);
+      setSearchTerm(`${value.fullName}`);
     } else if (!showDropdown) {
       setSearchTerm('');
     }
@@ -398,10 +398,6 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
                         </div>
                         
                         <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            {employee.employeeId}
-                          </span>
                           <span className="flex items-center gap-1" title={employee.department || '未分配部门'}>
                             <Building2 className="h-3 w-3" />
                             <span className="truncate">{employee.department || '未分配部门'}</span>
@@ -456,7 +452,7 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
           <Card className="absolute z-50 w-full mt-1 shadow-lg border">
             <CardContent className="p-3">
               <div className="text-sm text-muted-foreground text-center">
-                {enableDynamicSearch ? "输入姓名、工号或部门开始搜索" : "暂无可选择的员工"}
+                {enableDynamicSearch ? "输入姓名或部门开始搜索" : "暂无可选择的员工"}
               </div>
             </CardContent>
           </Card>

@@ -83,7 +83,6 @@ export const EmployeeDetailDialog: React.FC<EmployeeDetailDialogProps> = ({
                 </div>
                 <div className="flex flex-col">
                   <span>{employeeDetail.fullName}</span>
-                  <span className="text-sm font-normal text-muted-foreground">{employeeDetail.employeeId}</span>
                 </div>
               </>
             ) : (

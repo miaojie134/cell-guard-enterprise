@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/layouts/MainLayout";
 import { useData } from "@/context/DataContext";
@@ -51,7 +50,7 @@ const PhoneAssign = () => {
       assignPhone(selectedPhoneId, selectedEmployeeId);
       toast({
         title: "分配成功",
-        description: `成功将号码 ${selectedPhone?.number} 分配给 ${selectedEmployee?.name}`,
+        description: `成功将号码 ${selectedPhone?.phoneNumber} 分配给 ${selectedEmployee?.name}`,
       });
       setSelectedPhoneId("");
       setSelectedEmployeeId("");
@@ -64,7 +63,7 @@ const PhoneAssign = () => {
     recoverPhone(phoneId);
     toast({
       title: "回收成功",
-      description: `成功从 ${phone?.currentUser || "用户"} 回收号码 ${phone?.number}`,
+      description: `成功从 ${phone?.currentUserName || "用户"} 回收号码 ${phone?.phoneNumber}`,
     });
   };
   
@@ -93,7 +92,7 @@ const PhoneAssign = () => {
                   {availablePhones.length > 0 ? (
                     availablePhones.map(phone => (
                       <SelectItem key={phone.id} value={phone.id}>
-                        {phone.number} ({phone.provider})
+                        {phone.phoneNumber} ({phone.vendor})
                       </SelectItem>
                     ))
                   ) : (
@@ -107,9 +106,9 @@ const PhoneAssign = () => {
             
             {selectedPhoneId && (
               <div className="p-3 bg-muted rounded-md text-sm">
-                <p><span className="font-medium">号码:</span> {selectedPhone?.number}</p>
-                <p><span className="font-medium">供应商:</span> {selectedPhone?.provider}</p>
-                <p><span className="font-medium">办卡人:</span> {selectedPhone?.registrant}</p>
+                <p><span className="font-medium">号码:</span> {selectedPhone?.phoneNumber}</p>
+                <p><span className="font-medium">供应商:</span> {selectedPhone?.vendor}</p>
+                <p><span className="font-medium">办卡人:</span> {selectedPhone?.applicantName}</p>
                 <p><span className="font-medium">使用历史:</span> {getPhoneHistoryByPhoneId(selectedPhoneId).length} 条记录</p>
               </div>
             )}
@@ -127,7 +126,7 @@ const PhoneAssign = () => {
                   {activeEmployees.length > 0 ? (
                     activeEmployees.map(employee => (
                       <SelectItem key={employee.id} value={employee.id}>
-                        {employee.name} ({employee.employeeId} - {employee.department})
+                        {employee.name} ({employee.department})
                       </SelectItem>
                     ))
                   ) : (
@@ -141,7 +140,6 @@ const PhoneAssign = () => {
             
             {selectedEmployeeId && (
               <div className="p-3 bg-muted rounded-md text-sm">
-                <p><span className="font-medium">员工工号:</span> {selectedEmployee?.employeeId}</p>
                 <p><span className="font-medium">员工姓名:</span> {selectedEmployee?.name}</p>
                 <p><span className="font-medium">所属部门:</span> {selectedEmployee?.department}</p>
               </div>
@@ -179,9 +177,9 @@ const PhoneAssign = () => {
                 <tbody>
                   {phonesInUse.map(phone => (
                     <tr key={phone.id}>
-                      <td>{phone.number}</td>
-                      <td>{phone.currentUser}</td>
-                      <td><StatusBadge status={phone.status} /></td>
+                      <td>{phone.phoneNumber}</td>
+                      <td>{phone.currentUserName}</td>
+                      <td><StatusBadge status={phone.status as any} /></td>
                       <td>
                         <Button 
                           size="sm" 

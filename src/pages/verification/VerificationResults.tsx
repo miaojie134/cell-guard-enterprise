@@ -188,11 +188,11 @@ const VerificationResults: React.FC = () => {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
-                    <Label className="text-sm">员工工号</Label>
+                    <Label className="text-sm">员工编号</Label>
                     <Input
                       value={filters.employee_id}
                       onChange={(e) => setFilters(prev => ({ ...prev, employee_id: e.target.value }))}
-                      placeholder="输入员工工号"
+                      placeholder="输入员工编号"
                       className="mt-1"
                     />
                   </div>
@@ -319,7 +319,7 @@ const VerificationResults: React.FC = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="text-xs">员工工号</TableHead>
+                          <TableHead className="text-xs">员工编号</TableHead>
                           <TableHead className="text-xs">员工姓名</TableHead>
                           <TableHead className="text-xs">邮箱地址</TableHead>
                           <TableHead className="text-xs">令牌状态</TableHead>

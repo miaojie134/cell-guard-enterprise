@@ -325,7 +325,7 @@ const VerificationCreate: React.FC = () => {
                       <EmployeeSelector
                         value={null}
                         onChange={handleEmployeeSelect}
-                        placeholder="搜索员工姓名、工号或部门..."
+                        placeholder="搜索员工姓名或部门..."
                         compact
                         enableDynamicSearch={true}
                       />
@@ -363,7 +363,7 @@ const VerificationCreate: React.FC = () => {
                       <Alert className="py-2">
                         <UserCheck className="h-4 w-4" />
                         <AlertDescription className="text-sm">
-                          请使用上方搜索框搜索并选择员工。支持按姓名、工号、部门等搜索。
+                          请使用上方搜索框搜索并选择员工。支持按姓名、部门等搜索。
                         </AlertDescription>
                       </Alert>
                     )}

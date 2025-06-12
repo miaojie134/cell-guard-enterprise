@@ -92,10 +92,6 @@ export const UpdateEmployeeForm: React.FC<UpdateEmployeeFormProps> = ({
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-medium text-muted-foreground">工号</label>
-            <p className="text-lg font-medium">{employee.employeeId}</p>
-          </div>
-          <div>
             <label className="text-sm font-medium text-muted-foreground">姓名</label>
             <p className="text-lg font-medium">{employee.name}</p>
           </div>

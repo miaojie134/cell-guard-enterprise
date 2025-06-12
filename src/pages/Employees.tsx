@@ -283,7 +283,7 @@ const Employees = () => {
             <div className="w-full lg:w-auto">
               <SearchBar
                 onSearch={handleSearch}
-                placeholder="搜索员工姓名、工号..."
+                placeholder="搜索员工姓名..."
               />
             </div>
             <div className="flex items-center gap-2 w-full lg:w-auto">
@@ -338,9 +338,10 @@ const Employees = () => {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>工号</th>
                   <th>姓名</th>
                   <th>部门</th>
+                  <th>手机号</th>
+                  <th>邮箱</th>
                   <th>状态</th>
                   <th>入职日期</th>
                   <th>离职日期</th>
@@ -350,7 +351,7 @@ const Employees = () => {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-8">
+                    <td colSpan={8} className="text-center py-8">
                       <div className="flex items-center justify-center space-x-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         <span>加载中...</span>
@@ -359,16 +360,17 @@ const Employees = () => {
                   </tr>
                 ) : employees.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-4">
+                    <td colSpan={8} className="text-center py-4">
                       没有找到符合条件的员工
                     </td>
                   </tr>
                 ) : (
                   employees.map((employee) => (
                     <tr key={employee.id}>
-                      <td>{employee.employeeId}</td>
                       <td>{employee.name}</td>
                       <td>{employee.department}</td>
+                      <td>{employee.phoneNumber || "-"}</td>
+                      <td>{employee.email || "-"}</td>
                       <td>
                         <StatusBadge 
                           status={mapEmployeeStatusToBadgeStatus(employee.status)} 

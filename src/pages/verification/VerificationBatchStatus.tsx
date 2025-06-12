@@ -241,7 +241,7 @@ const VerificationBatchStatus: React.FC = () => {
             empIds = requestedScopeValues.split(',').map(id => id.trim());
           }
           
-          // 如果有员工姓名信息，显示姓名；否则显示工号
+          // 如果有员工姓名信息，显示姓名；否则显示员工
           if (Object.keys(employeeNames).length > 0) {
             const names = empIds.map(id => {
               const name = employeeNames[id];
@@ -250,13 +250,13 @@ const VerificationBatchStatus: React.FC = () => {
             return { 
               text: '按员工盘点', 
               icon: UserCheck, 
-              detail: `员工姓名: ${names.join(', ')} (${names.length}位员工)` 
+              detail: `员工: ${names.join(', ')} (${names.length}位员工)` 
             };
           } else {
             return { 
               text: '按员工盘点', 
               icon: UserCheck, 
-              detail: `员工工号: ${empIds.join(', ')} (${empIds.length}位员工)` 
+              detail: `员工: ${empIds.join(', ')} (${empIds.length}位员工)` 
             };
           }
         }

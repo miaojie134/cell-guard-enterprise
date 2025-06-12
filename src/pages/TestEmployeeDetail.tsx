@@ -69,11 +69,11 @@ const TestEmployeeDetail = () => {
           <CardContent className="space-y-4">
             <div className="flex gap-4 items-end">
               <div className="flex-1">
-                <label className="text-sm font-medium">员工工号</label>
+                <label className="text-sm font-medium">员工编号</label>
                 <Input
                   value={employeeId}
                   onChange={(e) => setEmployeeId(e.target.value)}
-                  placeholder="请输入员工工号，例如：employeeId"
+                  placeholder="请输入员工编号，例如：EMP001"
                 />
               </div>
               <Button onClick={handleFetchDetail} disabled={isLoading}>
@@ -108,10 +108,6 @@ const TestEmployeeDetail = () => {
                       <div>
                         <label className="text-sm font-medium text-gray-500">员工姓名</label>
                         <p className="text-sm font-medium">{employeeDetail.fullName}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">员工工号</label>
-                        <p className="text-sm font-medium">{employeeDetail.employeeId}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-500">部门</label>
