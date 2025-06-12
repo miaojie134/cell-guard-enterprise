@@ -28,7 +28,6 @@ import { Plus, FileText, Pencil, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { usePhoneNumbers, usePhoneNumber } from "@/hooks/usePhoneNumbers";
-import { useEmployeesForSelector } from "@/hooks/useEmployees";
 import { CreatePhoneRequest, UpdatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest, PhoneStatus } from "@/config/api/phone";
 import { Link } from "react-router-dom";
 
@@ -90,12 +89,6 @@ const Phones = () => {
     isAssigning,
     isUnassigning,
   } = usePhoneNumbers(searchParams);
-
-  // 获取员工列表
-  const { activeEmployees, isLoading: isLoadingEmployees } = useEmployeesForSelector({
-    employmentStatus: 'Active',
-    limit: 100,
-  });
 
   // 获取当前选中的手机号码详情
   const { phoneNumber: currentPhone } = usePhoneNumber(currentPhoneNumber || "");
@@ -615,12 +608,11 @@ const Phones = () => {
                 <EmployeeSelector
                   value={selectedEmployee}
                   onChange={setSelectedEmployee}
-                  employees={activeEmployees}
-                  isLoading={isLoadingEmployees}
                   placeholder="搜索员工姓名或工号..."
                   required
                   error={formErrors.employee}
                   compact={true}
+                  enableDynamicSearch={true}
                 />
               </div>
               
@@ -949,12 +941,11 @@ const Phones = () => {
                 <EmployeeSelector
                   value={assignSelectedEmployee}
                   onChange={setAssignSelectedEmployee}
-                  employees={activeEmployees}
-                  isLoading={isLoadingEmployees}
                   placeholder="搜索员工姓名或工号..."
                   required
                   error={assignFormErrors.employee}
                   compact={true}
+                  enableDynamicSearch={true}
                 />
               </div>
               

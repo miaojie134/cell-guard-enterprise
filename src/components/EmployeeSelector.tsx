@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import {
   Phone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useEmployeesForSelector } from '@/hooks/useEmployees';
 
 export interface Employee {
   id: number;
@@ -30,7 +31,7 @@ export interface Employee {
 interface EmployeeSelectorProps {
   value?: Employee | null;
   onChange: (employee: Employee | null) => void;
-  employees: Employee[];
+  employees?: Employee[]; // 兼容旧用法，但不推荐
   isLoading?: boolean;
   placeholder?: string;
   required?: boolean;
@@ -39,13 +40,31 @@ interface EmployeeSelectorProps {
   error?: string;
   compact?: boolean;
   label?: string;
+  enableDynamicSearch?: boolean; // 是否启用动态搜索
 }
+
+// 防抖hook
+const useDebounce = (value: string, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
 
 export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
   value,
   onChange,
-  employees,
-  isLoading = false,
+  employees: staticEmployees = [],
+  isLoading: externalIsLoading = false,
   placeholder = "搜索员工姓名、工号或部门...",
   required = false,
   disabled = false,
@@ -53,48 +72,112 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
   error,
   compact = false,
   label,
+  enableDynamicSearch = true, // 默认启用动态搜索
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [isComposing, setIsComposing] = useState(false); // 中文输入法状态
   
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // 防抖搜索词，减少API调用频率（增加到1000ms，适合中文输入）
+  const debouncedSearchTerm = useDebounce(searchTerm, 1000);
+
+  // 动态搜索：根据搜索词调用API（只有在非中文输入状态下才搜索）
+  const {
+    employees: searchResults,
+    isLoading: isSearchLoading,
+  } = useEmployeesForSelector({
+    search: enableDynamicSearch && debouncedSearchTerm.trim() && !isComposing ? debouncedSearchTerm : undefined,
+    employmentStatus: 'Active',
+    limit: 50, // 搜索结果限制在50个，提高响应速度
+  });
+
+  // 默认员工列表（当没有搜索时显示）
+  const {
+    employees: defaultEmployees,
+    isLoading: isDefaultLoading,
+  } = useEmployeesForSelector({
+    search: undefined, // 不传搜索条件
+    employmentStatus: 'Active',
+    limit: 20, // 默认只显示20个最近的员工
+  });
+
+  // 选择合适的员工数据源
+  const employees = useMemo(() => {
+    // 如果传入了静态员工列表，优先使用（向后兼容）
+    if (staticEmployees.length > 0) {
+      return staticEmployees;
+    }
+    
+    // 如果启用动态搜索
+    if (enableDynamicSearch) {
+      // 有搜索词时使用搜索结果，没有搜索词时使用默认列表
+      return debouncedSearchTerm.trim() ? searchResults : defaultEmployees;
+    }
+    
+    // 不启用动态搜索时返回空数组
+    return [];
+  }, [staticEmployees, enableDynamicSearch, debouncedSearchTerm, searchResults, defaultEmployees]);
+
+  // 综合loading状态
+  const isLoading = useMemo(() => {
+    if (staticEmployees.length > 0) {
+      return externalIsLoading;
+    }
+    
+    if (enableDynamicSearch) {
+      return debouncedSearchTerm.trim() ? isSearchLoading : isDefaultLoading;
+    }
+    
+    return false;
+  }, [staticEmployees.length, externalIsLoading, enableDynamicSearch, debouncedSearchTerm, isSearchLoading, isDefaultLoading]);
+
   // 过滤员工列表
   useEffect(() => {
-    if (!searchTerm.trim() && !showDropdown) {
+    if (!showDropdown) {
       setFilteredEmployees([]);
       return;
     }
 
-    // 如果没有搜索词但显示下拉框，显示最近的员工
-    if (!searchTerm.trim() && showDropdown) {
-      setFilteredEmployees(employees.slice(0, compact ? 6 : 10));
+    // 如果使用静态员工列表，需要前端过滤
+    if (staticEmployees.length > 0) {
+      const filtered = employees.filter(emp => 
+        !searchTerm.trim() || 
+        emp.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        emp.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (emp.department && emp.department.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (emp.email && emp.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (emp.position && emp.position.toLowerCase().includes(searchTerm.toLowerCase()))
+      ).slice(0, compact ? 8 : 12);
+      
+      setFilteredEmployees(filtered);
       setHighlightedIndex(-1);
       return;
     }
 
-    const filtered = employees.filter(emp => 
-      emp.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (emp.department && emp.department.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (emp.email && emp.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (emp.position && emp.position.toLowerCase().includes(searchTerm.toLowerCase()))
-    ).slice(0, compact ? 6 : 10);
-
-    setFilteredEmployees(filtered);
+    // 动态搜索模式：后端已经过滤，直接使用
+    setFilteredEmployees(employees.slice(0, compact ? 8 : 12));
     setHighlightedIndex(-1);
-  }, [searchTerm, employees, compact, showDropdown]);
+    
+    // 确保输入框保持焦点
+    setTimeout(() => {
+      if (inputRef.current && document.activeElement !== inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 0);
+  }, [searchTerm, employees, showDropdown, staticEmployees.length, compact]);
 
   // 处理搜索输入
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchTerm(query);
     
-    // 只有在输入内容时才显示下拉框
-    setShowDropdown(query.trim().length > 0);
+    // 显示下拉框
+    setShowDropdown(true);
     
     // 如果有搜索回调，调用它
     if (onSearch) {
@@ -102,17 +185,32 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
     }
   };
 
+  // 处理中文输入法开始事件
+  const handleCompositionStart = () => {
+    setIsComposing(true);
+  };
+
+  // 处理中文输入法结束事件
+  const handleCompositionEnd = () => {
+    setIsComposing(false);
+  };
+
+  // 处理输入框聚焦
+  const handleInputFocus = () => {
+    setShowDropdown(true);
+  };
+
   // 处理输入框点击
   const handleInputClick = () => {
     if (!value) {
-      setShowDropdown(!showDropdown);
+      setShowDropdown(true);
     }
   };
 
   // 处理搜索图标点击
   const handleSearchIconClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setShowDropdown(!showDropdown);
+    setShowDropdown(true);
     inputRef.current?.focus();
   };
 
@@ -122,6 +220,13 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
     setSearchTerm(`${employee.fullName} (${employee.employeeId})`);
     setShowDropdown(false);
     setHighlightedIndex(-1);
+    
+    // 选择后保持输入框焦点
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 100);
   };
 
   // 清除选择
@@ -208,8 +313,11 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
             type="text"
             value={searchTerm}
             onChange={handleSearchChange}
+            onFocus={handleInputFocus}
             onKeyDown={handleKeyDown}
             onClick={handleInputClick}
+            onCompositionStart={handleCompositionStart}
+            onCompositionEnd={handleCompositionEnd}
             placeholder={placeholder}
             disabled={disabled || isLoading}
             className={cn(
@@ -268,7 +376,11 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
                         index === highlightedIndex && "bg-accent",
                         compact && "py-1.5 text-sm"
                       )}
-                      onClick={() => handleEmployeeSelect(employee)}
+                      onMouseDown={(e) => {
+                        // 防止点击下拉选项时输入框失去焦点
+                        e.preventDefault();
+                        handleEmployeeSelect(employee);
+                      }}
                       onMouseEnter={() => setHighlightedIndex(index)}
                     >
                       {/* 员工头像/图标 */}
@@ -314,12 +426,13 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
                   );
                 })}
                 
-                {employees.length > filteredEmployees.length && (
+                {/* 搜索提示 */}
+                {enableDynamicSearch && searchTerm.trim() && (
                   <div className={cn(
                     "text-center text-muted-foreground border-t border-border/30 bg-muted/20",
                     compact ? "py-2 text-xs" : "py-3 text-sm"
                   )}>
-                    继续输入以缩小搜索范围...
+                    {isLoading ? "搜索中..." : `显示前${filteredEmployees.length}个结果`}
                   </div>
                 )}
               </div>
@@ -328,7 +441,7 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
         )}
 
         {/* 无结果提示 */}
-        {showDropdown && searchTerm && filteredEmployees.length === 0 && !isLoading && (
+        {showDropdown && searchTerm.trim() && filteredEmployees.length === 0 && !isLoading && (
           <Card className="absolute z-50 w-full mt-1 shadow-lg border">
             <CardContent className="p-3">
               <div className="text-sm text-muted-foreground text-center">
@@ -338,12 +451,12 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
           </Card>
         )}
 
-        {/* 无员工数据提示 */}
-        {showDropdown && !searchTerm && employees.length === 0 && !isLoading && (
+        {/* 空状态提示 */}
+        {showDropdown && !searchTerm.trim() && filteredEmployees.length === 0 && !isLoading && (
           <Card className="absolute z-50 w-full mt-1 shadow-lg border">
             <CardContent className="p-3">
               <div className="text-sm text-muted-foreground text-center">
-                暂无可选择的员工
+                {enableDynamicSearch ? "输入姓名、工号或部门开始搜索" : "暂无可选择的员工"}
               </div>
             </CardContent>
           </Card>

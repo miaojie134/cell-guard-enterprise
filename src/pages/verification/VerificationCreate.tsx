@@ -50,8 +50,11 @@ const VerificationCreate: React.FC = () => {
     queryFn: () => departmentService.getDepartments(),
   });
 
-  // 获取员工列表 (用于EmployeeSelector)
-  const { employees, activeEmployees, isLoading: isLoadingEmployees } = useEmployeesForSelector();
+  // 获取活跃员工数据用于统计 (员工选择器现在自带动态搜索)
+  const { activeEmployees, isLoading: isLoadingEmployees } = useEmployeesForSelector({
+    employmentStatus: 'Active',
+    limit: 1000, // 用于统计，获取更多数据
+  });
 
   // 发起盘点
   const createMutation = useMutation({
@@ -322,10 +325,9 @@ const VerificationCreate: React.FC = () => {
                       <EmployeeSelector
                         value={null}
                         onChange={handleEmployeeSelect}
-                        employees={activeEmployees}
                         placeholder="搜索员工姓名、工号或部门..."
-                        isLoading={isLoadingEmployees}
                         compact
+                        enableDynamicSearch={true}
                       />
                     </div>
 
