@@ -51,7 +51,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   onEdit, 
   onDelete 
 }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const hasChildren = node.children && node.children.length > 0;
 
   const handleToggle = () => {
