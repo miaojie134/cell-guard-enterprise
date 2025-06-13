@@ -55,22 +55,7 @@ const Phones = () => {
     cancellationDate: "",
   });
 
-  // 时间筛选状态
-  type DateFilterType = 'application' | 'cancellation' | 'none';
-  
-  const [dateFilterType, setDateFilterType] = useState<DateFilterType>('none');
-  const [customDateRange, setCustomDateRange] = useState<{
-    from?: Date;
-    to?: Date;
-  }>({});
-  const [tempDateRange, setTempDateRange] = useState<{
-    from?: Date;
-    to?: Date;
-  }>({});
-
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [isWaitingForSecondDate, setIsWaitingForSecondDate] = useState(false);
-  const [autoConfirmTimer, setAutoConfirmTimer] = useState<NodeJS.Timeout | null>(null);
+  // 移除了旧的时间筛选状态，现在使用独立的列头筛选
   
   // 列头筛选器独立状态
   const [applicationDateRange, setApplicationDateRange] = useState<{from?: Date; to?: Date}>({});
@@ -78,6 +63,13 @@ const Phones = () => {
   const [isApplicationDatePickerOpen, setIsApplicationDatePickerOpen] = useState(false);
   const [isApplicationWaitingForSecondDate, setIsApplicationWaitingForSecondDate] = useState(false);
   const [applicationAutoConfirmTimer, setApplicationAutoConfirmTimer] = useState<NodeJS.Timeout | null>(null);
+  
+  // 注销时间列头筛选的独立状态
+  const [cancellationDateRange, setCancellationDateRange] = useState<{from?: Date; to?: Date}>({});
+  const [tempCancellationDateRange, setTempCancellationDateRange] = useState<{from?: Date; to?: Date}>({});
+  const [isCancellationDatePickerOpen, setIsCancellationDatePickerOpen] = useState(false);
+  const [isCancellationWaitingForSecondDate, setIsCancellationWaitingForSecondDate] = useState(false);
+  const [cancellationAutoConfirmTimer, setCancellationAutoConfirmTimer] = useState<NodeJS.Timeout | null>(null);
   
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -94,6 +86,7 @@ const Phones = () => {
     remarks: "",
     status: "idle" as PhoneStatus,
     applicationDate: new Date().toISOString().split('T')[0],
+    cancellationDate: "",
   });
   
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
@@ -133,79 +126,7 @@ const Phones = () => {
     return `${year}-${month}-${day}`;
   };
 
-  // 计算时间筛选的开始和结束时间
-  const getTimeFilterDates = () => {
-    if (dateFilterType === 'none') {
-      return { dateFrom: undefined, dateTo: undefined };
-    }
-    
-    let dateFrom: string | undefined;
-    let dateTo: string | undefined;
-    
-    if (customDateRange.from) {
-      dateFrom = formatDateToLocalString(customDateRange.from);
-    }
-    if (customDateRange.to) {
-      dateTo = formatDateToLocalString(customDateRange.to);
-    }
-    
-    return { dateFrom, dateTo };
-  };
-
-  // 更新searchParams以包含时间筛选
-  const updateSearchParamsWithTimeFilter = () => {
-    const { dateFrom, dateTo } = getTimeFilterDates();
-    
-    // 判断是否为单日选择（开始和结束日期相同）
-    const isSingleDay = dateFrom && dateTo && dateFrom === dateTo;
-    
-    // 调试信息
-    if (dateFrom || dateTo) {
-      console.log('🗓️ 日期筛选调试信息:', {
-        dateFilterType,
-        customDateRange,
-        计算结果: { dateFrom, dateTo },
-        是否单日: isSingleDay,
-        原始选择: customDateRange.from ? formatDateToLocalString(customDateRange.from) : null
-      });
-    }
-    
-    setSearchParams(prev => ({
-      ...prev,
-      page: 1, // 重置页码
-      // 清空所有时间相关参数
-      applicationDateFrom: "",
-      applicationDateTo: "",
-      applicationDate: "",
-      cancellationDateFrom: "",
-      cancellationDateTo: "",
-      cancellationDate: "",
-      // 根据筛选类型和是否单日设置对应参数
-      ...(dateFilterType === 'application' && {
-        ...(isSingleDay 
-          ? { applicationDate: dateFrom }
-          : { 
-              applicationDateFrom: dateFrom || "", 
-              applicationDateTo: dateTo || "" 
-            }
-        )
-      }),
-      ...(dateFilterType === 'cancellation' && {
-        ...(isSingleDay 
-          ? { cancellationDate: dateFrom }
-          : { 
-              cancellationDateFrom: dateFrom || "", 
-              cancellationDateTo: dateTo || "" 
-            }
-        )
-      }),
-    }));
-  };
-
-  // 监听时间筛选变化
-  useEffect(() => {
-    updateSearchParamsWithTimeFilter();
-  }, [dateFilterType, customDateRange]);
+  // 移除了旧的时间筛选相关函数，现在使用独立的列头筛选
 
   // 办卡时间列头筛选的独立处理函数
   const updateApplicationDateFilter = () => {
@@ -326,14 +247,87 @@ const Phones = () => {
     return "选择日期";
   };
 
-  // 清理定时器
-  useEffect(() => {
-    return () => {
-      if (autoConfirmTimer) {
-        clearTimeout(autoConfirmTimer);
+  // 注销时间筛选的智能日期选择
+  const handleCancellationDateSelect = (range: DateRange | undefined) => {
+    if (!range) {
+      setTempCancellationDateRange({});
+      return;
+    }
+
+    const { from, to } = range;
+    
+    // 只选择了开始日期
+    if (from && !to) {
+      setTempCancellationDateRange({ from });
+      setIsCancellationWaitingForSecondDate(true);
+      
+      // 清除之前的定时器
+      if (cancellationAutoConfirmTimer) {
+        clearTimeout(cancellationAutoConfirmTimer);
       }
-    };
-  }, [autoConfirmTimer]);
+      
+      // 500ms后自动确认为单日选择（仅更新临时状态）
+      const timer = setTimeout(() => {
+        setTempCancellationDateRange({ from, to: from });
+        setIsCancellationWaitingForSecondDate(false);
+        setCancellationAutoConfirmTimer(null);
+      }, 500);
+      
+      setCancellationAutoConfirmTimer(timer);
+    } 
+    // 选择了范围
+    else if (from && to) {
+      // 清除定时器
+      if (cancellationAutoConfirmTimer) {
+        clearTimeout(cancellationAutoConfirmTimer);
+        setCancellationAutoConfirmTimer(null);
+      }
+      
+      setTempCancellationDateRange({ from, to });
+      setIsCancellationWaitingForSecondDate(false);
+    }
+  };
+
+  // 清除注销时间筛选定时器
+  const clearCancellationAutoConfirmTimer = () => {
+    if (cancellationAutoConfirmTimer) {
+      clearTimeout(cancellationAutoConfirmTimer);
+      setCancellationAutoConfirmTimer(null);
+    }
+  };
+
+  // 获取注销时间临时选择显示
+  const getCancellationTempDateDisplay = () => {
+    if (tempCancellationDateRange.from && tempCancellationDateRange.to) {
+      if (tempCancellationDateRange.from.getTime() === tempCancellationDateRange.to.getTime()) {
+        return tempCancellationDateRange.from.toLocaleDateString('zh-CN');
+      }
+      return `${tempCancellationDateRange.from.toLocaleDateString('zh-CN')} ~ ${tempCancellationDateRange.to.toLocaleDateString('zh-CN')}`;
+    }
+    if (tempCancellationDateRange.from) {
+      return tempCancellationDateRange.from.toLocaleDateString('zh-CN');
+    }
+    return "";
+  };
+
+  // 获取注销时间筛选显示
+  const getCancellationDateDisplay = () => {
+    if (cancellationDateRange.from && cancellationDateRange.to) {
+      if (cancellationDateRange.from.getTime() === cancellationDateRange.to.getTime()) {
+        return cancellationDateRange.from.toLocaleDateString('zh-CN');
+      }
+      return `${cancellationDateRange.from.toLocaleDateString('zh-CN')} ~ ${cancellationDateRange.to.toLocaleDateString('zh-CN')}`;
+    }
+    if (cancellationDateRange.from) {
+      return cancellationDateRange.from.toLocaleDateString('zh-CN');
+    }
+    if (cancellationDateRange.to) {
+      return cancellationDateRange.to.toLocaleDateString('zh-CN');
+    }
+    return "选择日期";
+  };
+
+  // 移除了旧的清理定时器代码
 
   // 清理办卡时间筛选定时器
   useEffect(() => {
@@ -343,6 +337,15 @@ const Phones = () => {
       }
     };
   }, [applicationAutoConfirmTimer]);
+
+  // 清理注销时间筛选定时器
+  useEffect(() => {
+    return () => {
+      if (cancellationAutoConfirmTimer) {
+        clearTimeout(cancellationAutoConfirmTimer);
+      }
+    };
+  }, [cancellationAutoConfirmTimer]);
 
   // 获取当前选中的手机号码详情
   const { phoneNumber: currentPhone } = usePhoneNumber(currentPhoneNumber || "");
@@ -390,131 +393,11 @@ const Phones = () => {
     setSearchParams(prev => ({ ...prev, limit: pageSize, page: 1 }));
   };
 
-  // 时间筛选处理函数
-  const handleDateFilterTypeChange = (value: DateFilterType) => {
-    setDateFilterType(value);
-    if (value === 'none') {
-      setCustomDateRange({});
-      setTempDateRange({});
-    }
-  };
+  // 移除了旧的时间筛选处理函数
 
-  const applyCustomDateRange = () => {
-    setCustomDateRange(tempDateRange);
-    setIsDatePickerOpen(false);
-    setIsWaitingForSecondDate(false);
-    if (autoConfirmTimer) {
-      clearTimeout(autoConfirmTimer);
-      setAutoConfirmTimer(null);
-    }
-  };
+  // 移除了旧的智能日期选择处理函数
 
-  // 清理定时器的函数
-  const clearAutoConfirmTimer = () => {
-    if (autoConfirmTimer) {
-      clearTimeout(autoConfirmTimer);
-      setAutoConfirmTimer(null);
-    }
-  };
-
-  // 智能日期选择处理
-  const handleSmartDateSelect = (range: DateRange | undefined) => {
-    clearAutoConfirmTimer(); // 清除之前的定时器
-    
-    console.log('📅 日历选择调试:', { 
-      range, 
-      from: range?.from ? formatDateToLocalString(range.from) : null,
-      to: range?.to ? formatDateToLocalString(range.to) : null
-    });
-    
-    if (!range || !range.from) {
-      setTempDateRange({});
-      setIsWaitingForSecondDate(false);
-      return;
-    }
-
-    // 如果已经有完整的范围选择，直接设置
-    if (range.to && range.from.getTime() !== range.to.getTime()) {
-      setTempDateRange({
-        from: range.from,
-        to: range.to
-      });
-      setIsWaitingForSecondDate(false);
-      return;
-    }
-
-    // 第一次点击日期
-    setTempDateRange({
-      from: range.from,
-      to: range.from // 临时设为相同日期，表示单日选择
-    });
-    setIsWaitingForSecondDate(true);
-
-    // 设置自动确认定时器（800ms后自动确认为单日选择）
-    const timer = setTimeout(() => {
-      setIsWaitingForSecondDate(false);
-      setAutoConfirmTimer(null);
-      // 如果用户没有选择第二个日期，保持单日选择
-    }, 800);
-    
-    setAutoConfirmTimer(timer);
-  };
-
-  const getCustomDateDisplay = () => {
-    if (!customDateRange.from && !customDateRange.to) {
-      return '选择日期';
-    }
-    
-    const startStr = customDateRange.from 
-      ? format(customDateRange.from, 'yyyy-MM-dd', { locale: zhCN })
-      : '';
-    const endStr = customDateRange.to 
-      ? format(customDateRange.to, 'yyyy-MM-dd', { locale: zhCN })
-      : '';
-    
-    // 如果开始和结束日期相同，显示单个日期
-    if (startStr && endStr && startStr === endStr) {
-      return startStr;
-    }
-    
-    if (startStr && endStr) {
-      return `${startStr} 至 ${endStr}`;
-    } else if (startStr) {
-      return `从 ${startStr} 开始`;
-    } else if (endStr) {
-      return `到 ${endStr} 结束`;
-    }
-    
-    return '选择日期';
-  };
-
-  const getTempDateDisplay = () => {
-    if (!tempDateRange.from && !tempDateRange.to) {
-      return '选择日期';
-    }
-    
-    const startStr = tempDateRange.from 
-      ? format(tempDateRange.from, 'yyyy-MM-dd', { locale: zhCN })
-      : '';
-    const endStr = tempDateRange.to 
-      ? format(tempDateRange.to, 'yyyy-MM-dd', { locale: zhCN })
-      : '';
-    
-    // 如果开始和结束日期相同，显示单个日期
-    if (startStr && endStr && startStr === endStr) {
-      return startStr;
-    }
-    
-    if (startStr && endStr) {
-      return `${startStr} 至 ${endStr}`;
-    } else if (startStr) {
-      return `从 ${startStr} 开始`;
-    } else if (endStr) {
-      return `到 ${endStr} 结束`;
-    }
-    
-    return '选择日期';
-  };
+  // 移除了旧的日期显示函数
 
   // Form handlers
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -562,6 +445,7 @@ const Phones = () => {
       remarks: "",
       status: "idle",
       applicationDate: new Date().toISOString().split('T')[0],
+      cancellationDate: "",
     });
     setSelectedEmployee(null);
     setFormErrors({});
@@ -579,6 +463,7 @@ const Phones = () => {
         remarks: phone.remarks || "",
         status: phone.status as PhoneStatus,
         applicationDate: phone.applicationDate,
+        cancellationDate: phone.cancellationDate || "",
       });
       // 清除之前的错误信息
       setFormErrors({});
@@ -642,12 +527,18 @@ const Phones = () => {
       return false;
     }
     
+    // 如果状态改为已注销，必须填写注销日期
+    if (formData.status === 'deactivated' && !formData.cancellationDate) {
+      errors.cancellationDate = '设置为已注销状态时必须选择注销日期';
+    }
+    
     // 检查是否有字段被修改
     const hasChanges = 
       formData.purpose !== originalPhone.purpose ||
       formData.vendor !== originalPhone.vendor ||
       formData.remarks !== (originalPhone.remarks || "") ||
-      formData.status !== originalPhone.status;
+      formData.status !== originalPhone.status ||
+      formData.cancellationDate !== (originalPhone.cancellationDate || "");
     
     if (!hasChanges) {
       errors.general = '请至少修改一个字段';
@@ -655,8 +546,8 @@ const Phones = () => {
       return false;
     }
     
-    setFormErrors({});
-    return true;
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleEditSubmit = (e: React.FormEvent) => {
@@ -685,6 +576,14 @@ const Phones = () => {
       }
       if (formData.status !== originalPhone.status) {
         updateRequest.status = formData.status;
+      }
+      
+      // 只有当前状态为已注销时，才可能发送注销日期字段
+      if (formData.status === 'deactivated') {
+        // 状态改为已注销，或者已注销状态下注销日期有修改
+        if (formData.status !== originalPhone.status || formData.cancellationDate !== (originalPhone.cancellationDate || "")) {
+          updateRequest.cancellationDate = formData.cancellationDate;
+        }
       }
       
       updatePhone({
@@ -797,8 +696,8 @@ const Phones = () => {
             />
                         <div className="flex flex-wrap gap-2">
               
-              {/* 活跃筛选条件显示区域 - 替换注销时间筛选器的位置 */}
-              {(applicationDateRange.from || applicationDateRange.to || dateFilterType === 'cancellation' || searchParams.status) ? (
+              {/* 活跃筛选条件显示区域 */}
+              {(applicationDateRange.from || applicationDateRange.to || cancellationDateRange.from || cancellationDateRange.to || searchParams.status) && (
                 <div className="flex items-center gap-2 text-xs text-blue-700 bg-blue-50 border border-blue-300 rounded-md px-3 py-1.5">
                   <Filter className="h-3 w-3 text-blue-600" />
                   <span className="font-medium">筛选:</span>
@@ -819,8 +718,6 @@ const Phones = () => {
                       </button>
                     </div>
                   )}
-                  
-
 
                   {/* 办卡时间筛选条件 */}
                   {(applicationDateRange.from || applicationDateRange.to) && (
@@ -848,15 +745,21 @@ const Phones = () => {
                   )}
                   
                   {/* 注销时间筛选条件 */}
-                  {dateFilterType === 'cancellation' && (customDateRange.from || customDateRange.to) && (
+                  {(cancellationDateRange.from || cancellationDateRange.to) && (
                     <div className="flex items-center gap-1 bg-white border border-blue-200 rounded px-2 py-0.5">
                       <span>注销时间</span>
-                      <span className="font-medium text-blue-800">{getCustomDateDisplay()}</span>
+                      <span className="font-medium text-blue-800">{getCancellationDateDisplay()}</span>
                       <button
                         onClick={() => {
-                          setCustomDateRange({});
-                          setTempDateRange({});
-                          setDateFilterType('none');
+                          setCancellationDateRange({});
+                          setTempCancellationDateRange({});
+                          setSearchParams(prev => ({
+                            ...prev,
+                            page: 1,
+                            cancellationDateFrom: "",
+                            cancellationDateTo: "",
+                            cancellationDate: "",
+                          }));
                         }}
                         className="ml-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded px-1"
                         title="清除注销时间筛选"
@@ -866,116 +769,13 @@ const Phones = () => {
                     </div>
                   )}
                   
-                  {/* 注销时间筛选器 */}
-                  {dateFilterType === 'cancellation' && !(customDateRange.from || customDateRange.to) && (
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs">注销时间:</span>
-                      <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            className="h-auto p-0 text-xs min-w-16 max-w-none hover:bg-transparent"
-                            onClick={() => {
-                              setTempDateRange(customDateRange);
-                              setIsDatePickerOpen(true);
-                            }}
-                          >
-                            <CalendarDays className="h-3 w-3 mr-1 flex-shrink-0" />
-                            <span className="truncate">选择日期</span>
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-2" align="end">
-                          <div className="space-y-2">
-                            <div className="text-xs font-medium text-center border-b pb-1">
-                              {isWaitingForSecondDate ? (
-                                <span className="text-blue-600 animate-pulse">
-                                  已选择 {getTempDateDisplay()}
-                                </span>
-                              ) : tempDateRange.from || tempDateRange.to ? (
-                                <span>选择: {getTempDateDisplay()}</span>
-                              ) : (
-                                <span>点击日期（智能识别单日/范围选择）</span>
-                              )}
-                            </div>
-                            
-                            <CalendarComponent
-                              mode="range"
-                              selected={tempDateRange as DateRange}
-                              onSelect={handleSmartDateSelect}
-                              locale={zhCN}
-                              numberOfMonths={1}
-                              className="rounded-md border p-1"
-                              classNames={{
-                                head_cell: "text-muted-foreground rounded-md w-8 font-normal text-xs",
-                                cell: "h-8 w-8 text-center text-xs p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                                day: "h-8 w-8 p-0 font-normal text-xs aria-selected:opacity-100",
-                                caption: "flex justify-center pt-1 relative items-center",
-                                caption_label: "text-xs font-medium",
-                                nav_button: "h-6 w-6 bg-transparent p-0 opacity-50 hover:opacity-100",
-                                table: "w-full border-collapse space-y-1",
-                                row: "flex w-full mt-1"
-                              }}
-                            />
-                            
-                            <div className="flex gap-1">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setTempDateRange({});
-                                  setCustomDateRange({});
-                                  setDateFilterType('none');
-                                  setIsWaitingForSecondDate(false);
-                                  clearAutoConfirmTimer();
-                                }}
-                                className="flex-1 h-6 text-xs px-1"
-                              >
-                                清空
-                              </Button>
-                              
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setIsDatePickerOpen(false);
-                                  setIsWaitingForSecondDate(false);
-                                  clearAutoConfirmTimer();
-                                }}
-                                className="flex-1 h-6 text-xs px-1"
-                              >
-                                取消
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  setCustomDateRange(tempDateRange);
-                                  setIsDatePickerOpen(false);
-                                  setIsWaitingForSecondDate(false);
-                                  if (autoConfirmTimer) {
-                                    clearTimeout(autoConfirmTimer);
-                                    setAutoConfirmTimer(null);
-                                  }
-                                }}
-                                className="flex-1 h-6 text-xs px-1"
-                                disabled={!tempDateRange.from}
-                              >
-                                应用
-                              </Button>
-                            </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  )}
-                  
                   {/* 清除所有筛选 */}
                   <button
                     onClick={() => {
                       setApplicationDateRange({});
                       setTempApplicationDateRange({});
-                      setCustomDateRange({});
-                      setTempDateRange({});
-                      setDateFilterType('none');
+                      setCancellationDateRange({});
+                      setTempCancellationDateRange({});
                       setSearchParams(prev => ({
                         ...prev,
                         page: 1,
@@ -994,17 +794,6 @@ const Phones = () => {
                     清除所有
                   </button>
                 </div>
-              ) : (
-                /* 注销时间筛选入口 - 无筛选时显示 */
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setDateFilterType('cancellation')}
-                  className="h-8 text-xs"
-                >
-                  <Filter className="h-3 w-3 mr-1" />
-                  注销时间筛选
-                </Button>
               )}
             </div>
           </div>
@@ -1263,6 +1052,140 @@ const Phones = () => {
                         </Popover>
                       </div>
                     </th>
+                    <th>
+                      <div className="flex items-center gap-1">
+                        <span>注销时间</span>
+                        <Popover open={isCancellationDatePickerOpen} onOpenChange={setIsCancellationDatePickerOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={`relative h-5 w-5 p-0 hover:bg-gray-100 ${cancellationDateRange.from || cancellationDateRange.to ? 'text-blue-600' : ''}`}
+                              title={cancellationDateRange.from || cancellationDateRange.to ? `筛选: ${getCancellationDateDisplay()}` : "筛选注销时间"}
+                              onClick={() => {
+                                setTempCancellationDateRange(cancellationDateRange);
+                                setIsCancellationDatePickerOpen(true);
+                              }}
+                            >
+                              <Filter className="h-3 w-3" />
+                              {(cancellationDateRange.from || cancellationDateRange.to) && (
+                                <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full"></div>
+                              )}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-2" align="start">
+                            <div className="space-y-2">
+                              <div className="text-xs font-medium text-center border-b pb-1">
+                                {isCancellationWaitingForSecondDate ? (
+                                  <span className="text-blue-600 animate-pulse">
+                                    已选择 {getCancellationTempDateDisplay()}
+                                  </span>
+                                ) : tempCancellationDateRange.from || tempCancellationDateRange.to ? (
+                                  <span>选择: {getCancellationTempDateDisplay()}</span>
+                                ) : (
+                                  <span>点击日期（智能识别单日/范围选择）</span>
+                                )}
+                              </div>
+                              
+                              <CalendarComponent
+                                mode="range"
+                                selected={tempCancellationDateRange as DateRange}
+                                onSelect={handleCancellationDateSelect}
+                                locale={zhCN}
+                                numberOfMonths={1}
+                                className="rounded-md border p-1"
+                                classNames={{
+                                  head_cell: "text-muted-foreground rounded-md w-8 font-normal text-xs",
+                                  cell: "h-8 w-8 text-center text-xs p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                                  day: "h-8 w-8 p-0 font-normal text-xs aria-selected:opacity-100",
+                                  caption: "flex justify-center pt-1 relative items-center",
+                                  caption_label: "text-xs font-medium",
+                                  nav_button: "h-6 w-6 bg-transparent p-0 opacity-50 hover:opacity-100",
+                                  table: "w-full border-collapse space-y-1",
+                                  row: "flex w-full mt-1"
+                                }}
+                              />
+                              
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setTempCancellationDateRange({});
+                                    setCancellationDateRange({});
+                                    setIsCancellationWaitingForSecondDate(false);
+                                    clearCancellationAutoConfirmTimer();
+                                    
+                                    // 清空筛选条件
+                                    setSearchParams(prev => ({
+                                      ...prev,
+                                      page: 1,
+                                      cancellationDateFrom: "",
+                                      cancellationDateTo: "",
+                                      cancellationDate: "",
+                                    }));
+                                  }}
+                                  className="flex-1 h-6 text-xs px-1"
+                                >
+                                  清空
+                                </Button>
+                                
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setIsCancellationDatePickerOpen(false);
+                                    setIsCancellationWaitingForSecondDate(false);
+                                    clearCancellationAutoConfirmTimer();
+                                  }}
+                                  className="flex-1 h-6 text-xs px-1"
+                                >
+                                  取消
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    // 应用筛选时才真正触发搜索
+                                    setCancellationDateRange(tempCancellationDateRange);
+                                    
+                                    // 手动调用筛选更新
+                                    const dateFrom = tempCancellationDateRange.from ? formatDateToLocalString(tempCancellationDateRange.from) : "";
+                                    const dateTo = tempCancellationDateRange.to ? formatDateToLocalString(tempCancellationDateRange.to) : "";
+                                    const isSingleDay = dateFrom && dateTo && dateFrom === dateTo;
+                                    
+                                    console.log('🗓️ 注销时间列头筛选应用:', {
+                                      tempCancellationDateRange,
+                                      计算结果: { dateFrom, dateTo },
+                                      是否单日: isSingleDay,
+                                    });
+                                    
+                                    setSearchParams(prev => ({
+                                      ...prev,
+                                      page: 1,
+                                      // 根据单日/范围选择设置参数
+                                      cancellationDate: isSingleDay ? dateFrom : "",
+                                      cancellationDateFrom: isSingleDay ? "" : dateFrom,
+                                      cancellationDateTo: isSingleDay ? "" : dateTo,
+                                    }));
+                                    
+                                    setIsCancellationDatePickerOpen(false);
+                                    setIsCancellationWaitingForSecondDate(false);
+                                    if (cancellationAutoConfirmTimer) {
+                                      clearTimeout(cancellationAutoConfirmTimer);
+                                      setCancellationAutoConfirmTimer(null);
+                                    }
+                                  }}
+                                  className="flex-1 h-6 text-xs px-1"
+                                  disabled={!tempCancellationDateRange.from}
+                                >
+                                  应用
+                                </Button>
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </th>
                     <th>运营商</th>
                     <th>用途</th>
                     <th>操作</th>
@@ -1288,6 +1211,9 @@ const Phones = () => {
                           status={getStatusVariant(phone.status)} 
                           text={getStatusText(phone.status)} 
                         />
+                      </td>
+                      <td className="text-sm">
+                        {phone.cancellationDate ? new Date(phone.cancellationDate).toLocaleDateString('zh-CN') : '-'}
                       </td>
                       <td>{phone.vendor}</td>
                       <td>{phone.purpose}</td>
@@ -1352,7 +1278,7 @@ const Phones = () => {
                   ))}
                   {phoneNumbers.length === 0 && !isLoading && (
                     <tr>
-                      <td colSpan={9} className="text-center py-4">
+                      <td colSpan={10} className="text-center py-4">
                         没有找到符合条件的手机号码
                       </td>
                     </tr>
@@ -1575,7 +1501,9 @@ const Phones = () => {
                   value={formData.status} 
                   onValueChange={(value) => setFormData(prev => ({ 
                     ...prev, 
-                    status: value as PhoneStatus
+                    status: value as PhoneStatus,
+                    // 如果从已注销状态切换到其他状态，清空注销日期
+                    cancellationDate: value === 'deactivated' ? prev.cancellationDate : ""
                   }))}
                 >
                   <SelectTrigger>
@@ -1589,6 +1517,26 @@ const Phones = () => {
                   </SelectContent>
                 </Select>
               </div>
+              
+              {/* 当状态为已注销时，显示注销日期选择器 */}
+              {formData.status === 'deactivated' && (
+                <div className="space-y-2">
+                  <Label htmlFor="cancellationDate">注销日期 *</Label>
+                  <Input
+                    id="cancellationDate"
+                    name="cancellationDate"
+                    type="date"
+                    value={formData.cancellationDate}
+                    onChange={handleFormChange}
+                    required
+                    className={formErrors.cancellationDate ? "border-red-500" : ""}
+                  />
+                  {formErrors.cancellationDate && (
+                    <p className="text-sm text-red-500">{formErrors.cancellationDate}</p>
+                  )}
+                </div>
+              )}
+              
               <div className="space-y-2">
                 <Label htmlFor="remarks">备注</Label>
                 <Input

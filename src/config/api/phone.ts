@@ -107,6 +107,7 @@ export interface UpdatePhoneRequest {
   remarks?: string;
   status?: PhoneStatus;
   vendor?: string;
+  cancellationDate?: string; // 注销日期，格式: YYYY-MM-DD
 }
 
 // 风险号码处理操作类型（匹配后端RiskHandleAction枚举）
