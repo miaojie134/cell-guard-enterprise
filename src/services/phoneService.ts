@@ -28,6 +28,16 @@ export const getPhoneNumbers = async (params: PhoneSearchParams = {}): Promise<A
   if (params.status) url.searchParams.append('status', params.status);
   if (params.applicantStatus) url.searchParams.append('applicantStatus', params.applicantStatus);
 
+  // 办卡时间筛选参数
+  if (params.applicationDateFrom) url.searchParams.append('applicationDateFrom', params.applicationDateFrom);
+  if (params.applicationDateTo) url.searchParams.append('applicationDateTo', params.applicationDateTo);
+  if (params.applicationDate) url.searchParams.append('applicationDate', params.applicationDate);
+
+  // 注销时间筛选参数
+  if (params.cancellationDateFrom) url.searchParams.append('cancellationDateFrom', params.cancellationDateFrom);
+  if (params.cancellationDateTo) url.searchParams.append('cancellationDateTo', params.cancellationDateTo);
+  if (params.cancellationDate) url.searchParams.append('cancellationDate', params.cancellationDate);
+
   try {
     const response = await fetch(url.toString(), {
       method: 'GET',

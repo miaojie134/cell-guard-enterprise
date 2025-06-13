@@ -19,6 +19,14 @@ export interface PhoneSearchParams {
   search?: string;
   status?: string;
   applicantStatus?: string;
+  // 办卡时间筛选
+  applicationDateFrom?: string;  // 办卡日期起始日期
+  applicationDateTo?: string;    // 办卡日期截止日期
+  applicationDate?: string;      // 办卡日期精确查询（单日）
+  // 注销时间筛选
+  cancellationDateFrom?: string; // 注销日期起始日期
+  cancellationDateTo?: string;   // 注销日期截止日期
+  cancellationDate?: string;     // 注销日期精确查询（单日）
 }
 
 // 风险号码搜索参数（专门用于风险号码列表接口）

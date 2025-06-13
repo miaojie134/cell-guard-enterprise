@@ -13,8 +13,6 @@ import Employees from "./pages/Employees";
 import Departments from "./pages/Departments";
 import RiskPhones from "./pages/RiskPhones";
 import ImportData from "./pages/ImportData";
-import TestEmployeeDetail from "./pages/TestEmployeeDetail";
-import TestAPI from "./pages/TestAPI";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import { lazy } from "react";
@@ -53,8 +51,6 @@ const App = () => (
                 <Route path="/departments" element={<Departments />} />
                 <Route path="/risk" element={<RiskPhones />} />
                 <Route path="/import" element={<ImportData />} />
-                <Route path="/test-employee-detail" element={<TestEmployeeDetail />} />
-                <Route path="/test-api" element={<TestAPI />} />
                 
                 {/* 验证相关路由 */}
                 <Route path="/verification" element={<VerificationManagement />} />

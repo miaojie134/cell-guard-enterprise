@@ -14,6 +14,12 @@ export interface UsePhoneNumbersOptions {
   applicantStatus?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
+  applicationDateFrom?: string;
+  applicationDateTo?: string;
+  applicationDate?: string;
+  cancellationDateFrom?: string;
+  cancellationDateTo?: string;
+  cancellationDate?: string;
 }
 
 export const usePhoneNumbers = (options: UsePhoneNumbersOptions = {}) => {
@@ -29,6 +35,12 @@ export const usePhoneNumbers = (options: UsePhoneNumbersOptions = {}) => {
     applicantStatus: options.applicantStatus,
     sortBy: options.sortBy,
     sortOrder: options.sortOrder,
+    applicationDateFrom: options.applicationDateFrom,
+    applicationDateTo: options.applicationDateTo,
+    applicationDate: options.applicationDate,
+    cancellationDateFrom: options.cancellationDateFrom,
+    cancellationDateTo: options.cancellationDateTo,
+    cancellationDate: options.cancellationDate,
   };
 
   // 获取手机号码列表
