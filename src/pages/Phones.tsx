@@ -265,12 +265,12 @@ const Phones = () => {
         clearTimeout(applicationAutoConfirmTimer);
       }
       
-      // 800ms后自动确认为单日选择（仅更新临时状态）
+      // 500ms后自动确认为单日选择（仅更新临时状态）
       const timer = setTimeout(() => {
         setTempApplicationDateRange({ from, to: from });
         setIsApplicationWaitingForSecondDate(false);
         setApplicationAutoConfirmTimer(null);
-      }, 800);
+      }, 500);
       
       setApplicationAutoConfirmTimer(timer);
     } 
@@ -795,7 +795,7 @@ const Phones = () => {
               onSearch={handleSearch}
               placeholder="搜索号码、使用人、办卡人..."
             />
-            <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2">
               <Select
                 value={searchParams.status || "all"}
                 onValueChange={(value) => handleFilterChange("status", value)}
@@ -826,136 +826,185 @@ const Phones = () => {
                 </SelectContent>
               </Select>
               
-                            {/* 注销时间筛选 */}
-              {dateFilterType === 'cancellation' && (
-                <div className="flex items-center gap-2 border rounded-md px-2 py-1">
-                  <Filter className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-xs">注销时间:</span>
+              {/* 活跃筛选条件显示区域 - 替换注销时间筛选器的位置 */}
+              {(applicationDateRange.from || applicationDateRange.to || dateFilterType === 'cancellation') ? (
+                <div className="flex items-center gap-2 text-xs text-blue-700 bg-blue-50 border border-blue-300 rounded-md px-3 py-1.5">
+                  <Filter className="h-3 w-3 text-blue-600" />
+                  <span className="font-medium">筛选:</span>
                   
-                  <div className="flex items-center gap-1">
-                    <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="h-auto p-0 text-xs min-w-16 max-w-none hover:bg-transparent"
-                          onClick={() => {
-                            setTempDateRange(customDateRange);
-                            setIsDatePickerOpen(true);
-                          }}
-                        >
-                          <CalendarDays className="h-3 w-3 mr-1 flex-shrink-0" />
-                          <span className="truncate">
-                            {(customDateRange.from || customDateRange.to) 
-                              ? getCustomDateDisplay()
-                              : '选择日期'
-                            }
-                          </span>
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-2" align="end">
-                        <div className="space-y-2">
-                          <div className="text-xs font-medium text-center border-b pb-1">
-                            {isWaitingForSecondDate ? (
-                              <span className="text-blue-600 animate-pulse">
-                                已选择 {getTempDateDisplay()}，
-                              </span>
-                            ) : tempDateRange.from || tempDateRange.to ? (
-                              <span>选择: {getTempDateDisplay()}</span>
-                            ) : (
-                              <span>点击日期（智能识别单日/范围选择）</span>
-                            )}
-                          </div>
-                          
-                          <CalendarComponent
-                            mode="range"
-                            selected={tempDateRange as DateRange}
-                            onSelect={handleSmartDateSelect}
-                            locale={zhCN}
-                            numberOfMonths={1}
-                            className="rounded-md border p-1"
-                            classNames={{
-                              head_cell: "text-muted-foreground rounded-md w-8 font-normal text-xs",
-                              cell: "h-8 w-8 text-center text-xs p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                              day: "h-8 w-8 p-0 font-normal text-xs aria-selected:opacity-100",
-                              caption: "flex justify-center pt-1 relative items-center",
-                              caption_label: "text-xs font-medium",
-                              nav_button: "h-6 w-6 bg-transparent p-0 opacity-50 hover:opacity-100",
-                              table: "w-full border-collapse space-y-1",
-                              row: "flex w-full mt-1"
-                            }}
-                          />
-                          
-                          <div className="flex gap-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setTempDateRange({});
-                                setCustomDateRange({});
-                                setDateFilterType('none');
-                                setIsWaitingForSecondDate(false);
-                                clearAutoConfirmTimer();
-                              }}
-                              className="flex-1 h-6 text-xs px-1"
-                            >
-                              清空
-                            </Button>
-                            
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setIsDatePickerOpen(false);
-                                setIsWaitingForSecondDate(false);
-                                clearAutoConfirmTimer();
-                              }}
-                              className="flex-1 h-6 text-xs px-1"
-                            >
-                              取消
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                setCustomDateRange(tempDateRange);
-                                setIsDatePickerOpen(false);
-                                setIsWaitingForSecondDate(false);
-                                if (autoConfirmTimer) {
-                                  clearTimeout(autoConfirmTimer);
-                                  setAutoConfirmTimer(null);
-                                }
-                              }}
-                              className="flex-1 h-6 text-xs px-1"
-                              disabled={!tempDateRange.from}
-                            >
-                              应用
-                            </Button>
-                          </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                    
-                    {/* 快速清空按钮 */}
-                    {(customDateRange.from || customDateRange.to) && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                  {/* 办卡时间筛选条件 */}
+                  {(applicationDateRange.from || applicationDateRange.to) && (
+                    <div className="flex items-center gap-1 bg-white border border-blue-200 rounded px-2 py-0.5">
+                      <span>办卡时间</span>
+                      <span className="font-medium text-blue-800">{getApplicationDateDisplay()}</span>
+                      <button
+                        onClick={() => {
+                          setApplicationDateRange({});
+                          setTempApplicationDateRange({});
+                          setSearchParams(prev => ({
+                            ...prev,
+                            page: 1,
+                            applicationDateFrom: "",
+                            applicationDateTo: "",
+                            applicationDate: "",
+                          }));
+                        }}
+                        className="ml-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded px-1"
+                        title="清除办卡时间筛选"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                  
+                  {/* 注销时间筛选条件 */}
+                  {dateFilterType === 'cancellation' && (customDateRange.from || customDateRange.to) && (
+                    <div className="flex items-center gap-1 bg-white border border-blue-200 rounded px-2 py-0.5">
+                      <span>注销时间</span>
+                      <span className="font-medium text-blue-800">{getCustomDateDisplay()}</span>
+                      <button
                         onClick={() => {
                           setCustomDateRange({});
                           setTempDateRange({});
                           setDateFilterType('none');
                         }}
-                        className="h-auto p-0 text-xs text-red-500 hover:text-red-700"
-                        title="清空注销时间筛选"
+                        className="ml-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded px-1"
+                        title="清除注销时间筛选"
                       >
-                        ✕
-                      </Button>
-                    )}
-                  </div>
+                        ×
+                      </button>
+                    </div>
+                  )}
+                  
+                  {/* 注销时间筛选器 */}
+                  {dateFilterType === 'cancellation' && !(customDateRange.from || customDateRange.to) && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs">注销时间:</span>
+                      <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="h-auto p-0 text-xs min-w-16 max-w-none hover:bg-transparent"
+                            onClick={() => {
+                              setTempDateRange(customDateRange);
+                              setIsDatePickerOpen(true);
+                            }}
+                          >
+                            <CalendarDays className="h-3 w-3 mr-1 flex-shrink-0" />
+                            <span className="truncate">选择日期</span>
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-2" align="end">
+                          <div className="space-y-2">
+                            <div className="text-xs font-medium text-center border-b pb-1">
+                              {isWaitingForSecondDate ? (
+                                <span className="text-blue-600 animate-pulse">
+                                  已选择 {getTempDateDisplay()}
+                                </span>
+                              ) : tempDateRange.from || tempDateRange.to ? (
+                                <span>选择: {getTempDateDisplay()}</span>
+                              ) : (
+                                <span>点击日期（智能识别单日/范围选择）</span>
+                              )}
+                            </div>
+                            
+                            <CalendarComponent
+                              mode="range"
+                              selected={tempDateRange as DateRange}
+                              onSelect={handleSmartDateSelect}
+                              locale={zhCN}
+                              numberOfMonths={1}
+                              className="rounded-md border p-1"
+                              classNames={{
+                                head_cell: "text-muted-foreground rounded-md w-8 font-normal text-xs",
+                                cell: "h-8 w-8 text-center text-xs p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                                day: "h-8 w-8 p-0 font-normal text-xs aria-selected:opacity-100",
+                                caption: "flex justify-center pt-1 relative items-center",
+                                caption_label: "text-xs font-medium",
+                                nav_button: "h-6 w-6 bg-transparent p-0 opacity-50 hover:opacity-100",
+                                table: "w-full border-collapse space-y-1",
+                                row: "flex w-full mt-1"
+                              }}
+                            />
+                            
+                            <div className="flex gap-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setTempDateRange({});
+                                  setCustomDateRange({});
+                                  setDateFilterType('none');
+                                  setIsWaitingForSecondDate(false);
+                                  clearAutoConfirmTimer();
+                                }}
+                                className="flex-1 h-6 text-xs px-1"
+                              >
+                                清空
+                              </Button>
+                              
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setIsDatePickerOpen(false);
+                                  setIsWaitingForSecondDate(false);
+                                  clearAutoConfirmTimer();
+                                }}
+                                className="flex-1 h-6 text-xs px-1"
+                              >
+                                取消
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setCustomDateRange(tempDateRange);
+                                  setIsDatePickerOpen(false);
+                                  setIsWaitingForSecondDate(false);
+                                  if (autoConfirmTimer) {
+                                    clearTimeout(autoConfirmTimer);
+                                    setAutoConfirmTimer(null);
+                                  }
+                                }}
+                                className="flex-1 h-6 text-xs px-1"
+                                disabled={!tempDateRange.from}
+                              >
+                                应用
+                              </Button>
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
+                  
+                  {/* 清除所有筛选 */}
+                  <button
+                    onClick={() => {
+                      setApplicationDateRange({});
+                      setTempApplicationDateRange({});
+                      setCustomDateRange({});
+                      setTempDateRange({});
+                      setDateFilterType('none');
+                      setSearchParams(prev => ({
+                        ...prev,
+                        page: 1,
+                        applicationDateFrom: "",
+                        applicationDateTo: "",
+                        applicationDate: "",
+                        cancellationDateFrom: "",
+                        cancellationDateTo: "",
+                        cancellationDate: "",
+                      }));
+                    }}
+                    className="text-blue-600 hover:text-blue-800 underline text-xs"
+                    title="清除所有筛选"
+                  >
+                    清除所有
+                  </button>
                 </div>
-              )}
-              
-              {/* 注销时间筛选入口 */}
-              {dateFilterType === 'none' && (
+              ) : (
+                /* 注销时间筛选入口 - 无筛选时显示 */
                 <Button
                   variant="outline"
                   size="sm"
@@ -968,82 +1017,6 @@ const Phones = () => {
               )}
             </div>
           </div>
-          
-          {/* 活跃筛选条件显示 - 紧凑版 */}
-          {(applicationDateRange.from || applicationDateRange.to || dateFilterType === 'cancellation') && (
-            <div className="flex items-center gap-2 text-xs text-blue-700 bg-blue-50 border-l-4 border-blue-400 px-3 py-2 mb-3">
-              <span className="font-medium">筛选:</span>
-              
-              {/* 办卡时间筛选条件 */}
-              {(applicationDateRange.from || applicationDateRange.to) && (
-                <div className="flex items-center gap-1 bg-white border border-blue-200 rounded px-2 py-0.5">
-                  <span>办卡时间</span>
-                  <span className="font-medium text-blue-800">{getApplicationDateDisplay()}</span>
-                  <button
-                    onClick={() => {
-                      setApplicationDateRange({});
-                      setTempApplicationDateRange({});
-                      setSearchParams(prev => ({
-                        ...prev,
-                        page: 1,
-                        applicationDateFrom: "",
-                        applicationDateTo: "",
-                        applicationDate: "",
-                      }));
-                    }}
-                    className="ml-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded px-1"
-                    title="清除办卡时间筛选"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              
-              {/* 注销时间筛选条件 */}
-              {dateFilterType === 'cancellation' && (customDateRange.from || customDateRange.to) && (
-                <div className="flex items-center gap-1 bg-white border border-blue-200 rounded px-2 py-0.5">
-                  <span>注销时间</span>
-                  <span className="font-medium text-blue-800">{getCustomDateDisplay()}</span>
-                  <button
-                    onClick={() => {
-                      setCustomDateRange({});
-                      setTempDateRange({});
-                      setDateFilterType('none');
-                    }}
-                    className="ml-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded px-1"
-                    title="清除注销时间筛选"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              
-              {/* 清除所有筛选 */}
-              <button
-                onClick={() => {
-                  setApplicationDateRange({});
-                  setTempApplicationDateRange({});
-                  setCustomDateRange({});
-                  setTempDateRange({});
-                  setDateFilterType('none');
-                  setSearchParams(prev => ({
-                    ...prev,
-                    page: 1,
-                    applicationDateFrom: "",
-                    applicationDateTo: "",
-                    applicationDate: "",
-                    cancellationDateFrom: "",
-                    cancellationDateTo: "",
-                    cancellationDate: "",
-                  }));
-                }}
-                className="text-blue-600 hover:text-blue-800 underline ml-2"
-                title="清除所有筛选"
-              >
-                清除所有
-              </button>
-            </div>
-          )}
           
           <div className="overflow-x-auto">
             {isLoading ? (
@@ -1089,7 +1062,7 @@ const Phones = () => {
                               <div className="text-xs font-medium text-center border-b pb-1">
                                 {isApplicationWaitingForSecondDate ? (
                                   <span className="text-blue-600 animate-pulse">
-                                    已选择 {getApplicationTempDateDisplay()}，
+                                    已选择 {getApplicationTempDateDisplay()}
                                   </span>
                                 ) : tempApplicationDateRange.from || tempApplicationDateRange.to ? (
                                   <span>选择: {getApplicationTempDateDisplay()}</span>
