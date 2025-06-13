@@ -74,12 +74,12 @@ export const EmployeeDetailDialog: React.FC<EmployeeDetailDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader className="pb-4">
-          <DialogTitle className="text-xl font-semibold flex items-center gap-3">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-lg font-semibold flex items-center gap-2">
             {employeeDetail ? (
               <>
-                <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
-                  <User className="h-4 w-4 text-primary" />
+                <div className="h-7 w-7 bg-primary/10 rounded-full flex items-center justify-center">
+                  <User className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <div className="flex flex-col">
                   <span>{employeeDetail.fullName}</span>
@@ -87,8 +87,8 @@ export const EmployeeDetailDialog: React.FC<EmployeeDetailDialogProps> = ({
               </>
             ) : (
               <>
-                <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
-                  <User className="h-4 w-4 text-primary" />
+                <div className="h-7 w-7 bg-primary/10 rounded-full flex items-center justify-center">
+                  <User className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <span>员工详情</span>
               </>
@@ -115,15 +115,15 @@ export const EmployeeDetailDialog: React.FC<EmployeeDetailDialogProps> = ({
         )}
 
         {employeeDetail && !isLoading && !error && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* 基本信息 */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <User className="h-4 w-4" />
                 基本信息
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-muted/30 rounded-lg">
                 <div className="space-y-1">
                   <div className="text-xs text-muted-foreground">部门</div>
                   <div className="flex items-center gap-2">
@@ -178,7 +178,7 @@ export const EmployeeDetailDialog: React.FC<EmployeeDetailDialogProps> = ({
             <Separator />
 
             {/* 当前使用的手机号码 */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <UserCheck className="h-4 w-4" />
                 当前使用的手机号码
@@ -187,10 +187,10 @@ export const EmployeeDetailDialog: React.FC<EmployeeDetailDialogProps> = ({
               {employeeDetail.usingMobileNumbers && employeeDetail.usingMobileNumbers.length > 0 ? (
                 <div className="space-y-2">
                   {employeeDetail.usingMobileNumbers.map((phone) => (
-                    <div key={phone.id} className={`flex items-center justify-between p-3 rounded-lg border transition-colors hover:opacity-80 ${getUsingPhoneStatusColor(phone.status)}`}>
+                    <div key={phone.id} className={`flex items-center justify-between p-2.5 rounded-lg border transition-colors hover:opacity-80 ${getUsingPhoneStatusColor(phone.status)}`}>
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 bg-white/50 rounded-full flex items-center justify-center">
-                          <Phone className="h-4 w-4" />
+                        <div className="h-7 w-7 bg-white/50 rounded-full flex items-center justify-center">
+                          <Phone className="h-3.5 w-3.5" />
                         </div>
                         <span className="font-medium">{phone.phoneNumber}</span>
                       </div>
@@ -201,8 +201,8 @@ export const EmployeeDetailDialog: React.FC<EmployeeDetailDialogProps> = ({
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground bg-muted/20 rounded-lg border-2 border-dashed">
-                  <UserCheck className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <div className="text-center py-6 text-muted-foreground bg-muted/20 rounded-lg border-2 border-dashed">
+                  <UserCheck className="h-6 w-6 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">暂无当前使用的手机号码</p>
                 </div>
               )}
@@ -211,7 +211,7 @@ export const EmployeeDetailDialog: React.FC<EmployeeDetailDialogProps> = ({
             <Separator />
 
             {/* 办理的手机号码 */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <CreditCard className="h-4 w-4" />
                 办理的手机号码
@@ -220,10 +220,10 @@ export const EmployeeDetailDialog: React.FC<EmployeeDetailDialogProps> = ({
               {employeeDetail.handledMobileNumbers && employeeDetail.handledMobileNumbers.length > 0 ? (
                 <div className="space-y-2">
                   {employeeDetail.handledMobileNumbers.map((phone) => (
-                    <div key={phone.id} className={`flex items-center justify-between p-3 rounded-lg border hover:bg-muted/20 transition-colors`}>
+                    <div key={phone.id} className={`flex items-center justify-between p-2.5 rounded-lg border hover:bg-muted/20 transition-colors`}>
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 bg-white/50 rounded-full flex items-center justify-center">
-                          <CreditCard className="h-4 w-4" />
+                        <div className="h-7 w-7 bg-white/50 rounded-full flex items-center justify-center">
+                          <CreditCard className="h-3.5 w-3.5" />
                         </div>
                         <span className="font-medium">{phone.phoneNumber}</span>
                       </div>
@@ -234,8 +234,8 @@ export const EmployeeDetailDialog: React.FC<EmployeeDetailDialogProps> = ({
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground bg-muted/20 rounded-lg border-2 border-dashed">
-                  <CreditCard className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <div className="text-center py-6 text-muted-foreground bg-muted/20 rounded-lg border-2 border-dashed">
+                  <CreditCard className="h-6 w-6 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">暂无办理的手机号码</p>
                 </div>
               )}
