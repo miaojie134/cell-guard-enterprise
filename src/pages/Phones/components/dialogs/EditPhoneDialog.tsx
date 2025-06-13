@@ -147,6 +147,61 @@ export const EditPhoneDialog: React.FC<EditPhoneDialogProps> = ({
     }
   };
 
+  // 状态标签映射
+  const getStatusLabel = (status: PhoneStatus): string => {
+    const statusLabels: Record<PhoneStatus, string> = {
+      'idle': '闲置',
+      'in_use': '使用中',
+      'pending_deactivation': '待注销',
+      'deactivated': '已注销',
+      'risk_pending': '待核实-办卡人离职',
+      'user_reported': '待核实-用户报告'
+    };
+    return statusLabels[status];
+  };
+
+  // 获取可选择的状态选项（根据当前状态和业务规则）
+  const getAvailableStatusOptions = () => {
+    if (!phoneData) {
+      // 如果没有数据，返回所有状态选项
+      const allStatuses: PhoneStatus[] = ['idle', 'in_use', 'pending_deactivation', 'deactivated', 'risk_pending', 'user_reported'];
+      return allStatuses.map(status => ({ value: status, label: getStatusLabel(status) }));
+    }
+
+    const currentStatus = phoneData.status as PhoneStatus;
+
+    // 根据后端状态转换矩阵，只显示通过update接口可以转换的状态
+    const getFilteredOptions = (allowedStatuses: PhoneStatus[]) => {
+      return allowedStatuses.map(status => ({ value: status, label: getStatusLabel(status) }));
+    };
+
+    switch (currentStatus) {
+      case 'idle': // 闲置
+        return getFilteredOptions(['idle', 'pending_deactivation', 'user_reported', 'deactivated']);
+        
+      case 'in_use': // 使用中
+        return getFilteredOptions(['in_use', 'pending_deactivation', 'user_reported', 'deactivated']);
+        
+      case 'pending_deactivation': // 待注销
+        return getFilteredOptions(['pending_deactivation', 'in_use', 'user_reported', 'deactivated']);
+        
+      case 'user_reported': // 待核实-用户报告
+        return getFilteredOptions(['user_reported', 'in_use', 'pending_deactivation', 'deactivated']);
+        
+      case 'deactivated': // 已注销
+        return getFilteredOptions(['deactivated', 'idle', 'pending_deactivation', 'user_reported']);
+        
+      case 'risk_pending': // 风险待核实 - 不能通过update接口转换
+        return getFilteredOptions(['risk_pending']);
+        
+      default:
+        // 未知状态，只保留当前状态
+        return getFilteredOptions([currentStatus]);
+    }
+  };
+
+
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -222,10 +277,11 @@ export const EditPhoneDialog: React.FC<EditPhoneDialogProps> = ({
                   <SelectValue placeholder="选择状态" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="idle">闲置</SelectItem>
-                  <SelectItem value="pending_deactivation">待注销</SelectItem>
-                  <SelectItem value="deactivated">已注销</SelectItem>
-                  <SelectItem value="user_reported">待核实-用户报告</SelectItem>
+                  {getAvailableStatusOptions().map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
