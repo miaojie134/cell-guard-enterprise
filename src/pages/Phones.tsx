@@ -796,42 +796,32 @@ const Phones = () => {
               placeholder="搜索号码、使用人、办卡人..."
             />
                         <div className="flex flex-wrap gap-2">
-              <Select
-                value={searchParams.status || "all"}
-                onValueChange={(value) => handleFilterChange("status", value)}
-              >
-                <SelectTrigger className="w-[130px]">
-                  <SelectValue placeholder="号码状态" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">号码状态</SelectItem>
-                  <SelectItem value="idle">闲置</SelectItem>
-                  <SelectItem value="in_use">使用中</SelectItem>
-                  <SelectItem value="pending_deactivation">待注销</SelectItem>
-                  <SelectItem value="deactivated">已注销</SelectItem>
-                  <SelectItem value="user_reported">待核实-用户报告</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select
-                value={searchParams.applicantStatus || "all"}
-                onValueChange={(value) => handleFilterChange("applicantStatus", value)}
-              >
-                <SelectTrigger className="w-[130px]">
-                  <SelectValue placeholder="办卡人状态" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">办卡人状态</SelectItem>
-                  <SelectItem value="Active">在职</SelectItem>
-                  <SelectItem value="Departed">已离职</SelectItem>
-                </SelectContent>
-              </Select>
               
               {/* 活跃筛选条件显示区域 - 替换注销时间筛选器的位置 */}
-              {(applicationDateRange.from || applicationDateRange.to || dateFilterType === 'cancellation') ? (
+              {(applicationDateRange.from || applicationDateRange.to || dateFilterType === 'cancellation' || searchParams.status) ? (
                 <div className="flex items-center gap-2 text-xs text-blue-700 bg-blue-50 border border-blue-300 rounded-md px-3 py-1.5">
                   <Filter className="h-3 w-3 text-blue-600" />
                   <span className="font-medium">筛选:</span>
                   
+                  {/* 号码状态筛选条件 */}
+                  {searchParams.status && (
+                    <div className="flex items-center gap-1 bg-white border border-blue-200 rounded px-2 py-0.5">
+                      <span>号码状态</span>
+                      <span className="font-medium text-blue-800">{getStatusText(searchParams.status)}</span>
+                      <button
+                        onClick={() => {
+                          handleFilterChange("status", "all");
+                        }}
+                        className="ml-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded px-1"
+                        title="清除号码状态筛选"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                  
+
+
                   {/* 办卡时间筛选条件 */}
                   {(applicationDateRange.from || applicationDateRange.to) && (
                     <div className="flex items-center gap-1 bg-white border border-blue-200 rounded px-2 py-0.5">
@@ -989,6 +979,7 @@ const Phones = () => {
                       setSearchParams(prev => ({
                         ...prev,
                         page: 1,
+                        status: "",
                         applicationDateFrom: "",
                         applicationDateTo: "",
                         applicationDate: "",
@@ -1170,7 +1161,108 @@ const Phones = () => {
                         </Popover>
                       </div>
                     </th>
-                    <th>号码状态</th>
+                    <th>
+                      <div className="flex items-center gap-1">
+                        <span>号码状态</span>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={`relative h-5 w-5 p-0 hover:bg-gray-100 ${searchParams.status ? 'text-blue-600' : ''}`}
+                              title="筛选号码状态"
+                            >
+                              <Filter className="h-3 w-3" />
+                              {searchParams.status && (
+                                <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full"></div>
+                              )}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-2" align="start">
+                            <div className="space-y-2">
+                              <div className="text-xs font-medium text-center border-b pb-1">
+                                选择号码状态
+                              </div>
+                              
+                              <div className="space-y-1">
+                                <button
+                                  onClick={() => {
+                                    handleFilterChange("status", "all");
+                                  }}
+                                  className={`w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 ${
+                                    !searchParams.status || searchParams.status === "all" 
+                                      ? 'bg-blue-100 text-blue-700' 
+                                      : ''
+                                  }`}
+                                >
+                                  全部状态
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleFilterChange("status", "idle");
+                                  }}
+                                  className={`w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 ${
+                                    searchParams.status === "idle" 
+                                      ? 'bg-blue-100 text-blue-700' 
+                                      : ''
+                                  }`}
+                                >
+                                  闲置
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleFilterChange("status", "in_use");
+                                  }}
+                                  className={`w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 ${
+                                    searchParams.status === "in_use" 
+                                      ? 'bg-blue-100 text-blue-700' 
+                                      : ''
+                                  }`}
+                                >
+                                  使用中
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleFilterChange("status", "pending_deactivation");
+                                  }}
+                                  className={`w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 ${
+                                    searchParams.status === "pending_deactivation" 
+                                      ? 'bg-blue-100 text-blue-700' 
+                                      : ''
+                                  }`}
+                                >
+                                  待注销
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleFilterChange("status", "deactivated");
+                                  }}
+                                  className={`w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 ${
+                                    searchParams.status === "deactivated" 
+                                      ? 'bg-blue-100 text-blue-700' 
+                                      : ''
+                                  }`}
+                                >
+                                  已注销
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleFilterChange("status", "user_reported");
+                                  }}
+                                  className={`w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 ${
+                                    searchParams.status === "user_reported" 
+                                      ? 'bg-blue-100 text-blue-700' 
+                                      : ''
+                                  }`}
+                                >
+                                  待核实-用户报告
+                                </button>
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </th>
                     <th>运营商</th>
                     <th>用途</th>
                     <th>操作</th>
