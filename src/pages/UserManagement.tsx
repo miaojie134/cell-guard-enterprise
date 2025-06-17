@@ -265,6 +265,8 @@ const UserManagement: React.FC = () => {
   const [showCreateUserDialog, setShowCreateUserDialog] = useState(false);
   const [showEditUserDialog, setShowEditUserDialog] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [createUserForm, setCreateUserForm] = useState<CreateUserRequest>({
     username: '',
     password: '',
@@ -548,19 +550,8 @@ const UserManagement: React.FC = () => {
       return;
     }
 
-    const userId = user.userId || (user as any).id;
-    if (!userId) {
-      toast({
-        title: "错误",
-        description: "无法获取用户ID，请重试",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (confirm(`确定要删除用户 "${user.name || user.username}" 吗？此操作不可逆。`)) {
-      deleteUserMutation.mutate(userId);
-    }
+    setUserToDelete(user);
+    setShowDeleteConfirmDialog(true);
   };
 
   // 处理部门选择
@@ -1163,6 +1154,58 @@ const UserManagement: React.FC = () => {
                 disabled={updateUserMutation.isPending}
               >
                 {updateUserMutation.isPending ? '更新中...' : '更新信息'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* 删除确认对话框 */}
+        <Dialog open={showDeleteConfirmDialog} onOpenChange={setShowDeleteConfirmDialog}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-red-600">
+                <AlertCircle className="h-5 w-5" />
+                确认删除用户
+              </DialogTitle>
+              <DialogDescription>
+                您即将删除用户 <strong>"{userToDelete?.name || userToDelete?.username}"</strong>。
+                <br />
+              </DialogDescription>
+            </DialogHeader>
+            
+            <DialogFooter className="space-x-2">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowDeleteConfirmDialog(false);
+                  setUserToDelete(null);
+                }}
+                disabled={deleteUserMutation.isPending}
+              >
+                取消
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  if (userToDelete) {
+                    const userId = userToDelete.userId || (userToDelete as any).id;
+                    if (userId) {
+                      deleteUserMutation.mutate(userId);
+                    } else {
+                      toast({
+                        title: "错误",
+                        description: "无法获取用户ID，请重试",
+                        variant: "destructive",
+                      });
+                    }
+                  }
+                  setShowDeleteConfirmDialog(false);
+                  setUserToDelete(null);
+                }}
+                disabled={deleteUserMutation.isPending}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                {deleteUserMutation.isPending ? '删除中...' : '确认删除'}
               </Button>
             </DialogFooter>
           </DialogContent>
