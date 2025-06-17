@@ -85,10 +85,6 @@ export const PhoneDetailsDialog: React.FC<PhoneDetailsDialogProps> = ({
                 <p>{phoneData.applicantName}</p>
               </div>
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">办卡人工号</Label>
-                <p>{phoneData.applicantEmployeeId}</p>
-              </div>
-              <div>
                 <Label className="text-sm font-medium text-muted-foreground">当前使用人</Label>
                 <p>{phoneData.currentUserName || "-"}</p>
               </div>
