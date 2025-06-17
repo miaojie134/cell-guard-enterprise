@@ -242,12 +242,12 @@ const EmployeeVerification: React.FC = () => {
             <p className="text-gray-600 mb-4">
               您的反馈已成功提交，感谢您的配合！
             </p>
-            <Button 
+            {/* <Button 
               onClick={() => navigate('/')} 
               className="w-full"
             >
               完成
-            </Button>
+            </Button> */}
           </CardContent>
         </Card>
       </div>

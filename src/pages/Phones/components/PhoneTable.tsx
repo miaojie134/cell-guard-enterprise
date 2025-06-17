@@ -128,16 +128,16 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
         <tbody>
           {phoneNumbers.map((phone) => (
             <tr key={phone.id}>
-              <td>{phone.phoneNumber}</td>
-              <td>{phone.currentUserName || "-"}</td>
-              <td>{phone.applicantName}</td>
+              <td className="min-w-[120px]">{phone.phoneNumber}</td>
+              <td className="hidden sm:table-cell">{phone.currentUserName || "-"}</td>
+              <td className="max-w-[80px] truncate" title={phone.applicantName}>{phone.applicantName}</td>
               <td>
                 <StatusBadge 
                   status={phone.applicantStatus === "Active" ? "active" : "inactive"} 
-                  text={phone.applicantStatus === "Active" ? "在职" : "已离职"} 
+                  text={phone.applicantStatus === "Active" ? "在职" : "离职"} 
                 />
               </td>
-              <td className="text-sm">
+              <td className="hidden md:table-cell text-sm">
                 {phone.applicationDate ? new Date(phone.applicationDate).toLocaleDateString('zh-CN') : '-'}
               </td>
               <td>
@@ -146,33 +146,33 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
                   text={getStatusText(phone.status)} 
                 />
               </td>
-              <td className="text-sm">
+              <td className="hidden lg:table-cell text-sm">
                 {phone.cancellationDate ? new Date(phone.cancellationDate).toLocaleDateString('zh-CN') : '-'}
               </td>
-              <td>{phone.vendor}</td>
-              <td>{phone.purpose}</td>
-              <td>
-                <div className="flex flex-wrap gap-2">
+              <td className="hidden md:table-cell max-w-[80px] truncate" title={phone.vendor}>{phone.vendor}</td>
+              <td className="hidden lg:table-cell max-w-[80px] truncate" title={phone.purpose}>{phone.purpose}</td>
+              <td className="min-w-[140px]">
+                <div className="flex flex-wrap gap-1">
                   <Button 
                     variant="outline" 
                     size="icon" 
                     onClick={() => onOpenDetails(phone.phoneNumber)}
-                    className="h-8 w-8"
+                    className="h-7 w-7 shrink-0"
                   >
-                    <FileText className="h-4 w-4" />
+                    <FileText className="h-3 w-3" />
                     <span className="sr-only">详情</span>
                   </Button>
                   <Button 
                     variant="outline" 
                     size="icon" 
                     onClick={() => onOpenEdit(phone.phoneNumber)}
-                    className="h-8 w-8"
+                    className="h-7 w-7 shrink-0"
                     disabled={isUpdating}
                   >
                     {isUpdating ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="h-3 w-3 animate-spin" />
                     ) : (
-                      <Pencil className="h-4 w-4" />
+                      <Pencil className="h-3 w-3" />
                     )}
                     <span className="sr-only">编辑</span>
                   </Button>
@@ -183,7 +183,7 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
                       size="sm"
                       onClick={() => onOpenUnassign(phone.phoneNumber)}
                       disabled={isUnassigning}
-                      className="h-8 px-2 text-xs"
+                      className="h-7 px-2 text-xs shrink-0"
                     >
                       {isUnassigning ? (
                         <Loader2 className="h-3 w-3 animate-spin" />
@@ -197,7 +197,7 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
                       size="sm"
                       onClick={() => onOpenAssign(phone.phoneNumber)}
                       disabled={isAssigning}
-                      className="h-8 px-2 text-xs"
+                      className="h-7 px-2 text-xs shrink-0"
                     >
                       {isAssigning ? (
                         <Loader2 className="h-3 w-3 animate-spin" />
@@ -218,7 +218,7 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
                           size="icon"
                           onClick={() => onOpenDelete(phone.phoneNumber)}
                           disabled={isDeleting}
-                          className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-50"
+                          className="h-7 w-7 text-gray-400 hover:text-red-500 hover:bg-red-50 shrink-0"
                           title="删除号码"
                         >
                           {isDeleting ? (
@@ -235,7 +235,7 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
                           variant="ghost" 
                           size="icon"
                           disabled
-                          className="h-8 w-8 text-gray-300 cursor-not-allowed"
+                          className="h-7 w-7 text-gray-300 cursor-not-allowed shrink-0"
                           title="有使用历史记录的号码不能删除"
                         >
                           <Trash2 className="h-3 w-3" />

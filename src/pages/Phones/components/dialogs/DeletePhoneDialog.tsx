@@ -60,7 +60,7 @@ export const DeletePhoneDialog: React.FC<DeletePhoneDialogProps> = ({
           </DialogTitle>
           <DialogDescription className="text-sm text-gray-600">
             {hasUsageHistory ? (
-              "该手机号码存在使用历史记录，为保留审计记录，不允许删除。"
+              "该手机号码存在使用历史记录，为保留历史记录，不允许删除。"
             ) : (
               "此操作将永久删除手机号码记录，且无法恢复。请谨慎操作。"
             )}
@@ -79,7 +79,7 @@ export const DeletePhoneDialog: React.FC<DeletePhoneDialogProps> = ({
                   </p>
                   <p className="text-sm text-orange-700">
                     手机号码 <span className="font-mono font-semibold">{phoneNumber}</span> 存在使用历史记录。
-                    为了保留审计信息和合规要求，系统不允许删除有使用历史的号码。
+                    系统不允许删除有使用历史的号码。
                   </p>
                   <p className="text-xs text-orange-600 mt-2">
                     如果确实需要停用该号码，建议将状态更改为"已注销"而不是删除记录。

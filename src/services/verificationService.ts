@@ -44,6 +44,23 @@ class VerificationService {
     return successData.data;
   }
 
+  // 处理提交类接口响应（不需要返回数据）
+  private async handleSubmitResponse(response: Response): Promise<void> {
+    const data: APIResponse<null> | APIErrorResponse = await response.json();
+
+    if (!response.ok) {
+      const errorData = data as APIErrorResponse;
+      throw new Error(errorData.error || errorData.details || '请求失败');
+    }
+
+    const successData = data as APIResponse<null>;
+    if (successData.status !== ResponseStatus.SUCCESS) {
+      throw new Error(successData.message || '响应格式错误');
+    }
+
+    // 提交成功，不需要返回数据
+  }
+
   // 发起号码使用确认流程（管理员接口）
   async initiate(data: VerificationInitiateRequest): Promise<{ batchId: string }> {
     try {
@@ -116,7 +133,8 @@ class VerificationService {
         body: JSON.stringify(data),
       });
 
-      await this.handleResponse<null>(response);
+      // 对于提交类接口，使用特殊的响应处理逻辑
+      await this.handleSubmitResponse(response);
     } catch (error) {
       console.error('提交确认结果失败:', error);
       if (error instanceof Error) {

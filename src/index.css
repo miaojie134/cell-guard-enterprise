@@ -208,3 +208,26 @@
 .data-table tr:hover {
   @apply bg-muted/50;
 }
+
+/* 响应式表格优化 */
+@media (max-width: 768px) {
+  .data-table th,
+  .data-table td {
+    @apply px-2 py-1.5;
+  }
+
+  .data-table .truncate {
+    max-width: 60px;
+  }
+}
+
+@media (max-width: 640px) {
+  .data-table th,
+  .data-table td {
+    @apply px-1.5 py-1;
+  }
+
+  .data-table .truncate {
+    max-width: 50px;
+  }
+}

@@ -112,11 +112,11 @@ export const PhoneTableHeader: React.FC<PhoneTableHeaderProps> = ({
 
   return (
     <tr>
-      <th>号码</th>
-      <th>当前使用人</th>
+      <th className="min-w-[120px]">号码</th>
+      <th className="hidden sm:table-cell">当前使用人</th>
       <th>办卡人</th>
       <th>办卡人状态</th>
-      <th>
+      <th className="hidden md:table-cell">
         <div className="flex items-center gap-1">
           <span>办卡时间</span>
           <Popover open={applicationDatePicker.isPickerOpen} onOpenChange={applicationDatePicker.setIsPickerOpen}>
@@ -211,7 +211,7 @@ export const PhoneTableHeader: React.FC<PhoneTableHeaderProps> = ({
                 variant="ghost"
                 size="sm"
                 className={`relative h-5 w-5 p-0 hover:bg-gray-100 ${searchParams.status ? 'text-blue-600' : ''}`}
-                title="筛选号码状态"
+                title={searchParams.status ? `筛选: ${getStatusText(searchParams.status)}` : "筛选号码状态"}
               >
                 <Filter className="h-3 w-3" />
                 {searchParams.status && (
@@ -219,80 +219,38 @@ export const PhoneTableHeader: React.FC<PhoneTableHeaderProps> = ({
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-2" align="start">
+            <PopoverContent className="w-64 p-3" align="start">
               <div className="space-y-2">
-                <div className="text-xs font-medium text-center border-b pb-1">
-                  选择号码状态
-                </div>
+                <div className="text-xs font-medium border-b pb-1">筛选号码状态</div>
                 
                 <div className="space-y-1">
-                  <button
-                    onClick={() => onFilterChange("status", "all")}
-                    className={`w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 ${
-                      !searchParams.status || searchParams.status === "all" 
-                        ? 'bg-blue-100 text-blue-700' 
-                        : ''
-                    }`}
+                  <Button
+                    variant={searchParams.status === "" ? "secondary" : "ghost"}
+                    size="sm"
+                    onClick={() => onFilterChange("status", "")}
+                    className="w-full justify-start h-7 text-xs"
                   >
                     全部状态
-                  </button>
-                  <button
-                    onClick={() => onFilterChange("status", "idle")}
-                    className={`w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 ${
-                      searchParams.status === "idle" 
-                        ? 'bg-blue-100 text-blue-700' 
-                        : ''
-                    }`}
-                  >
-                    闲置
-                  </button>
-                  <button
-                    onClick={() => onFilterChange("status", "in_use")}
-                    className={`w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 ${
-                      searchParams.status === "in_use" 
-                        ? 'bg-blue-100 text-blue-700' 
-                        : ''
-                    }`}
-                  >
-                    使用中
-                  </button>
-                  <button
-                    onClick={() => onFilterChange("status", "pending_deactivation")}
-                    className={`w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 ${
-                      searchParams.status === "pending_deactivation" 
-                        ? 'bg-blue-100 text-blue-700' 
-                        : ''
-                    }`}
-                  >
-                    待注销
-                  </button>
-                  <button
-                    onClick={() => onFilterChange("status", "deactivated")}
-                    className={`w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 ${
-                      searchParams.status === "deactivated" 
-                        ? 'bg-blue-100 text-blue-700' 
-                        : ''
-                    }`}
-                  >
-                    已注销
-                  </button>
-                  <button
-                    onClick={() => onFilterChange("status", "user_reported")}
-                    className={`w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 ${
-                      searchParams.status === "user_reported" 
-                        ? 'bg-blue-100 text-blue-700' 
-                        : ''
-                    }`}
-                  >
-                    待核实-用户报告
-                  </button>
+                  </Button>
+                  
+                  {['idle', 'in_use', 'pending_deactivation', 'deactivated', 'risk_pending', 'user_reported'].map((status) => (
+                    <Button
+                      key={status}
+                      variant={searchParams.status === status ? "secondary" : "ghost"}
+                      size="sm"
+                      onClick={() => onFilterChange("status", status)}
+                      className="w-full justify-start h-7 text-xs"
+                    >
+                      {getStatusText(status)}
+                    </Button>
+                  ))}
                 </div>
               </div>
             </PopoverContent>
           </Popover>
         </div>
       </th>
-      <th>
+      <th className="hidden lg:table-cell">
         <div className="flex items-center gap-1">
           <span>注销时间</span>
           <Popover open={cancellationDatePicker.isPickerOpen} onOpenChange={cancellationDatePicker.setIsPickerOpen}>
@@ -378,9 +336,9 @@ export const PhoneTableHeader: React.FC<PhoneTableHeaderProps> = ({
           </Popover>
         </div>
       </th>
-      <th>运营商</th>
-      <th>用途</th>
-      <th>操作</th>
+      <th className="hidden md:table-cell">运营商</th>
+      <th className="hidden lg:table-cell">用途</th>
+      <th className="min-w-[140px]">操作</th>
     </tr>
   );
 }; 

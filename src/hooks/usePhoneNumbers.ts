@@ -154,13 +154,13 @@ export const usePhoneNumbers = (options: UsePhoneNumbersOptions = {}) => {
         error.message?.includes('号码存在使用历史记录') ||
         error.message?.includes('使用历史记录') ||
         error.message?.includes('不允许删除') ||
-        error.message?.includes('审计记录') ||
+        error.message?.includes('历史记录') ||
         error.message?.includes('status: 409') ||
         error.message?.includes('409')
       ) {
         toast({
           title: '无法删除',
-          description: '该号码存在使用历史记录，为保留审计记录，不允许删除',
+          description: '该号码存在使用历史记录，为保留历史记录，不允许删除',
           variant: 'destructive',
         });
       } else {
