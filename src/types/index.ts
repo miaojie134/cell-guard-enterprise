@@ -32,6 +32,8 @@ export const FRONTEND_PHONE_STATUS = {
 
 // User role constants
 export const USER_ROLES = {
+  SUPER_ADMIN: 'super_admin',
+  REGIONAL_ADMIN: 'regional_admin',
   ADMIN: 'admin',
   USER: 'user'
 } as const;
@@ -42,12 +44,19 @@ export const SORT_ORDER = {
   DESC: 'desc'
 } as const;
 
+// 权限类型常量
+export const PERMISSION_TYPES = {
+  MANAGE: 'manage',
+  VIEW: 'view'
+} as const;
+
 // Type definitions based on constants
 export type BackendEmploymentStatus = typeof BACKEND_EMPLOYMENT_STATUS[keyof typeof BACKEND_EMPLOYMENT_STATUS];
 export type FrontendEmploymentStatus = typeof FRONTEND_EMPLOYMENT_STATUS[keyof typeof FRONTEND_EMPLOYMENT_STATUS];
 export type BackendPhoneStatus = typeof BACKEND_PHONE_STATUS[keyof typeof BACKEND_PHONE_STATUS];
 export type FrontendPhoneStatus = typeof FRONTEND_PHONE_STATUS[keyof typeof FRONTEND_PHONE_STATUS];
 export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
+export type PermissionType = typeof PERMISSION_TYPES[keyof typeof PERMISSION_TYPES];
 export type SortOrder = typeof SORT_ORDER[keyof typeof SORT_ORDER];
 
 // Employee related types
@@ -153,7 +162,10 @@ export interface PhoneUsageHistory {
 export interface User {
   id: string;
   username: string;
+  name?: string; // 添加用户姓名字段
   role: UserRole;
+  isSuperAdmin?: boolean; // 添加超级管理员标识字段
+  departmentPermissions?: DepartmentPermission[]; // 多部门权限列表
 }
 
 // General data types
@@ -371,3 +383,10 @@ export type VerificationScopeType = typeof VERIFICATION_SCOPE[keyof typeof VERIF
 export type VerificationStatusType = typeof VERIFICATION_STATUS[keyof typeof VERIFICATION_STATUS];
 export type VerificationActionType = typeof VERIFICATION_ACTION[keyof typeof VERIFICATION_ACTION];
 export type PhoneVerificationStatusType = typeof PHONE_VERIFICATION_STATUS[keyof typeof PHONE_VERIFICATION_STATUS];
+
+// 部门权限类型
+export interface DepartmentPermission {
+  departmentId: number;
+  departmentName: string;
+  permissionType: PermissionType;
+}

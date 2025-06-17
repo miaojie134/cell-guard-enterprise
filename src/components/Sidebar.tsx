@@ -10,51 +10,71 @@ import {
   Upload, 
   LogOut,
   Building2,
-  ClipboardCheck
+  ClipboardCheck,
+  Settings,
+  Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { hasMenuPermission } from "@/utils/permissions";
 
 export const Sidebar = () => {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const location = useLocation();
 
-  const navItems = [
+  // 所有可能的菜单项
+  const allNavItems = [
     {
       name: "仪表盘",
       path: "/dashboard",
       icon: <LayoutDashboard className="mr-2 h-4 w-4" />,
+      key: "dashboard",
     },
     {
       name: "号码管理",
       path: "/phones",
       icon: <Phone className="mr-2 h-4 w-4" />,
+      key: "phones",
     },
     {
       name: "风险号码",
       path: "/risk",
       icon: <AlertTriangle className="mr-2 h-4 w-4" />,
+      key: "risk",
     },
     {
       name: "盘点管理",
       path: "/verification",
       icon: <ClipboardCheck className="mr-2 h-4 w-4" />,
+      key: "verification",
     },
     {
       name: "员工管理",
       path: "/employees",
       icon: <User className="mr-2 h-4 w-4" />,
+      key: "employees",
     },
     {
       name: "部门管理",
       path: "/departments",
       icon: <Building2 className="mr-2 h-4 w-4" />,
+      key: "departments",
+    },
+    {
+      name: "用户管理",
+      path: "/users",
+      icon: <Users className="mr-2 h-4 w-4" />,
+      key: "users",
     },
     {
       name: "数据导入",
       path: "/import",
       icon: <Upload className="mr-2 h-4 w-4" />,
+      key: "import",
     },
   ];
+
+  // 根据用户权限过滤菜单项
+  const navItems = allNavItems.filter(item => hasMenuPermission(user, item.key));
 
   return (
     <div className="w-56 h-screen bg-sidebar border-r border-sidebar-border flex flex-col">

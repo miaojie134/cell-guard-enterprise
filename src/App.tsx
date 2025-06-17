@@ -13,6 +13,7 @@ import Employees from "./pages/Employees";
 import Departments from "./pages/Departments";
 import RiskPhones from "./pages/RiskPhones";
 import ImportData from "./pages/ImportData";
+import UserManagement from "./pages/UserManagement";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import { lazy } from "react";
@@ -49,6 +50,7 @@ const App = () => (
                 <Route path="/phones" element={<Phones />} />
                 <Route path="/employees" element={<Employees />} />
                 <Route path="/departments" element={<Departments />} />
+                <Route path="/users" element={<UserManagement />} />
                 <Route path="/risk" element={<RiskPhones />} />
                 <Route path="/import" element={<ImportData />} />
                 
