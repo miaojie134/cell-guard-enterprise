@@ -279,4 +279,95 @@ export const handleRiskPhone = async (phoneNumber: string, handleData: HandleRis
     console.error('处理风险号码失败:', error);
     throw error;
   }
-}; 
+};
+
+// 增强版批量导入手机号码数据结果
+export interface EnhancedImportData {
+  message: string;
+  successCount: number;
+  errorCount: number;
+  errors: Array<{
+    rowNumber: number;
+    rowData: string[];
+    reason: string;
+  }>;
+}
+
+// API响应结构
+export interface EnhancedImportResult {
+  status: string;
+  message: string;
+  data: EnhancedImportData;
+}
+
+// 中文状态到英文状态的映射
+const statusChineseToEnglishMap: Record<string, string> = {
+  '闲置': 'idle',
+  '使用中': 'in_use',
+  '待注销': 'pending_deactivation',
+  '已注销': 'deactivated',
+  '待核实-办卡人离职': 'risk_pending',
+  '待核实-用户报告': 'user_reported'
+};
+
+// 处理CSV文件内容，将中文状态转换为英文状态
+const preprocessCSVFile = async (file: File): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        let content = event.target?.result as string;
+
+        // 替换中文状态为英文状态
+        Object.entries(statusChineseToEnglishMap).forEach(([chinese, english]) => {
+          // 使用正则表达式进行全局替换，考虑CSV格式（逗号分隔）
+          const regex = new RegExp(`([,]|^)${chinese}([,]|$)`, 'g');
+          content = content.replace(regex, `$1${english}$2`);
+        });
+
+        // 创建新的文件对象
+        const processedBlob = new Blob([content], { type: file.type });
+        const processedFile = new File([processedBlob], file.name, { type: file.type });
+        resolve(processedFile);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    reader.onerror = () => reject(new Error('文件读取失败'));
+    reader.readAsText(file, 'utf-8');
+  });
+};
+
+export const enhancedImportPhones = async (file: File): Promise<APIResponse<EnhancedImportResult>> => {
+  try {
+    // 预处理CSV文件，将中文状态转换为英文状态
+    const processedFile = await preprocessCSVFile(file);
+
+    const formData = new FormData();
+    formData.append('file', processedFile);
+
+    const token = localStorage.getItem('token');
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_CONFIG.BASE_URL}/mobilenumbers/enhanced-import`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('增强版批量导入手机号码失败:', error);
+    throw error;
+  }
+};
+
