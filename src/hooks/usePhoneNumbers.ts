@@ -140,16 +140,32 @@ export const usePhoneNumbers = (options: UsePhoneNumbersOptions = {}) => {
       });
     },
     onError: (error: any) => {
-      const errorMessage = error.message || '删除手机号码失败';
+      let errorMessage = error.message || '删除手机号码失败';
+
+      console.log('Delete phone error:', error);
+
       if (error.message?.includes('401')) {
         toast({
           title: '认证失败',
           description: '请重新登录',
           variant: 'destructive',
         });
+      } else if (
+        error.message?.includes('号码存在使用历史记录') ||
+        error.message?.includes('使用历史记录') ||
+        error.message?.includes('不允许删除') ||
+        error.message?.includes('审计记录') ||
+        error.message?.includes('status: 409') ||
+        error.message?.includes('409')
+      ) {
+        toast({
+          title: '无法删除',
+          description: '该号码存在使用历史记录，为保留审计记录，不允许删除',
+          variant: 'destructive',
+        });
       } else {
         toast({
-          title: '错误',
+          title: '删除失败',
           description: errorMessage,
           variant: 'destructive',
         });

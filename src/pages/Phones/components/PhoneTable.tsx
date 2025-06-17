@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/StatusBadge";
-import { FileText, Pencil, Loader2 } from "lucide-react";
+import { FileText, Pencil, Loader2, Trash2 } from "lucide-react";
 import { PhoneTableHeader } from "./PhoneTableHeader";
 
 interface PhoneNumber {
@@ -47,12 +47,14 @@ interface PhoneTableProps {
   isUpdating: boolean;
   isAssigning: boolean;
   isUnassigning: boolean;
+  isDeleting: boolean;
   onFilterChange: (key: string, value: string) => void;
   onUpdateSearchParams: (updater: (prev: SearchParams) => SearchParams) => void;
   onOpenDetails: (phoneNumber: string) => void;
   onOpenEdit: (phoneNumber: string) => void;
   onOpenAssign: (phoneNumber: string) => void;
   onOpenUnassign: (phoneNumber: string) => void;
+  onOpenDelete: (phoneNumber: string) => void;
 }
 
 const getStatusText = (status: string) => {
@@ -87,12 +89,14 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
   isUpdating,
   isAssigning,
   isUnassigning,
+  isDeleting,
   onFilterChange,
   onUpdateSearchParams,
   onOpenDetails,
   onOpenEdit,
   onOpenAssign,
   onOpenUnassign,
+  onOpenDelete,
 }) => {
   if (isLoading) {
     return (
@@ -202,6 +206,44 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
                       )}
                     </Button>
                   )}
+                  {/* 删除按钮 - 低调样式，仅当没有使用历史时显示 */}
+                  {(() => {
+                    const hasUsageHistory = phone.usageHistory && phone.usageHistory.length > 0;
+                    console.log(`Phone ${phone.phoneNumber} usageHistory:`, phone.usageHistory, 'hasUsageHistory:', hasUsageHistory);
+                    
+                    if (!hasUsageHistory) {
+                      return (
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => onOpenDelete(phone.phoneNumber)}
+                          disabled={isDeleting}
+                          className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-50"
+                          title="删除号码"
+                        >
+                          {isDeleting ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3 w-3" />
+                          )}
+                          <span className="sr-only">删除</span>
+                        </Button>
+                      );
+                    } else {
+                      return (
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          disabled
+                          className="h-8 w-8 text-gray-300 cursor-not-allowed"
+                          title="有使用历史记录的号码不能删除"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          <span className="sr-only">不可删除</span>
+                        </Button>
+                      );
+                    }
+                  })()}
                 </div>
               </td>
             </tr>

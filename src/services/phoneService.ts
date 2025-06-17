@@ -165,16 +165,31 @@ export const updatePhone = async (phoneNumber: string, phoneData: UpdatePhoneReq
 // 删除手机号码
 export const deletePhone = async (id: string): Promise<APIResponse<void>> => {
   try {
+    console.log('Deleting phone:', id);
+
     const response = await fetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
 
+    console.log('Delete phone response status:', response.status);
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      try {
+        const errorData = await response.json();
+        console.error('Delete phone error response:', errorData);
+        // 尝试获取更详细的错误信息
+        const errorMsg = errorData.error || errorData.message || errorData.details || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMsg);
+      } catch (jsonError) {
+        // 如果无法解析JSON，返回HTTP状态码错误
+        console.error('Failed to parse error response:', jsonError);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
     }
 
     const data = await response.json();
+    console.log('Delete phone success response:', data);
     return data;
   } catch (error) {
     console.error('删除手机号码失败:', error);

@@ -19,6 +19,7 @@ import {
   PhoneDetailsDialog,
   AssignPhoneDialog,
   UnassignPhoneDialog,
+  DeletePhoneDialog,
 } from "./Phones/components/dialogs";
 
 const Phones = () => {
@@ -46,6 +47,7 @@ const Phones = () => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [showUnassignDialog, setShowUnassignDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [currentPhoneNumber, setCurrentPhoneNumber] = useState<string>("");
 
   // 使用API hook获取数据
@@ -137,6 +139,22 @@ const Phones = () => {
     setShowUnassignDialog(true);
   };
 
+  const openDeleteDialog = (phoneNumber: string) => {
+    // 双重检查：确保没有使用历史才能删除
+    const phone = phoneNumbers.find(p => p.phoneNumber === phoneNumber);
+    if (phone?.usageHistory && phone.usageHistory.length > 0) {
+      toast({
+        title: '无法删除',
+        description: '该号码存在使用历史记录，不允许删除',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    setCurrentPhoneNumber(phoneNumber);
+    setShowDeleteDialog(true);
+  };
+
   // Submit handlers
   const handleAddSubmit = (data: CreatePhoneRequest) => {
     createPhone(data);
@@ -157,6 +175,12 @@ const Phones = () => {
   const handleUnassignSubmit = (phoneNumber: string, data: UnassignPhoneRequest) => {
     unassignPhone({ phoneNumber, data });
     setShowUnassignDialog(false);
+  };
+
+  const handleDeleteSubmit = (phoneNumber: string) => {
+    deletePhone(phoneNumber);
+    setShowDeleteDialog(false);
+    setCurrentPhoneNumber("");
   };
 
   // 获取当前编辑的手机号码数据
@@ -203,12 +227,14 @@ const Phones = () => {
             isUpdating={isUpdating}
             isAssigning={isAssigning}
             isUnassigning={isUnassigning}
+            isDeleting={isDeleting}
             onFilterChange={handleFilterChange}
             onUpdateSearchParams={setSearchParams}
             onOpenDetails={openDetailsDialog}
             onOpenEdit={openEditDialog}
             onOpenAssign={openAssignDialog}
             onOpenUnassign={openUnassignDialog}
+            onOpenDelete={openDeleteDialog}
           />
           
           {pagination && (
@@ -260,6 +286,19 @@ const Phones = () => {
         phoneNumber={currentPhoneNumber}
         onSubmit={handleUnassignSubmit}
         isUnassigning={isUnassigning}
+      />
+      
+      <DeletePhoneDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        phoneNumber={currentPhoneNumber}
+        onSubmit={handleDeleteSubmit}
+        isDeleting={isDeleting}
+        hasUsageHistory={
+          currentPhoneNumber 
+            ? (phoneNumbers.find(p => p.phoneNumber === currentPhoneNumber)?.usageHistory?.length ?? 0) > 0 
+            : false
+        }
       />
     </MainLayout>
   );

@@ -49,11 +49,6 @@ export const Header: React.FC<HeaderProps> = ({ title }) => {
               {getUserRoleDisplay()}
             </Badge>
           </div>
-          {user?.departmentPermissions && user.departmentPermissions.length > 0 && (
-            <div className="text-xs text-blue-600 mt-1">
-              管理 {user.departmentPermissions.length} 个部门
-            </div>
-          )}
         </div>
         <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-medium text-xs">
           {user?.username[0]?.toUpperCase()}
