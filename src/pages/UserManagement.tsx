@@ -507,24 +507,59 @@ const UserManagement: React.FC = () => {
   const handleUpdateUserSubmit = () => {
     if (!editingUser) return;
 
+    // 过滤掉空值字段，特别是空密码
+    const request: UpdateUserRequest = {};
+    
+    if (editUserForm.username && editUserForm.username.trim()) {
+      request.username = editUserForm.username.trim();
+    }
+    
+    if (editUserForm.password && editUserForm.password.trim()) {
+      request.password = editUserForm.password.trim();
+    }
+    
+    if (editUserForm.role) {
+      request.role = editUserForm.role;
+    }
+
+    const userId = editingUser.userId || (editingUser as any).id;
+    if (!userId) {
+      toast({
+        title: "错误",
+        description: "无法获取用户ID，请重试",
+        variant: "destructive",
+      });
+      return;
+    }
+
     updateUserMutation.mutate({
-      userId: editingUser.userId,
-      request: editUserForm
+      userId,
+      request
     });
   };
 
   const handleDeleteUser = (user: User) => {
-    if (user.isSuperAdmin) {
+    if (isSystemAdmin(user)) {
       toast({
         title: "错误",
-        description: "不能删除超级管理员账户",
+        description: "不能删除系统默认管理员账户",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const userId = user.userId || (user as any).id;
+    if (!userId) {
+      toast({
+        title: "错误",
+        description: "无法获取用户ID，请重试",
         variant: "destructive",
       });
       return;
     }
 
     if (confirm(`确定要删除用户 "${user.name || user.username}" 吗？此操作不可逆。`)) {
-      deleteUserMutation.mutate(user.userId);
+      deleteUserMutation.mutate(userId);
     }
   };
 
@@ -643,8 +678,6 @@ const UserManagement: React.FC = () => {
     }
   };
 
-
-
   // 检查权限
   if (!isSuperAdmin(user)) {
     return (
@@ -668,6 +701,11 @@ const UserManagement: React.FC = () => {
       </MainLayout>
     );
   }
+
+  // 判断是否是系统默认管理员（不可编辑）
+  const isSystemAdmin = (userInfo: User) => {
+    return userInfo.username === 'admin' && userInfo.isSuperAdmin;
+  };
 
   const getRoleDisplay = (userInfo: User) => {
     if (userInfo.isSuperAdmin) {
@@ -837,7 +875,7 @@ const UserManagement: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleEditUserInfo(userInfo)}
-                          disabled={userInfo.isSuperAdmin} // 超级管理员不能编辑基本信息
+                          disabled={isSystemAdmin(userInfo)} // 只有系统默认管理员不能编辑基本信息
                         >
                           <Edit className="h-4 w-4 mr-1" />
                           编辑信息
@@ -846,7 +884,7 @@ const UserManagement: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleEditUser(userInfo)}
-                          disabled={userInfo.isSuperAdmin} // 超级管理员不能编辑权限
+                          disabled={isSystemAdmin(userInfo)} // 只有系统默认管理员不能编辑权限
                         >
                           <Shield className="h-4 w-4 mr-1" />
                           权限管理
@@ -855,7 +893,7 @@ const UserManagement: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleDeleteUser(userInfo)}
-                          disabled={userInfo.isSuperAdmin} // 超级管理员不能删除
+                          disabled={isSystemAdmin(userInfo)} // 只有系统默认管理员不能删除
                         >
                           <Trash2 className="h-4 w-4 mr-1" />
                           删除
@@ -1063,7 +1101,7 @@ const UserManagement: React.FC = () => {
                 编辑用户信息
               </DialogTitle>
               <DialogDescription>
-                修改用户 "{editingUser?.username}" 的基本信息
+                修改用户 "{editingUser?.username}" 的基本信息。
               </DialogDescription>
             </DialogHeader>
             
@@ -1078,6 +1116,20 @@ const UserManagement: React.FC = () => {
                   onChange={(e) => setEditUserForm({
                     ...editUserForm,
                     username: e.target.value
+                  })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-password">密码</Label>
+                <Input
+                  id="edit-password"
+                  type="password"
+                  placeholder="留空表示不修改密码"
+                  value={editUserForm.password || ''}
+                  onChange={(e) => setEditUserForm({
+                    ...editUserForm,
+                    password: e.target.value
                   })}
                 />
               </div>
