@@ -281,6 +281,40 @@ export const handleRiskPhone = async (phoneNumber: string, handleData: HandleRis
   }
 };
 
+// 导出手机号码资产明细
+export const exportPhoneAssets = async (params: PhoneSearchParams = {}): Promise<Blob> => {
+  const url = new URL(`${API_CONFIG.BASE_URL}/mobilenumbers/export`, window.location.origin);
+
+  // 添加查询参数
+  if (params.search) url.searchParams.append('search', params.search);
+  if (params.status) url.searchParams.append('status', params.status);
+  if (params.applicantStatus) url.searchParams.append('applicantStatus', params.applicantStatus);
+  if (params.applicationDateFrom) url.searchParams.append('applicationDateFrom', params.applicationDateFrom);
+  if (params.applicationDateTo) url.searchParams.append('applicationDateTo', params.applicationDateTo);
+  if (params.cancellationDateFrom) url.searchParams.append('cancellationDateFrom', params.cancellationDateFrom);
+  if (params.cancellationDateTo) url.searchParams.append('cancellationDateTo', params.cancellationDateTo);
+
+  try {
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        ...getAuthHeaders(),
+        'Accept': 'text/csv',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    return blob;
+  } catch (error) {
+    console.error('导出手机号码资产明细失败:', error);
+    throw error;
+  }
+};
+
 // 增强版批量导入手机号码数据结果
 export interface EnhancedImportData {
   message: string;
