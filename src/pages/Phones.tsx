@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { hasManagePermission } from "@/utils/permissions";
 import { usePhoneNumbers, usePhoneNumber } from "@/hooks/usePhoneNumbers";
+import { useDepartmentOptions } from "@/hooks/useDepartments";
 import { CreatePhoneRequest, UpdatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest } from "@/config/api/phone";
 
 // 导入拆分的组件
@@ -26,6 +27,9 @@ import {
 const Phones = () => {
   const { toast } = useToast();
   const { isAuthenticated, user } = useAuth();
+
+  // 获取部门选项数据来映射部门名称
+  const { options: departmentOptions } = useDepartmentOptions();
   
   // State
   const [searchParams, setSearchParams] = useState({
@@ -230,6 +234,7 @@ const Phones = () => {
             isUnassigning={isUnassigning}
             isDeleting={isDeleting}
             user={user}
+            departmentOptions={departmentOptions}
             onFilterChange={handleFilterChange}
             onUpdateSearchParams={setSearchParams}
             onOpenDetails={openDetailsDialog}

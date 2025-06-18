@@ -24,6 +24,7 @@ import { useEmployeesForSelector } from "@/hooks/useEmployees";
 import { useRiskPhoneNumbers } from "@/hooks/usePhoneNumbers";
 import { useAuth } from "@/context/AuthContext";
 import { hasManagePermission } from "@/utils/permissions";
+import { useDepartmentOptions } from "@/hooks/useDepartments";
 
 // 处理表单数据类型
 interface RiskHandlingForm {
@@ -59,6 +60,9 @@ const RiskPhones = () => {
     employmentStatus: 'Active',
     limit: 100,
   });
+
+  // 获取部门选项数据来映射部门名称
+  const { options: departmentOptions } = useDepartmentOptions();
 
   // 获取风险号码数据
   const {
@@ -166,6 +170,15 @@ const RiskPhones = () => {
     return statusMap[status] || status;
   };
 
+  // 部门映射
+  const getDepartmentName = (departmentId?: number) => {
+    if (!departmentId) {
+      return '未分配部门';
+    }
+    const department = departmentOptions.find(dept => dept.id === departmentId);
+    return department ? department.name : `部门ID: ${departmentId}`;
+  };
+
   const getStatusVariant = (status: string): "active" | "inactive" | "pending" | "cancelled" | "risk" => {
     const variantMap: Record<string, "active" | "inactive" | "pending" | "cancelled" | "risk"> = {
       'idle': 'inactive',
@@ -246,6 +259,7 @@ const RiskPhones = () => {
                       <th>办卡人状态</th>
                       <th>当前使用人</th>
                       <th>状态</th>
+                      <th>部门</th>
                       <th>供应商</th>
                       <th>操作</th>
                     </tr>
@@ -258,6 +272,7 @@ const RiskPhones = () => {
                         <td><StatusBadge status="inactive" text="已离职" /></td>
                         <td>{phone.currentUserName || "-"}</td>
                         <td><StatusBadge status={getStatusVariant(phone.status)} text={getStatusText(phone.status)} /></td>
+                        <td>{getDepartmentName(phone.departmentId)}</td>
                         <td>{phone.vendor}</td>
                         <td>
                           <Button 
@@ -273,7 +288,7 @@ const RiskPhones = () => {
                     ))}
                     {riskPhoneNumbers.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="text-center py-4">
+                        <td colSpan={8} className="text-center py-4">
                           恭喜，没有发现风险号码
                         </td>
                       </tr>

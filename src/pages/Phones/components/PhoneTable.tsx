@@ -5,6 +5,7 @@ import { FileText, Pencil, Loader2, Trash2 } from "lucide-react";
 import { hasManagePermission } from "@/utils/permissions";
 import { User } from "@/types";
 import { PhoneTableHeader } from "./PhoneTableHeader";
+import { DepartmentOption } from "@/config/api";
 
 interface PhoneNumber {
   id: string;
@@ -52,6 +53,7 @@ interface PhoneTableProps {
   isUnassigning: boolean;
   isDeleting: boolean;
   user: User | null;
+  departmentOptions: DepartmentOption[];
   onFilterChange: (key: string, value: string) => void;
   onUpdateSearchParams: (updater: (prev: SearchParams) => SearchParams) => void;
   onOpenDetails: (phoneNumber: string) => void;
@@ -85,6 +87,15 @@ const getStatusVariant = (status: string): "active" | "inactive" | "pending" | "
   return variantMap[status] || 'inactive';
 };
 
+// 部门映射
+const getDepartmentName = (departmentId: number | undefined, departmentOptions: DepartmentOption[]) => {
+  if (!departmentId) {
+    return '未分配部门';
+  }
+  const department = departmentOptions.find(dept => dept.id === departmentId);
+  return department ? department.name : `部门ID: ${departmentId}`;
+};
+
 export const PhoneTable: React.FC<PhoneTableProps> = ({
   phoneNumbers,
   isLoading,
@@ -95,6 +106,7 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
   isUnassigning,
   isDeleting,
   user,
+  departmentOptions,
   onFilterChange,
   onUpdateSearchParams,
   onOpenDetails,
@@ -141,6 +153,9 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
                   status={phone.applicantStatus === "Active" ? "active" : "inactive"} 
                   text={phone.applicantStatus === "Active" ? "在职" : "离职"} 
                 />
+              </td>
+              <td className="hidden md:table-cell max-w-[100px] truncate" title={getDepartmentName(phone.departmentId, departmentOptions)}>
+                {getDepartmentName(phone.departmentId, departmentOptions)}
               </td>
               <td className="hidden md:table-cell text-sm">
                 {phone.applicationDate ? new Date(phone.applicationDate).toLocaleDateString('zh-CN') : '-'}
@@ -255,7 +270,7 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
           ))}
           {phoneNumbers.length === 0 && !isLoading && (
             <tr>
-              <td colSpan={10} className="text-center py-4">
+              <td colSpan={11} className="text-center py-4">
                 没有找到符合条件的手机号码
               </td>
             </tr>

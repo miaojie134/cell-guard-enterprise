@@ -116,6 +116,7 @@ export const PhoneTableHeader: React.FC<PhoneTableHeaderProps> = ({
       <th className="hidden sm:table-cell">当前使用人</th>
       <th>办卡人</th>
       <th>办卡人状态</th>
+      <th className="hidden md:table-cell">部门</th>
       <th className="hidden md:table-cell">
         <div className="flex items-center gap-1">
           <span>办卡时间</span>
