@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { MainLayout } from "@/layouts/MainLayout";
 import { 
@@ -16,7 +15,7 @@ import { EnhancedPhoneImportForm } from "@/components/EnhancedPhoneImportForm";
 import { exportPhoneAssets } from "@/services/phoneService";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
-import { hasManagePermission } from "@/utils/permissions";
+import { hasManagePermission, isSuperAdmin } from "@/utils/permissions";
 
 const ImportData = () => {
   const { user } = useAuth();
@@ -75,14 +74,14 @@ const ImportData = () => {
               权限不足
             </CardTitle>
           </CardHeader>
-          {/* <CardContent>
+          <CardContent>
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                只有具有管理权限的用户才能访问数据导入和导出功能。
+                只有具有管理权限的用户才能访问数据导入功能。
               </AlertDescription>
             </Alert>
-          </CardContent> */}
+          </CardContent>
         </Card>
       </MainLayout>
     );
@@ -94,7 +93,9 @@ const ImportData = () => {
         <TabsList className="grid grid-cols-3 w-full max-w-lg mx-auto mb-6">
           <TabsTrigger value="employees">员工导入</TabsTrigger>
           <TabsTrigger value="phones">号码导入</TabsTrigger>
-          <TabsTrigger value="export">数据导出</TabsTrigger>
+          <TabsTrigger value="export" disabled={!isSuperAdmin(user)}>
+            数据导出
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="employees">
@@ -106,58 +107,75 @@ const ImportData = () => {
         </TabsContent>
         
         <TabsContent value="export">
-          <div className="space-y-6">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold">数据导出</h2>
-              <p className="text-muted-foreground text-sm mt-2">导出系统中的数据明细，支持CSV格式文件下载</p>
-            </div>
-            
-            <div className="flex justify-center">
-              <Card className="relative overflow-hidden w-full max-w-md">
-                <div className="absolute top-0 right-0 w-20 h-20 bg-blue-50 rounded-full -translate-y-10 translate-x-10"></div>
-                <CardHeader className="pb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <Download className="h-5 w-5 text-blue-600" />
+          {!isSuperAdmin(user) ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-orange-500" />
+                  权限不足
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    数据导出功能仅对超级管理员开放。
+                  </AlertDescription>
+                </Alert>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-6">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold">数据导出</h2>
+                <p className="text-muted-foreground text-sm mt-2">导出系统中的数据明细，支持CSV格式文件下载</p>
+              </div>
+              
+              <div className="flex justify-center">
+                <Card className="relative overflow-hidden w-full max-w-md">
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-blue-50 rounded-full -translate-y-10 translate-x-10"></div>
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Download className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">手机号码资产明细</CardTitle>
+                        <CardDescription className="text-sm">
+                          完整的手机号码管理数据
+                        </CardDescription>
+                      </div>
                     </div>
-                    <div>
-                      <CardTitle className="text-lg">手机号码资产明细</CardTitle>
-                      <CardDescription className="text-sm">
-                        完整的手机号码管理数据
-                      </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="text-sm text-muted-foreground space-y-2">
+                      <p>• 包含所有手机号码的详细信息</p>
+                      <p>• 办卡人、使用人、状态等完整数据</p>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-sm text-muted-foreground space-y-2">
-                    <p>• 包含所有手机号码的详细信息</p>
-                    <p>• 办卡人、使用人、状态等完整数据</p>
-                  </div>
-                  <div className="pt-2">
-                    <Button 
-                      onClick={handleExportPhoneAssets}
-                      disabled={isExporting}
-                      className="w-full"
-                    >
-                      {isExporting ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          正在生成文件...
-                        </>
-                      ) : (
-                        <>
-                          <Download className="h-4 w-4 mr-2" />
-                          立即导出
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                    <div className="pt-2">
+                      <Button 
+                        onClick={handleExportPhoneAssets}
+                        disabled={isExporting}
+                        className="w-full"
+                      >
+                        {isExporting ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            正在生成文件...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-4 w-4 mr-2" />
+                            立即导出
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-
-
-          </div>
+          )}
         </TabsContent>
       </Tabs>
     </MainLayout>
