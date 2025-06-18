@@ -9,13 +9,17 @@ import {
 } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Download, Loader2, AlertCircle } from "lucide-react";
 import { EmployeeImportForm } from "@/components/EmployeeImportForm";
 import { EnhancedPhoneImportForm } from "@/components/EnhancedPhoneImportForm";
 import { exportPhoneAssets } from "@/services/phoneService";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import { hasManagePermission } from "@/utils/permissions";
 
 const ImportData = () => {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
 
@@ -59,6 +63,30 @@ const ImportData = () => {
       setIsExporting(false);
     }
   };
+
+  // 检查权限
+  if (!hasManagePermission(user)) {
+    return (
+      <MainLayout title="数据导入">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-orange-500" />
+              权限不足
+            </CardTitle>
+          </CardHeader>
+          {/* <CardContent>
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                只有具有管理权限的用户才能访问数据导入和导出功能。
+              </AlertDescription>
+            </Alert>
+          </CardContent> */}
+        </Card>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout title="数据导入">

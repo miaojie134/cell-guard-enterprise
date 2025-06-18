@@ -7,6 +7,7 @@ import { Plus, Loader2, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { hasManagePermission } from "@/utils/permissions";
 import { usePhoneNumbers, usePhoneNumber } from "@/hooks/usePhoneNumbers";
 import { CreatePhoneRequest, UpdatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest } from "@/config/api/phone";
 
@@ -24,7 +25,7 @@ import {
 
 const Phones = () => {
   const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   
   // State
   const [searchParams, setSearchParams] = useState({
@@ -202,7 +203,7 @@ const Phones = () => {
       <Card>
         <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
           <CardTitle>手机号码列表</CardTitle>
-          <Button onClick={openAddDialog} disabled={isCreating}>
+          <Button onClick={openAddDialog} disabled={isCreating || !hasManagePermission(user)}>
             {isCreating ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
@@ -228,6 +229,7 @@ const Phones = () => {
             isAssigning={isAssigning}
             isUnassigning={isUnassigning}
             isDeleting={isDeleting}
+            user={user}
             onFilterChange={handleFilterChange}
             onUpdateSearchParams={setSearchParams}
             onOpenDetails={openDetailsDialog}

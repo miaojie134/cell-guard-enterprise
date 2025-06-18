@@ -29,6 +29,8 @@ import { UpdateEmployeeForm } from "@/components/UpdateEmployeeForm";
 import { EmployeeDetailDialog } from "@/components/EmployeeDetailDialog";
 import { employeeService } from "@/services/employeeService";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import { hasManagePermission } from "@/utils/permissions";
 import { CreateEmployeeRequest, UpdateEmployeeRequest } from "@/config/api";
 import { Plus, Edit, ExternalLink, Loader2 } from "lucide-react";
 import { Badge } from '@/components/ui/badge';
@@ -70,6 +72,7 @@ const formatDisplayDate = (isoDate: string): string => {
 };
 
 const Employees = () => {
+  const { user } = useAuth();
   const { 
     employees, 
     totalItems, 
@@ -273,7 +276,7 @@ const Employees = () => {
       <Card>
         <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
           <CardTitle>员工列表</CardTitle>
-          <Button onClick={openAddDialog}>
+          <Button onClick={openAddDialog} disabled={!hasManagePermission(user)}>
             <Plus className="h-4 w-4 mr-2" />
             添加员工
           </Button>
@@ -392,6 +395,7 @@ const Employees = () => {
                             variant="ghost" 
                             size="sm" 
                             onClick={() => openUpdateDialog(employee.id)}
+                            disabled={!hasManagePermission(user)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>

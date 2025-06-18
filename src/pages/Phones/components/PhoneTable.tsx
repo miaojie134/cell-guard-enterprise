@@ -2,6 +2,8 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/StatusBadge";
 import { FileText, Pencil, Loader2, Trash2 } from "lucide-react";
+import { hasManagePermission } from "@/utils/permissions";
+import { User } from "@/types";
 import { PhoneTableHeader } from "./PhoneTableHeader";
 
 interface PhoneNumber {
@@ -48,6 +50,7 @@ interface PhoneTableProps {
   isAssigning: boolean;
   isUnassigning: boolean;
   isDeleting: boolean;
+  user: User | null;
   onFilterChange: (key: string, value: string) => void;
   onUpdateSearchParams: (updater: (prev: SearchParams) => SearchParams) => void;
   onOpenDetails: (phoneNumber: string) => void;
@@ -90,6 +93,7 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
   isAssigning,
   isUnassigning,
   isDeleting,
+  user,
   onFilterChange,
   onUpdateSearchParams,
   onOpenDetails,
@@ -167,7 +171,7 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
                     size="icon" 
                     onClick={() => onOpenEdit(phone.phoneNumber)}
                     className="h-7 w-7 shrink-0"
-                    disabled={isUpdating}
+                    disabled={isUpdating || !hasManagePermission(user)}
                   >
                     {isUpdating ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
@@ -178,25 +182,25 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
                   </Button>
                   {/* 分配/回收按钮 */}
                   {phone.currentUserName ? (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => onOpenUnassign(phone.phoneNumber)}
-                      disabled={isUnassigning}
-                      className="h-7 px-2 text-xs shrink-0"
-                    >
-                      {isUnassigning ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        "回收"
-                      )}
-                    </Button>
+                                      <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => onOpenUnassign(phone.phoneNumber)}
+                    disabled={isUnassigning || !hasManagePermission(user)}
+                    className="h-7 px-2 text-xs shrink-0"
+                  >
+                    {isUnassigning ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      "回收"
+                    )}
+                  </Button>
                   ) : (
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => onOpenAssign(phone.phoneNumber)}
-                      disabled={isAssigning}
+                      disabled={isAssigning || !hasManagePermission(user)}
                       className="h-7 px-2 text-xs shrink-0"
                     >
                       {isAssigning ? (
@@ -217,7 +221,7 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
                           variant="ghost" 
                           size="icon"
                           onClick={() => onOpenDelete(phone.phoneNumber)}
-                          disabled={isDeleting}
+                          disabled={isDeleting || !hasManagePermission(user)}
                           className="h-7 w-7 text-gray-400 hover:text-red-500 hover:bg-red-50 shrink-0"
                           title="删除号码"
                         >
