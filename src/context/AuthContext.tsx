@@ -79,10 +79,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         username: userInfo.username,
         name: userInfo.name,
         role: userInfo.role as any, // 支持新的角色类型
-        departmentPermissions: userInfo.departmentPermissions?.map((p: any) => ({
+        departmentPermissions: userInfo.permissions?.map((p: any) => ({
           departmentId: p.departmentId,
           departmentName: p.departmentName,
-          permissionType: p.permissionType as any
+          permissionType: p.permissionType as any,
+          subDepartmentIds: p.subDepartmentIds || []
         })) || []
       };
 

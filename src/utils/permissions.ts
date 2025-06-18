@@ -1,4 +1,4 @@
-import { User, DepartmentPermission, USER_ROLES, PERMISSION_TYPES } from '@/types';
+import { User, DepartmentPermission, USER_ROLES, PERMISSION_TYPES, PermissionType } from '@/types';
 
 // 权限检查辅助函数
 
@@ -39,17 +39,25 @@ export function isRegionalAdmin(user: User | null): boolean {
  * 检查用户是否有管理权限（针对特定部门）
  */
 export function hasManagePermission(user: User | null, departmentId?: number): boolean {
-  if (!user) return false;
+  if (!user) {
+    return false;
+  }
 
   // 超级管理员拥有所有权限
-  if (isSuperAdmin(user)) return true;
+  if (isSuperAdmin(user)) {
+    return true;
+  }
 
-  // 如果未指定部门ID，返回false
-  if (!departmentId) return false;
+  // 如果未指定部门ID，检查用户是否在任何部门有管理权限
+  if (departmentId === undefined) {
+    return user.departmentPermissions?.some(
+      (p: DepartmentPermission) => p.permissionType === PERMISSION_TYPES.MANAGE
+    ) || false;
+  }
 
-  // 检查区域管理员是否有该部门的管理权限
-  const managedDepartmentIds = getManagedDepartmentIds(user);
-  return managedDepartmentIds.includes(departmentId);
+  // 使用新的权限检查逻辑，支持父子部门权限继承
+  const permissionType = getDepartmentPermissionType(user, departmentId);
+  return permissionType === PERMISSION_TYPES.MANAGE;
 }
 
 /**
@@ -61,17 +69,18 @@ export function hasViewPermission(user: User | null, departmentId?: number): boo
   // 超级管理员拥有所有权限
   if (isSuperAdmin(user)) return true;
 
-  // 如果未指定部门ID，返回false
-  if (!departmentId) return false;
+  // 如果未指定部门ID，检查用户是否在任何部门有查看权限
+  if (departmentId === undefined) {
+    return user.departmentPermissions?.length > 0 || false;
+  }
 
-  // 检查区域管理员是否有该部门的查看权限
-  return user.departmentPermissions?.some(
-    (p: DepartmentPermission) => p.departmentId === departmentId
-  ) || false;
+  // 使用新的权限检查逻辑，支持父子部门权限继承
+  const permissionType = getDepartmentPermissionType(user, departmentId);
+  return permissionType === PERMISSION_TYPES.VIEW || permissionType === PERMISSION_TYPES.MANAGE;
 }
 
 /**
- * 获取用户可管理的部门ID列表
+ * 获取用户可管理的部门ID列表（包含父部门和子部门）
  */
 export function getManagedDepartmentIds(user: User | null): number[] {
   if (!user) return [];
@@ -79,14 +88,24 @@ export function getManagedDepartmentIds(user: User | null): number[] {
   // 超级管理员拥有所有权限（这里返回空数组，在具体使用时需要特殊处理）
   if (isSuperAdmin(user)) return [];
 
-  // 返回有管理权限的部门ID列表
-  return user.departmentPermissions?.filter(
-    (p: DepartmentPermission) => p.permissionType === PERMISSION_TYPES.MANAGE
-  ).map((p: DepartmentPermission) => p.departmentId) || [];
+  const managedIds: number[] = [];
+
+  user.departmentPermissions?.forEach((p: DepartmentPermission) => {
+    if (p.permissionType === PERMISSION_TYPES.MANAGE) {
+      // 添加父部门ID
+      managedIds.push(p.departmentId);
+      // 添加所有子部门ID
+      if (p.subDepartmentIds) {
+        managedIds.push(...p.subDepartmentIds);
+      }
+    }
+  });
+
+  return managedIds;
 }
 
 /**
- * 获取用户可查看的部门ID列表
+ * 获取用户可查看的部门ID列表（包含父部门和子部门）
  */
 export function getViewableDepartmentIds(user: User | null): number[] {
   if (!user) return [];
@@ -94,8 +113,19 @@ export function getViewableDepartmentIds(user: User | null): number[] {
   // 超级管理员拥有所有权限（这里返回空数组，在具体使用时需要特殊处理）
   if (isSuperAdmin(user)) return [];
 
-  // 返回有权限的部门ID列表（管理权限包含查看权限）
-  return user.departmentPermissions?.map((p: DepartmentPermission) => p.departmentId) || [];
+  const viewableIds: number[] = [];
+
+  user.departmentPermissions?.forEach((p: DepartmentPermission) => {
+    // 管理权限和查看权限都可以查看
+    // 添加父部门ID
+    viewableIds.push(p.departmentId);
+    // 添加所有子部门ID
+    if (p.subDepartmentIds) {
+      viewableIds.push(...p.subDepartmentIds);
+    }
+  });
+
+  return viewableIds;
 }
 
 /**
@@ -154,4 +184,39 @@ export function clearUserPermissions(): void {
   localStorage.removeItem("userRole");
   localStorage.removeItem("departmentPermissions");
   localStorage.removeItem("managedDepartmentIds");
-} 
+}
+
+/**
+ * 根据部门ID获取用户对该部门的权限类型
+ * 支持父子部门权限继承
+ */
+export function getDepartmentPermissionType(user: User | null, departmentId: number): PermissionType | null {
+  if (!user) {
+    return null;
+  }
+
+  // 超级管理员拥有所有权限
+  if (isSuperAdmin(user)) {
+    return PERMISSION_TYPES.MANAGE;
+  }
+
+  if (!user.departmentPermissions) {
+    return null;
+  }
+
+  // 查找权限：先查父部门，再查子部门
+  for (const permission of user.departmentPermissions) {
+    // 检查是否是父部门
+    if (permission.departmentId === departmentId) {
+      return permission.permissionType;
+    }
+
+    // 检查是否是子部门
+    if (permission.subDepartmentIds?.includes(departmentId)) {
+      return permission.permissionType;
+    }
+  }
+
+  return null;
+}
+

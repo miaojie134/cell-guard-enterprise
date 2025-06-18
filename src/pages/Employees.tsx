@@ -114,7 +114,6 @@ const Employees = () => {
 
   // Handle department filter change
   const handleDepartmentFilterChange = (department: any) => {
-    console.log('Department filter changed:', department);
     setSearchParams(prev => ({
       ...prev,
       filters: { ...prev.filters, departmentId: department?.id },
@@ -133,7 +132,6 @@ const Employees = () => {
       departmentId: searchParams.filters.departmentId,
     };
     
-    console.log('Fetching employees with API params:', apiParams);
     fetchEmployees(apiParams);
   }, [searchParams.page, searchParams.pageSize, searchParams.query, searchParams.filters.status, searchParams.filters.departmentId, fetchEmployees]);
 
@@ -171,20 +169,12 @@ const Employees = () => {
 
   // Dialog handlers
   const openDetailsDialog = (employeeId: string) => {
-    console.log('openDetailsDialog called with employeeId:', employeeId);
-    console.log('Available employees:', employees.map(emp => ({ id: emp.id, employeeId: emp.employeeId, name: emp.name })));
-    
     // 直接使用传入的员工ID查找员工，然后使用员工工号
     const employee = getEmployeeById(employeeId);
-    console.log('Found employee:', employee);
     
     if (employee) {
-      console.log('Setting currentEmployeeId to:', employee.employeeId);
       setCurrentEmployeeId(employee.employeeId);
       setShowDetailsDialog(true);
-    } else {
-      console.error('Employee not found with id:', employeeId);
-      console.error('Available employee IDs:', employees.map(emp => emp.id));
     }
   };
 
@@ -228,7 +218,6 @@ const Employees = () => {
       setShowAddDialog(false);
       refreshEmployeeList();
     } catch (error) {
-      console.error('Failed to create employee:', error);
       const errorMessage = error instanceof Error ? error.message : '创建员工失败';
       
       toast({
@@ -258,7 +247,6 @@ const Employees = () => {
       setCurrentEmployeeId(null);
       refreshEmployeeList();
     } catch (error) {
-      console.error('Failed to update employee:', error);
       const errorMessage = error instanceof Error ? error.message : '更新员工失败';
       
       toast({
@@ -395,7 +383,7 @@ const Employees = () => {
                             variant="ghost" 
                             size="sm" 
                             onClick={() => openUpdateDialog(employee.id)}
-                            disabled={!hasManagePermission(user)}
+                            disabled={!hasManagePermission(user, employee.departmentId)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>

@@ -25,6 +25,7 @@ interface PhoneNumber {
     startDate: string;
     endDate?: string;
   }>;
+  departmentId: number;
 }
 
 interface SearchParams {
@@ -171,7 +172,7 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
                     size="icon" 
                     onClick={() => onOpenEdit(phone.phoneNumber)}
                     className="h-7 w-7 shrink-0"
-                    disabled={isUpdating || !hasManagePermission(user)}
+                    disabled={isUpdating || !hasManagePermission(user, phone.departmentId)}
                   >
                     {isUpdating ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
@@ -186,7 +187,7 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
                     variant="outline" 
                     size="sm"
                     onClick={() => onOpenUnassign(phone.phoneNumber)}
-                    disabled={isUnassigning || !hasManagePermission(user)}
+                    disabled={isUnassigning || !hasManagePermission(user, phone.departmentId)}
                     className="h-7 px-2 text-xs shrink-0"
                   >
                     {isUnassigning ? (
@@ -200,7 +201,7 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
                       variant="outline" 
                       size="sm"
                       onClick={() => onOpenAssign(phone.phoneNumber)}
-                      disabled={isAssigning || !hasManagePermission(user)}
+                      disabled={isAssigning || !hasManagePermission(user, phone.departmentId)}
                       className="h-7 px-2 text-xs shrink-0"
                     >
                       {isAssigning ? (
@@ -221,7 +222,7 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
                           variant="ghost" 
                           size="icon"
                           onClick={() => onOpenDelete(phone.phoneNumber)}
-                          disabled={isDeleting || !hasManagePermission(user)}
+                          disabled={isDeleting || !hasManagePermission(user, phone.departmentId)}
                           className="h-7 w-7 text-gray-400 hover:text-red-500 hover:bg-red-50 shrink-0"
                           title="删除号码"
                         >

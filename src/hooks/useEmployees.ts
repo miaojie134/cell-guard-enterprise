@@ -54,6 +54,7 @@ export const useEmployees = (): UseEmployeesReturn => {
         employeeId: emp.employeeId,
         name: emp.fullName,
         department: departmentDisplay,
+        departmentId: emp.departmentId, // 添加部门ID用于权限控制
         email: emp.email,
         phoneNumber: emp.phoneNumber,
         status: emp.employmentStatus === 'Active' ? 'active' : 'departed',

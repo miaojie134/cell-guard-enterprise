@@ -65,6 +65,7 @@ export interface Employee {
   employeeId: string;
   name: string;
   department: string;
+  departmentId: number; // 所属部门ID，用于权限控制
   email?: string;
   phoneNumber?: string;
   status: FrontendEmploymentStatus;
@@ -78,6 +79,7 @@ export interface BackendEmployee {
   employeeId: string;
   fullName: string;
   department: string;
+  departmentId: number; // 所属部门ID，用于权限控制
   email: string;
   phoneNumber: string;
   employmentStatus: BackendEmploymentStatus;
@@ -103,6 +105,7 @@ export interface PhoneNumber {
   remarks?: string; // 备注
   status: string; // 号码状态
   vendor: string; // 运营商
+  departmentId: number; // 所属部门ID，用于权限控制
   createdAt: string;
   updatedAt: string;
   usageHistory?: PhoneUsageHistory[]; // 使用历史记录
@@ -125,6 +128,7 @@ export interface BackendPhoneNumber {
   status: string;
   updatedAt: string;
   vendor: string;
+  departmentId: number; // 所属部门ID，用于权限控制
   usageHistory?: Array<{
     employeeId: string;
     startDate: string;
@@ -215,6 +219,7 @@ export const mapBackendEmployeeToFrontend = (backendEmployee: BackendEmployee): 
     employeeId: backendEmployee.employeeId,
     name: backendEmployee.fullName,
     department: backendEmployee.department,
+    departmentId: backendEmployee.departmentId,
     email: backendEmployee.email,
     phoneNumber: backendEmployee.phoneNumber,
     status: EMPLOYMENT_STATUS_MAP[backendEmployee.employmentStatus] || FRONTEND_EMPLOYMENT_STATUS.DEPARTED,
@@ -238,6 +243,7 @@ export const mapBackendPhoneToFrontend = (backendPhone: BackendPhoneNumber): Pho
     remarks: backendPhone.remarks,
     status: backendPhone.status,
     vendor: backendPhone.vendor,
+    departmentId: backendPhone.departmentId,
     createdAt: formatDateFromISO(backendPhone.createdAt),
     updatedAt: formatDateFromISO(backendPhone.updatedAt),
     usageHistory: backendPhone.usageHistory?.map(usage => ({
@@ -389,4 +395,5 @@ export interface DepartmentPermission {
   departmentId: number;
   departmentName: string;
   permissionType: PermissionType;
+  subDepartmentIds?: number[]; // 子部门ID列表，继承父部门的权限
 }

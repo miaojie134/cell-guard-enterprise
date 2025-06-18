@@ -22,6 +22,8 @@ import { EmployeeSelector, Employee as SelectorEmployee } from "@/components/Emp
 import { PhoneStatus, RiskHandleAction } from "@/config/api/phone";
 import { useEmployeesForSelector } from "@/hooks/useEmployees";
 import { useRiskPhoneNumbers } from "@/hooks/usePhoneNumbers";
+import { useAuth } from "@/context/AuthContext";
+import { hasManagePermission } from "@/utils/permissions";
 
 // 处理表单数据类型
 interface RiskHandlingForm {
@@ -31,6 +33,8 @@ interface RiskHandlingForm {
 }
 
 const RiskPhones = () => {
+  const { user } = useAuth(); // 添加用户认证
+  
   // State
   const [searchParams, setSearchParams] = useState({
     page: 1,
@@ -260,7 +264,7 @@ const RiskPhones = () => {
                             variant="ghost" 
                             size="sm" 
                             onClick={() => openEditDialog(phone.phoneNumber)}
-                            disabled={isHandlingRiskPhone}
+                            disabled={isHandlingRiskPhone || !hasManagePermission(user, phone.departmentId)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
