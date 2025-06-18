@@ -352,7 +352,7 @@ export const enhancedImportPhones = async (file: File): Promise<APIResponse<Enha
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_CONFIG.BASE_URL}/mobilenumbers/enhanced-import`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/mobilenumbers/import`, {
       method: 'POST',
       headers,
       body: formData,
