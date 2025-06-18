@@ -1,30 +1,23 @@
 import { API_CONFIG, APIResponse, APIErrorResponse } from '@/config/api/base';
 
-// 用户权限管理相关类型定义
+// 简化的用户权限信息类型定义 - 只支持1级部门的直接权限
 export interface UserPermissionInfo {
   userId: number;
   username: string;
-  name?: string;
   isSuperAdmin: boolean;
-  role?: string;
-  departmentPermissions?: Array<{
+  permissions: Array<{
     departmentId: number;
     departmentName: string;
     permissionType: 'manage' | 'view';
   }>;
 }
 
-export interface AssignPermissionRequest {
-  departmentIds: number[];
-  permissionType: 'manage' | 'view';
-}
-
-
-
-// PUT请求期望的权限数组格式
-interface UserDepartmentPermission {
-  departmentId: number;
-  permissionType: 'manage' | 'view';
+// 简化的权限请求格式 - 只支持1级部门，只有manage和view两种权限
+export interface PermissionRequest {
+  permissions: Array<{
+    departmentId: number;        // 必须是1级部门ID
+    permissionType: 'manage' | 'view';  // 只支持 "manage" 或 "view"
+  }>;
 }
 
 class UserPermissionService {
@@ -89,19 +82,18 @@ class UserPermissionService {
     }
   }
 
-  // 为用户分配部门权限
-  async assignUserPermissions(userId: string, request: AssignPermissionRequest): Promise<void> {
+  // 为用户分配部门权限 (只支持1级部门)
+  async assignUserPermissions(userId: string, request: PermissionRequest): Promise<UserPermissionInfo> {
     try {
       console.log('分配用户权限:', userId, request);
 
-      // POST请求期望 {departmentIds: [], permissionType: "xxx"} 格式
       const response = await fetch(`${API_CONFIG.BASE_URL}/users/${userId}/permissions`, {
         method: 'POST',
         headers: this.getHeaders(),
-        body: JSON.stringify(request), // 直接发送原格式
+        body: JSON.stringify(request),
       });
 
-      await this.handleResponse<null>(response);
+      return await this.handleResponse<UserPermissionInfo>(response);
     } catch (error) {
       console.error('分配用户权限失败:', error);
       if (error instanceof Error) {
@@ -111,24 +103,18 @@ class UserPermissionService {
     }
   }
 
-  // 更新用户权限设置
-  async updateUserPermissions(userId: string, request: AssignPermissionRequest): Promise<void> {
+  // 更新用户权限设置 (只支持1级部门)
+  async updateUserPermissions(userId: string, request: PermissionRequest): Promise<UserPermissionInfo> {
     try {
       console.log('更新用户权限:', userId, request);
-
-      // PUT请求期望数组格式 [{departmentId: x, permissionType: "xxx"}]
-      const permissions: UserDepartmentPermission[] = request.departmentIds.map(departmentId => ({
-        departmentId,
-        permissionType: request.permissionType
-      }));
 
       const response = await fetch(`${API_CONFIG.BASE_URL}/users/${userId}/permissions`, {
         method: 'PUT',
         headers: this.getHeaders(),
-        body: JSON.stringify(permissions), // 发送数组格式
+        body: JSON.stringify(request),
       });
 
-      await this.handleResponse<null>(response);
+      return await this.handleResponse<UserPermissionInfo>(response);
     } catch (error) {
       console.error('更新用户权限失败:', error);
       if (error instanceof Error) {
@@ -137,12 +123,6 @@ class UserPermissionService {
       throw new Error('更新用户权限失败');
     }
   }
-
-
-
-
-
-
 }
 
 // 导出服务实例

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { MainLayout } from "@/layouts/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,242 +9,82 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, Users, UserCog, Shield, Eye, Edit, X, Plus, ChevronRight, ChevronDown, UserPlus, Trash2 } from "lucide-react";
+import { AlertCircle, Users, UserCog, Shield, Eye, Edit, X, Plus, UserPlus, Trash2 } from "lucide-react";
 import { isSuperAdmin } from "@/utils/permissions";
-import { userPermissionService, UserPermissionInfo, AssignPermissionRequest } from "@/services/userPermissionService";
+import { userPermissionService, UserPermissionInfo, PermissionRequest } from "@/services/userPermissionService";
 import { userService, User, CreateUserRequest, UpdateUserRequest } from "@/services/userService";
 import { useDepartmentTree } from "@/hooks/useDepartments";
 import { DepartmentTreeNode } from "@/config/api/department";
 import { useToast } from "@/hooks/use-toast";
 
-// 支持半选状态的复选框组件
-interface IndeterminateCheckboxProps {
-  id: string;
-  checked: boolean;
-  indeterminate: boolean;
-  onCheckedChange: (checked: boolean) => void;
-}
-
-const IndeterminateCheckbox: React.FC<IndeterminateCheckboxProps> = ({ 
-  id, 
-  checked, 
-  indeterminate, 
-  onCheckedChange 
-}) => {
-  const checkboxRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (checkboxRef.current) {
-      checkboxRef.current.indeterminate = indeterminate;
-    }
-  }, [indeterminate]);
-
-  return (
-    <input
-      ref={checkboxRef}
-      id={id}
-      type="checkbox"
-      checked={checked}
-      onChange={(e) => onCheckedChange(e.target.checked)}
-      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-    />
-  );
-};
-
-// 树形部门选择器组件
-interface DepartmentTreeSelectorProps {
+// 简化的部门选择器组件 - 只显示1级部门
+interface DepartmentSelectorProps {
   tree: DepartmentTreeNode[];
-  selectedIds: number[];
-  onSelectionChange: (departmentId: number, checked: boolean) => void;
-  expandedIds: Set<number>;
-  onToggleExpand: (departmentId: number) => void;
+  selectedPermissions: Record<number, 'manage' | 'view'>;
+  onPermissionChange: (departmentId: number, permissionType: 'manage' | 'view' | null) => void;
 }
 
-const DepartmentTreeSelector: React.FC<DepartmentTreeSelectorProps> = ({
+const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
   tree,
-  selectedIds,
-  onSelectionChange,
-  expandedIds,
-  onToggleExpand,
+  selectedPermissions,
+  onPermissionChange,
 }) => {
-  const renderTreeNode = (node: DepartmentTreeNode, level: number = 0) => {
-    const hasChildren = node.children && node.children.length > 0;
-    const isExpanded = expandedIds.has(node.id);
-    
-    // 获取所有子部门ID（递归）
-    const getAllChildIds = (dept: DepartmentTreeNode): number[] => {
-      let childIds: number[] = [];
-      if (dept.children) {
-        dept.children.forEach(child => {
-          childIds.push(child.id);
-          childIds.push(...getAllChildIds(child));
-        });
-      }
-      return childIds;
-    };
-
-    // 计算选择状态 - 考虑权限继承
-    const isDirectlySelected = selectedIds.includes(node.id);
-    
-    // 检查是否通过父部门继承了权限
-    const hasInheritedPermission = () => {
-      const findParentWithPermission = (tree: DepartmentTreeNode[], targetId: number): boolean => {
-        for (const treeNode of tree) {
-          if (treeNode.children) {
-            for (const child of treeNode.children) {
-              if (child.id === targetId && selectedIds.includes(treeNode.id)) {
-                return true;
-              }
-              if (child.children && findParentWithPermission([child], targetId)) {
-                return true;
-              }
-            }
-          }
-        }
-        return false;
-      };
-      return findParentWithPermission(tree, node.id);
-    };
-
-    const hasPermission = isDirectlySelected || hasInheritedPermission();
-    
-    // 查找树中的节点
-    const findNodeInTree = (tree: DepartmentTreeNode[], id: number): DepartmentTreeNode | null => {
-      for (const treeNode of tree) {
-        if (treeNode.id === id) return treeNode;
-        if (treeNode.children) {
-          const found = findNodeInTree(treeNode.children, id);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-
-    // 计算子部门的权限状态
-    const childIds = hasChildren ? getAllChildIds(node) : [];
-    const childrenWithPermission = childIds.filter(childId => {
-      // 子部门有权限的条件：直接选中 或 继承权限
-      return selectedIds.includes(childId) || selectedIds.some(selectedId => {
-        const selectedNode = findNodeInTree(tree, selectedId);
-        if (selectedNode) {
-          const selectedNodeAllChildren = getAllChildIds(selectedNode);
-          return selectedNodeAllChildren.includes(childId);
-        }
-        return false;
-      });
-    });
-    
-    const selectedChildrenCount = childrenWithPermission.length;
-    const totalChildrenCount = childIds.length;
-    
-    // 计算复选框状态
-    let checked = false;
-    let indeterminate = false;
-    
-    if (hasPermission) {
-      // 当前部门有权限（直接或继承）
-      checked = true;
-      indeterminate = false;
-    } else if (hasChildren && selectedChildrenCount > 0) {
-      // 当前部门没有权限，但有子部门有权限
-      if (selectedChildrenCount === totalChildrenCount) {
-        // 所有子部门都有权限
-        checked = true;
-        indeterminate = false;
-      } else {
-        // 部分子部门有权限 - 半选状态
-        checked = false;
-        indeterminate = true;
-      }
-    } else {
-      // 当前部门和子部门都没有权限
-      checked = false;
-      indeterminate = false;
-    }
-
-    // 调试日志
-    if (node.name === "基地中心" && (indeterminate || selectedChildrenCount > 0)) {
-      console.log(`基地中心状态:`, {
-        isDirectlySelected,
-        hasChildren,
-        childIds,
-        selectedChildrenCount,
-        totalChildrenCount,
-        checked,
-        indeterminate,
-        selectedIds
-      });
-    }
-    
-    const selectionState = { checked, indeterminate };
-    
-    return (
-      <div key={node.id}>
-        <div 
-          className="flex items-center space-x-2 py-1"
-          style={{ paddingLeft: `${level * 16}px` }}
-        >
-          {/* 展开/折叠按钮 */}
-          <div className="w-4 h-4 flex items-center justify-center">
-            {hasChildren ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-4 h-4 p-0 hover:bg-gray-100"
-                onClick={() => onToggleExpand(node.id)}
-              >
-                {isExpanded ? (
-                  <ChevronDown className="h-3 w-3" />
-                ) : (
-                  <ChevronRight className="h-3 w-3" />
-                )}
-              </Button>
-            ) : null}
-          </div>
-          
-          {/* 复选框 */}
-          <IndeterminateCheckbox
-            id={`dept-${node.id}`}
-            checked={selectionState.checked}
-            indeterminate={selectionState.indeterminate}
-            onCheckedChange={(checked) => onSelectionChange(node.id, checked)}
-          />
-          
-          {/* 部门名称 */}
-          <Label
-            htmlFor={`dept-${node.id}`}
-            className={`text-sm cursor-pointer flex-1 ${!node.isActive ? 'text-gray-400' : ''}`}
-          >
-            {node.name}
-            {!node.isActive && (
-              <Badge variant="secondary" className="ml-2 text-xs">
-                停用
-              </Badge>
-            )}
-            {hasChildren && (
-              <span className="text-xs text-gray-500 ml-1">
-                ({node.children.length})
-              </span>
-            )}
-          </Label>
-        </div>
-        
-        {/* 子部门 */}
-        {hasChildren && isExpanded && (
-          <div key={`${node.id}-children`}>
-            {node.children.map(child => renderTreeNode(child, level + 1))}
-          </div>
-        )}
-      </div>
-    );
-  };
+  // 过滤出1级部门（parentId为null的部门）
+  const firstLevelDepartments = tree.filter(dept => 
+    dept.parentId === null || dept.parentId === undefined
+  );
 
   return (
-    <div className="space-y-1">
-      {tree.map(node => renderTreeNode(node))}
+    <div className="space-y-3">
+      {firstLevelDepartments.map((department) => {
+        const currentPermission = selectedPermissions[department.id];
+        
+        return (
+          <div 
+            key={department.id}
+            className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+          >
+            <div className="flex items-center space-x-3">
+              <span className={`font-medium ${!department.isActive ? 'text-gray-400' : ''}`}>
+                {department.name}
+              </span>
+              {!department.isActive && (
+                <Badge variant="secondary" className="text-xs">
+                  停用
+                </Badge>
+              )}
+            </div>
+            
+            <div className="flex items-center">
+              <Select
+                value={currentPermission || "none"}
+                onValueChange={(value) => {
+                  if (value === "none") {
+                    onPermissionChange(department.id, null);
+                  } else {
+                    onPermissionChange(department.id, value as 'manage' | 'view');
+                  }
+                }}
+              >
+                <SelectTrigger className="w-24 h-8 text-xs">
+                  <SelectValue placeholder="无权限" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">无权限</SelectItem>
+                  <SelectItem value="view">查看</SelectItem>
+                  <SelectItem value="manage">管理</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
+      })}
+      
+      {firstLevelDepartments.length === 0 && (
+        <p className="text-sm text-gray-500 text-center py-4">暂无1级部门数据</p>
+      )}
     </div>
   );
 };
@@ -256,10 +96,9 @@ const UserManagement: React.FC = () => {
   
   // 状态管理
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userPermissionDetail, setUserPermissionDetail] = useState<UserPermissionInfo | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [selectedDepartmentIds, setSelectedDepartmentIds] = useState<number[]>([]);
-  const [selectedPermissionType, setSelectedPermissionType] = useState<'manage' | 'view'>('view');
-  const [expandedDepartmentIds, setExpandedDepartmentIds] = useState<Set<number>>(new Set());
+  const [selectedPermissions, setSelectedPermissions] = useState<Record<number, 'manage' | 'view'>>({});
 
   // 用户管理状态
   const [showCreateUserDialog, setShowCreateUserDialog] = useState(false);
@@ -356,36 +195,16 @@ const UserManagement: React.FC = () => {
     },
   });
 
-  // 分配权限mutation
-  const assignPermissionMutation = useMutation({
-    mutationFn: ({ userId, request }: { userId: number; request: AssignPermissionRequest }) =>
-      userPermissionService.assignUserPermissions(userId.toString(), request),
-    onSuccess: async () => {
-      // 强制重新获取数据并等待完成
-      await queryClient.invalidateQueries({ queryKey: ['users'] });
-      await refetch();
-      toast({
-        title: "成功",
-        description: "用户权限分配成功",
-      });
-      handleCloseDialog();
+  // 分配/更新权限mutation
+  const managePermissionMutation = useMutation({
+    mutationFn: ({ userId, request, isUpdate }: { userId: number; request: PermissionRequest; isUpdate: boolean }) => {
+      if (isUpdate) {
+        return userPermissionService.updateUserPermissions(userId.toString(), request);
+      } else {
+        return userPermissionService.assignUserPermissions(userId.toString(), request);
+      }
     },
-    onError: (error: any) => {
-      console.error('分配权限失败:', error);
-      toast({
-        title: "错误",
-        description: error.message || "分配权限失败",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // 更新权限mutation
-  const updatePermissionMutation = useMutation({
-    mutationFn: ({ userId, request }: { userId: number; request: AssignPermissionRequest }) =>
-      userPermissionService.updateUserPermissions(userId.toString(), request),
     onSuccess: async () => {
-      // 强制重新获取数据并等待完成
       await queryClient.invalidateQueries({ queryKey: ['users'] });
       await refetch();
       toast({
@@ -395,73 +214,53 @@ const UserManagement: React.FC = () => {
       handleCloseDialog();
     },
     onError: (error: any) => {
-      console.error('更新权限失败:', error);
+      console.error('权限操作失败:', error);
       toast({
         title: "错误",
-        description: error.message || "更新权限失败",
+        description: error.message || "权限操作失败",
         variant: "destructive",
       });
     },
   });
 
-  // 获取所有子部门ID（递归）
-  const getAllChildIds = (node: DepartmentTreeNode): number[] => {
-    const ids = [node.id];
-    if (node.children) {
-      node.children.forEach(child => {
-        ids.push(...getAllChildIds(child));
+  // 打开编辑对话框
+  const handleEditUser = async (userInfo: User) => {
+    try {
+      setSelectedUser(userInfo);
+      
+      // 获取用户详细权限信息
+      const userId = userInfo.userId || (userInfo as any).id;
+      if (!userId) {
+        throw new Error('无法获取用户ID');
+      }
+      
+      const permissionDetail = await userPermissionService.getUserPermissions(userId.toString());
+      setUserPermissionDetail(permissionDetail);
+      
+      // 初始化部门权限状态
+      const initialPermissions: Record<number, 'manage' | 'view'> = {};
+      permissionDetail.permissions?.forEach(perm => {
+        initialPermissions[perm.departmentId] = perm.permissionType;
+      });
+      setSelectedPermissions(initialPermissions);
+      
+      setShowEditDialog(true);
+    } catch (error) {
+      console.error('获取用户权限详情失败:', error);
+      toast({
+        title: "错误",
+        description: error instanceof Error ? error.message : "获取用户权限详情失败",
+        variant: "destructive",
       });
     }
-    return ids;
-  };
-
-  // 获取继承的权限ID列表（考虑父部门权限包含子部门权限）
-  const getInheritedPermissionIds = (userPermissions: Array<{departmentId: number}>) => {
-    if (!userPermissions || userPermissions.length === 0) return [];
-    
-    const directPermissionIds = userPermissions.map(p => p.departmentId);
-    const inheritedIds = new Set(directPermissionIds);
-    
-    // 为每个有权限的部门，添加其所有子部门
-    const addChildrenRecursively = (tree: DepartmentTreeNode[]) => {
-      tree.forEach(node => {
-        if (directPermissionIds.includes(node.id)) {
-          // 如果当前部门有权限，则其所有子部门也有权限
-          const allChildIds = getAllChildIds(node);
-          allChildIds.forEach(id => inheritedIds.add(id));
-        }
-        if (node.children && node.children.length > 0) {
-          addChildrenRecursively(node.children);
-        }
-      });
-    };
-    
-    addChildrenRecursively(departmentTree);
-    return Array.from(inheritedIds);
-  };
-
-  // 打开编辑对话框
-  const handleEditUser = (userInfo: User) => {
-    setSelectedUser(userInfo);
-    
-    // 只设置用户直接拥有权限的部门ID，不包括继承的子部门
-    const directPermissionIds = userInfo.departmentPermissions?.map(p => p.departmentId) || [];
-    setSelectedDepartmentIds(directPermissionIds);
-    setSelectedPermissionType('view');
-    
-    // 不自动展开，保持默认折叠状态
-    setExpandedDepartmentIds(new Set());
-    
-    setShowEditDialog(true);
   };
 
   // 关闭权限编辑对话框
   const handleCloseDialog = () => {
     setShowEditDialog(false);
     setSelectedUser(null);
-    setSelectedDepartmentIds([]);
-    setSelectedPermissionType('view');
-    setExpandedDepartmentIds(new Set());
+    setUserPermissionDetail(null);
+    setSelectedPermissions({});
   };
 
   // 用户管理处理函数
@@ -509,7 +308,6 @@ const UserManagement: React.FC = () => {
   const handleUpdateUserSubmit = () => {
     if (!editingUser) return;
 
-    // 过滤掉空值字段，特别是空密码
     const request: UpdateUserRequest = {};
     
     if (editUserForm.username && editUserForm.username.trim()) {
@@ -534,10 +332,7 @@ const UserManagement: React.FC = () => {
       return;
     }
 
-    updateUserMutation.mutate({
-      userId,
-      request
-    });
+    updateUserMutation.mutate({ userId, request });
   };
 
   const handleDeleteUser = (user: User) => {
@@ -554,51 +349,16 @@ const UserManagement: React.FC = () => {
     setShowDeleteConfirmDialog(true);
   };
 
-  // 处理部门选择
-  const handleDepartmentChange = (departmentId: number, checked: boolean) => {
-    const findNode = (tree: DepartmentTreeNode[], id: number): DepartmentTreeNode | null => {
-      for (const node of tree) {
-        if (node.id === id) return node;
-        if (node.children) {
-          const found = findNode(node.children, id);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-
-    const node = findNode(departmentTree, departmentId);
-    if (!node) return;
-
-    if (checked) {
-      // 选中时，同时选中所有子部门
-      const allChildIds = getAllChildIds(node);
-      setSelectedDepartmentIds(prev => {
-        const newIds = [...prev];
-        allChildIds.forEach(id => {
-          if (!newIds.includes(id)) {
-            newIds.push(id);
-          }
-        });
-        return newIds;
-      });
-    } else {
-      // 取消选中时，同时取消所有子部门
-      const allChildIds = getAllChildIds(node);
-      setSelectedDepartmentIds(prev => prev.filter(id => !allChildIds.includes(id)));
-    }
-  };
-
-  // 处理展开/折叠
-  const handleToggleExpand = (departmentId: number) => {
-    setExpandedDepartmentIds(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(departmentId)) {
-        newSet.delete(departmentId);
+  // 处理部门权限变更
+  const handlePermissionChange = (departmentId: number, permissionType: 'manage' | 'view' | null) => {
+    setSelectedPermissions(prev => {
+      const newPermissions = { ...prev };
+      if (permissionType === null) {
+        delete newPermissions[departmentId];
       } else {
-        newSet.add(departmentId);
+        newPermissions[departmentId] = permissionType;
       }
-      return newSet;
+      return newPermissions;
     });
   };
 
@@ -623,50 +383,26 @@ const UserManagement: React.FC = () => {
       return;
     }
 
-    // 获取用户直接选择的部门ID（排除通过继承获得权限的子部门）
-    const getDirectSelectedDepartmentIds = () => {
-      const directIds: number[] = [];
-      
-      // 检查每个选中的部门是否是直接选择的（即其父部门没有被选中）
-      const isDirectlySelected = (deptId: number) => {
-        const findParent = (tree: DepartmentTreeNode[], targetId: number): DepartmentTreeNode | null => {
-          for (const node of tree) {
-            if (node.children && node.children.some(child => child.id === targetId)) {
-              return node;
-            }
-            if (node.children) {
-              const found = findParent(node.children, targetId);
-              if (found) return found;
-            }
-          }
-          return null;
-        };
-        
-        const parent = findParent(departmentTree, deptId);
-        return !parent || !selectedDepartmentIds.includes(parent.id);
-      };
-      
-      selectedDepartmentIds.forEach(id => {
-        if (isDirectlySelected(id)) {
-          directIds.push(id);
-        }
+    // 构建权限请求
+    const permissions: Array<{ departmentId: number; permissionType: 'manage' | 'view' }> = 
+      Object.entries(selectedPermissions).map(([deptId, permType]) => ({
+        departmentId: parseInt(deptId),
+        permissionType: permType
+      }));
+
+    if (permissions.length === 0) {
+      toast({
+        title: "提示",
+        description: "请至少为用户分配一个部门权限",
+        variant: "destructive",
       });
-      
-      return directIds;
-    };
-
-    const request: AssignPermissionRequest = {
-      departmentIds: getDirectSelectedDepartmentIds(),
-      permissionType: selectedPermissionType,
-    };
-
-    if (selectedUser.departmentPermissions && selectedUser.departmentPermissions.length > 0) {
-      // 已有权限，更新
-      updatePermissionMutation.mutate({ userId, request });
-    } else {
-      // 没有权限，分配
-      assignPermissionMutation.mutate({ userId, request });
+      return;
     }
+
+    const request: PermissionRequest = { permissions };
+    const isUpdate = userPermissionDetail?.permissions && userPermissionDetail.permissions.length > 0;
+
+    managePermissionMutation.mutate({ userId, request, isUpdate: !!isUpdate });
   };
 
   // 检查权限
@@ -704,7 +440,6 @@ const UserManagement: React.FC = () => {
     } else if (userInfo.departmentPermissions && userInfo.departmentPermissions.length > 0) {
       return { text: "区域管理员", variant: "secondary" as const };
     } else if (userInfo.role) {
-      // 根据role字段判断
       switch (userInfo.role) {
         case "super_admin":
           return { text: "超级管理员", variant: "default" as const };
@@ -778,7 +513,7 @@ const UserManagement: React.FC = () => {
         {/* 页面标题和描述 */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">用户权限管理</h1>
-          <p className="text-gray-600">管理系统用户的角色和部门权限设置</p>
+          <p className="text-gray-600">管理系统用户的角色和1级部门权限设置</p>
         </div>
 
         {/* 用户列表 */}
@@ -791,7 +526,7 @@ const UserManagement: React.FC = () => {
                   用户列表
                 </CardTitle>
                 <CardDescription>
-                  显示所有用户的角色和权限信息
+                  显示所有用户的角色和1级部门权限信息
                 </CardDescription>
               </div>
               <Button onClick={handleCreateUser} className="flex items-center gap-2">
@@ -825,48 +560,14 @@ const UserManagement: React.FC = () => {
                       </div>
                     </div>
                     
-                    <div className="flex items-center space-x-4">
-                      {/* 部门权限显示 */}
-                      <div className="text-right">
-                        {userInfo.departmentPermissions && userInfo.departmentPermissions.length > 0 ? (
-                          <div className="space-y-1">
-                            <p className="text-sm font-medium">
-                              {userInfo.departmentPermissions.length} 个部门权限
-                            </p>
-                            <div className="flex flex-wrap gap-1">
-                              {userInfo.departmentPermissions.slice(0, 3).map((perm) => {
-                                const permDisplay = getPermissionTypeDisplay(perm.permissionType);
-                                return (
-                                  <div
-                                    key={perm.departmentId}
-                                    className={`flex items-center space-x-1 text-xs ${permDisplay.color}`}
-                                  >
-                                    {permDisplay.icon}
-                                    <span>{perm.departmentName}</span>
-                                  </div>
-                                );
-                              })}
-                              {userInfo.departmentPermissions.length > 3 && (
-                                <span className="text-xs text-gray-500">
-                                  +{userInfo.departmentPermissions.length - 3} 更多
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        ) : userInfo.isSuperAdmin ? (
-                          <p className="text-sm text-blue-600">全部权限</p>
-                        ) : (
-                          <p className="text-sm text-gray-500">无部门权限</p>
-                        )}
-                      </div>
-                      
+                    <div className="flex items-center">
                       {/* 操作按钮 */}
                       <div className="flex items-center space-x-2">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleEditUserInfo(userInfo)}
-                          disabled={isSystemAdmin(userInfo)} // 只有系统默认管理员不能编辑基本信息
+                          disabled={isSystemAdmin(userInfo)}
                         >
                           <Edit className="h-4 w-4 mr-1" />
                           编辑信息
@@ -875,7 +576,7 @@ const UserManagement: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleEditUser(userInfo)}
-                          disabled={isSystemAdmin(userInfo)} // 只有系统默认管理员不能编辑权限
+                          disabled={isSystemAdmin(userInfo)}
                         >
                           <Shield className="h-4 w-4 mr-1" />
                           权限管理
@@ -884,7 +585,7 @@ const UserManagement: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleDeleteUser(userInfo)}
-                          disabled={isSystemAdmin(userInfo)} // 只有系统默认管理员不能删除
+                          disabled={isSystemAdmin(userInfo)}
                         >
                           <Trash2 className="h-4 w-4 mr-1" />
                           删除
@@ -914,79 +615,25 @@ const UserManagement: React.FC = () => {
                 编辑用户权限
               </DialogTitle>
               <DialogDescription>
-                为用户 "{selectedUser?.name || selectedUser?.username}" 分配部门权限
+                为用户 "{selectedUser?.name || selectedUser?.username}" 分配1级部门权限
               </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-6">
-              {/* 权限类型选择 */}
               <div className="space-y-3">
-                <Label className="text-sm font-medium">权限类型</Label>
-                <RadioGroup
-                  value={selectedPermissionType}
-                  onValueChange={(value: 'manage' | 'view') => setSelectedPermissionType(value)}
-                  className="space-y-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="manage" id="manage" />
-                    <Label htmlFor="manage" className="flex items-center cursor-pointer">
-                      <UserCog className="h-4 w-4 mr-2 text-blue-600" />
-                      管理权限（可以查看、创建、编辑、删除）
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="view" id="view" />
-                    <Label htmlFor="view" className="flex items-center cursor-pointer">
-                      <Eye className="h-4 w-4 mr-2 text-green-600" />
-                      查看权限（只能查看，不能修改）
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              {/* 部门选择 - 树形结构 */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">选择部门</Label>
+                <Label className="text-sm font-medium">选择1级部门权限</Label>
                 <div className="max-h-64 overflow-y-auto border rounded-md p-3">
                   {departmentTree && departmentTree.length > 0 ? (
-                    <DepartmentTreeSelector
+                    <DepartmentSelector
                       tree={departmentTree}
-                      selectedIds={selectedDepartmentIds}
-                      onSelectionChange={handleDepartmentChange}
-                      expandedIds={expandedDepartmentIds}
-                      onToggleExpand={handleToggleExpand}
+                      selectedPermissions={selectedPermissions}
+                      onPermissionChange={handlePermissionChange}
                     />
                   ) : (
                     <p className="text-sm text-gray-500 text-center py-4">暂无部门数据</p>
                   )}
                 </div>
               </div>
-
-              {/* 当前权限显示 */}
-              {selectedUser?.departmentPermissions && selectedUser.departmentPermissions.length > 0 && (
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">当前权限</Label>
-                  <div className="space-y-2">
-                    {selectedUser.departmentPermissions.map((perm) => {
-                      const permDisplay = getPermissionTypeDisplay(perm.permissionType);
-                      return (
-                        <div
-                          key={perm.departmentId}
-                          className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                        >
-                          <div className="flex items-center space-x-2">
-                            {permDisplay.icon}
-                            <span className="text-sm">{perm.departmentName}</span>
-                          </div>
-                          <Badge variant="outline" className="text-xs">
-                            {permDisplay.text}
-                          </Badge>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
 
             <DialogFooter className="space-x-2">
@@ -995,13 +642,10 @@ const UserManagement: React.FC = () => {
               </Button>
               <Button
                 onClick={handleSavePermissions}
-                disabled={
-                  assignPermissionMutation.isPending ||
-                  updatePermissionMutation.isPending
-                }
+                disabled={managePermissionMutation.isPending}
               >
                 <Plus className="h-4 w-4 mr-1" />
-                {selectedUser?.departmentPermissions && selectedUser.departmentPermissions.length > 0 ? '更新权限' : '分配权限'}
+                {userPermissionDetail?.permissions && userPermissionDetail.permissions.length > 0 ? '更新权限' : '分配权限'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1170,6 +814,7 @@ const UserManagement: React.FC = () => {
               <DialogDescription>
                 您即将删除用户 <strong>"{userToDelete?.name || userToDelete?.username}"</strong>。
                 <br />
+                此操作不可撤销。
               </DialogDescription>
             </DialogHeader>
             
