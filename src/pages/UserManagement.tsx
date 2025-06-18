@@ -390,15 +390,6 @@ const UserManagement: React.FC = () => {
         permissionType: permType
       }));
 
-    if (permissions.length === 0) {
-      toast({
-        title: "提示",
-        description: "请至少为用户分配一个部门权限",
-        variant: "destructive",
-      });
-      return;
-    }
-
     const request: PermissionRequest = { permissions };
     const isUpdate = userPermissionDetail?.permissions && userPermissionDetail.permissions.length > 0;
 
