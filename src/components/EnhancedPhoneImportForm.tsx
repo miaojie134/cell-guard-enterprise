@@ -212,11 +212,11 @@ export const EnhancedPhoneImportForm: React.FC = () => {
 
   const downloadTemplate = () => {
     // 创建CSV模板文件（使用中文状态）
-    const headers = ['phoneNumber', 'applicantName', 'applicationDate', 'currentUserName', 'status', 'purpose', 'vendor', 'departmentName', 'remarks', 'assignmentDate'];
+    const headers = ['phoneNumber', 'applicantName', 'applicationDate', 'currentUserName', 'status', 'purpose', 'vendor', 'departmentName', 'remarks', 'assignmentDate', 'applicantEmail', 'currentUserEmail'];
     const sampleData = [
-      ['13800138001', '张三', '2023-01-15', '', '闲置', '办公用', '中国移动', '技术部', '备用号码', ''],
-      ['13800138002', '李四', '2023-01-16', '王五', '使用中', '客户联系', '中国联通', '销售部', '重要号码', '2023-02-01'],
-      ['13800138003', '赵六', '2022-12-01', '', '已注销', '个人使用', '中国电信', '人事部', '已停用', '']
+      ['13800138001', '张三', '2023-01-15', '', '闲置', '办公用', '中国移动', '技术部', '备用号码', '', 'zhangsan@company.com', ''],
+      ['13800138002', '李四', '2023-01-16', '王五', '使用中', '客户联系', '中国联通', '销售部', '重要号码', '2023-02-01', 'lisi@company.com', 'wangwu@company.com'],
+      ['13800138003', '赵六', '2022-12-01', '', '已注销', '个人使用', '中国电信', '人事部', '已停用', '', 'zhaoliu@company.com', '']
     ];
     
     const csvContent = [headers, ...sampleData]
@@ -247,17 +247,26 @@ export const EnhancedPhoneImportForm: React.FC = () => {
     if (!result || !result.errors || result.errors.length === 0) return;
 
     // 创建失败记录CSV文件
-    const headers = ['行号', 'phoneNumber', 'applicantName', 'applicationDate', 'currentUserName', 'status', 'purpose', 'vendor', 'departmentName', 'remarks', 'assignmentDate', '失败原因'];
+    const headers = ['行号', 'phoneNumber', 'applicantName', 'applicationDate', 'currentUserName', 'status', 'purpose', 'vendor', 'departmentName', 'remarks', 'assignmentDate', 'applicantEmail', 'currentUserEmail', '失败原因'];
     const errorData = result.errors.map(error => {
+      // 后端返回的数据结构：phoneNumber, applicantName, applicationDate, currentUserName, status, purpose, vendor, departmentName, remarks, assignmentDate, (可能包含)applicantEmail, currentUserEmail
+      // 前端模板结构：phoneNumber, applicantName, applicationDate, currentUserName, status, purpose, vendor, departmentName, remarks, assignmentDate, applicantEmail, currentUserEmail
+      const originalData = [...error.rowData];
+      
       // 转换状态字段（第5个字段，索引为4）为中文
-      const rowData = [...error.rowData];
-      if (rowData[4]) {
-        rowData[4] = getChineseStatus(rowData[4]);
+      if (originalData[4]) {
+        originalData[4] = getChineseStatus(originalData[4]);
       }
+      
+      // 如果是旧格式（10字段），需要在末尾添加两个空的邮箱字段
+      // 如果是新格式（12字段），直接使用
+      const adjustedRowData = originalData.length === 10 
+        ? [...originalData, '', '']  // 旧格式，末尾添加两个空邮箱字段
+        : originalData;              // 新格式，直接使用
       
       const row = [
         error.rowNumber.toString(),
-        ...rowData,
+        ...adjustedRowData,
         error.reason
       ];
       return row;

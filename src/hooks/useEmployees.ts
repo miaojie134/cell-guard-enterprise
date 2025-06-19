@@ -136,6 +136,9 @@ export const useEmployeeCacheRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['employeeDetail'] });
   };
 
+  return {
+    refreshAllEmployeeCaches
+  };
 };
 
 export interface UseEmployeesForSelectorOptions {
