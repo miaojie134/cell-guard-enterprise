@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -35,6 +35,15 @@ export const AssignPhoneDialog: React.FC<AssignPhoneDialogProps> = ({
   });
   const [assignSelectedEmployee, setAssignSelectedEmployee] = useState<Employee | null>(null);
   const [assignFormErrors, setAssignFormErrors] = useState<Record<string, string>>({});
+  const [dialogKey, setDialogKey] = useState(0);
+
+  // 监听对话框打开状态，每次打开时重置表单并生成新的key
+  useEffect(() => {
+    if (open) {
+      resetForm();
+      setDialogKey(prev => prev + 1); // 生成新的key强制重新渲染
+    }
+  }, [open]);
 
   // 重置表单
   const resetForm = () => {
@@ -85,9 +94,6 @@ export const AssignPhoneDialog: React.FC<AssignPhoneDialogProps> = ({
 
   // 处理对话框状态变化
   const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen && !isAssigning) {
-      resetForm();
-    }
     onOpenChange(newOpen);
   };
 
@@ -105,6 +111,7 @@ export const AssignPhoneDialog: React.FC<AssignPhoneDialogProps> = ({
             <div className="space-y-2">
               <Label>使用人 *</Label>
               <EmployeeSelector
+                key={dialogKey}
                 value={assignSelectedEmployee}
                 onChange={(employee) => {
                   setAssignSelectedEmployee(employee);

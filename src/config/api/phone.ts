@@ -45,7 +45,6 @@ export interface CreatePhoneRequest {
   applicantEmployeeId: string; // 员工工号
   applicationDate: string; // 格式: YYYY-MM-DD
   status: PhoneStatus;
-  purpose?: string; // 可选
   vendor: string;
   remarks: string;
 }

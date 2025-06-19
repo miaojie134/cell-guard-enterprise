@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -35,7 +35,6 @@ export const AddPhoneDialog: React.FC<AddPhoneDialogProps> = ({
 }) => {
   const [formData, setFormData] = useState({
     phoneNumber: "",
-    purpose: "",
     vendor: "",
     remarks: "",
     status: "idle" as PhoneStatus,
@@ -44,12 +43,20 @@ export const AddPhoneDialog: React.FC<AddPhoneDialogProps> = ({
   
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [dialogKey, setDialogKey] = useState(0);
+
+  // 监听对话框打开状态，每次打开时重置表单并生成新的key
+  useEffect(() => {
+    if (open) {
+      resetForm();
+      setDialogKey(prev => prev + 1); // 生成新的key强制重新渲染
+    }
+  }, [open]);
 
   // 重置表单
   const resetForm = () => {
     setFormData({
       phoneNumber: "",
-      purpose: "",
       vendor: "",
       remarks: "",
       status: "idle",
@@ -109,7 +116,6 @@ export const AddPhoneDialog: React.FC<AddPhoneDialogProps> = ({
       applicantEmployeeId: selectedEmployee!.employeeId,
       applicationDate: formData.applicationDate,
       status: formData.status,
-      purpose: formData.purpose,
       vendor: formData.vendor,
       remarks: formData.remarks,
     };
@@ -119,9 +125,6 @@ export const AddPhoneDialog: React.FC<AddPhoneDialogProps> = ({
 
   // 处理对话框状态变化
   const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen && !isCreating) {
-      resetForm();
-    }
     onOpenChange(newOpen);
   };
 
@@ -152,6 +155,7 @@ export const AddPhoneDialog: React.FC<AddPhoneDialogProps> = ({
             <div className="space-y-2">
               <Label>办卡人 *</Label>
               <EmployeeSelector
+                key={dialogKey}
                 value={selectedEmployee}
                 onChange={(employee) => {
                   setSelectedEmployee(employee);
@@ -209,17 +213,6 @@ export const AddPhoneDialog: React.FC<AddPhoneDialogProps> = ({
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="purpose">用途</Label>
-              <Input
-                id="purpose"
-                name="purpose"
-                placeholder="请输入号码用途"
-                value={formData.purpose}
-                onChange={handleFormChange}
-              />
-            </div>
-            
-            <div className="space-y-2">
               <Label htmlFor="status">初始状态</Label>
               <Select 
                 value={formData.status} 
@@ -233,10 +226,7 @@ export const AddPhoneDialog: React.FC<AddPhoneDialogProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="idle">闲置</SelectItem>
-                  <SelectItem value="in_use">使用中</SelectItem>
                   <SelectItem value="pending_deactivation">待注销</SelectItem>
-                  <SelectItem value="deactivated">已注销</SelectItem>
-                  <SelectItem value="user_reported">待核实-用户报告</SelectItem>
                 </SelectContent>
               </Select>
             </div>
