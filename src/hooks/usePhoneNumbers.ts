@@ -142,8 +142,6 @@ export const usePhoneNumbers = (options: UsePhoneNumbersOptions = {}) => {
     onError: (error: any) => {
       let errorMessage = error.message || '删除手机号码失败';
 
-      console.log('Delete phone error:', error);
-
       if (error.message?.includes('401')) {
         toast({
           title: '认证失败',

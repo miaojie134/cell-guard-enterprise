@@ -34,15 +34,7 @@ const PhoneAssign = () => {
   const selectedPhone = phoneNumbers.find(phone => phone.id === selectedPhoneId);
   const selectedEmployee = employees.find(emp => emp.id === selectedEmployeeId);
 
-  // Debug data on component mount
-  useEffect(() => {
-    console.log("PhoneAssign data:", { 
-      phoneNumbers, 
-      employees, 
-      availablePhones: availablePhones.length,
-      phonesInUse: phonesInUse.length
-    });
-  }, [phoneNumbers, employees]);
+
   
   // Handle assignment
   const handleAssignPhone = () => {

@@ -67,7 +67,7 @@ export const useEmployees = (): UseEmployeesReturn => {
   // 当部门选项数据变化时，重新映射员工数据
   React.useEffect(() => {
     if (rawEmployees.length > 0 && departmentOptions.length > 0) {
-      console.log('Department options loaded, remapping employees with proper department names...');
+
       const mappedEmployees = mapEmployeesWithDepartments(rawEmployees);
       setEmployees(mappedEmployees);
     } else if (rawEmployees.length > 0 && departmentOptions.length === 0) {
@@ -81,7 +81,7 @@ export const useEmployees = (): UseEmployeesReturn => {
     setError(null);
 
     try {
-      console.log('Fetching employees with params:', params);
+
       const response = await employeeService.getEmployees(params);
 
       // 保存原始数据
@@ -98,11 +98,6 @@ export const useEmployees = (): UseEmployeesReturn => {
       setTotalPages(response.pagination.totalPages);
       setCurrentPage(response.pagination.currentPage);
 
-      console.log('Employees fetched successfully:', {
-        count: response.items.length,
-        totalItems: response.pagination.totalItems,
-        currentPage: response.pagination.currentPage
-      });
     } catch (error) {
       console.error('Failed to fetch employees:', error);
       const errorMessage = error instanceof Error ? error.message : '获取员工列表失败';
@@ -141,7 +136,6 @@ export const useEmployeeCacheRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['employeeDetail'] });
   };
 
-  return { refreshAllEmployeeCaches };
 };
 
 export interface UseEmployeesForSelectorOptions {

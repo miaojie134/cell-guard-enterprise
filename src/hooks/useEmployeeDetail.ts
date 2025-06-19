@@ -41,10 +41,10 @@ export const useEmployeeDetail = (departmentOptions: DepartmentOption[] = []): U
     setError(null);
 
     try {
-      console.log('Fetching employee detail for employeeId:', employeeId);
+
       const detail = await employeeService.getEmployeeDetail(employeeId);
       setRawEmployeeDetail(detail);
-      console.log('Employee detail fetched successfully:', detail);
+
     } catch (error) {
       console.error('Failed to fetch employee detail:', error);
       const errorMessage = error instanceof Error ? error.message : '获取员工详情失败';

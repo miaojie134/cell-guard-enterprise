@@ -32,7 +32,7 @@ const Dashboard = () => {
   const riskPhones = getRiskPhones().slice(0, 5);
 
   useEffect(() => {
-    console.log("Dashboard data:", { phoneNumbers, employees });
+  
   }, [phoneNumbers, employees]);
 
   return (

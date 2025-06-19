@@ -74,6 +74,7 @@ export interface APIPhone {
   status: string;
   updatedAt: string;
   vendor: string;
+  departmentId: number; // 所属部门ID，用于权限控制
   usageHistory?: UsageHistoryItem[]; // 使用历史记录
 }
 

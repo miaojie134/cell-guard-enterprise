@@ -229,7 +229,6 @@ export const PhoneTable: React.FC<PhoneTableProps> = ({
                   {/* 删除按钮 - 低调样式，仅当没有使用历史时显示 */}
                   {(() => {
                     const hasUsageHistory = phone.usageHistory && phone.usageHistory.length > 0;
-                    console.log(`Phone ${phone.phoneNumber} usageHistory:`, phone.usageHistory, 'hasUsageHistory:', hasUsageHistory);
                     
                     if (!hasUsageHistory) {
                       return (

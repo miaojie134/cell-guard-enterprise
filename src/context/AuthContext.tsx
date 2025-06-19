@@ -28,18 +28,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const savedUser = localStorage.getItem("user");
         const hasValidToken = authService.isTokenValid();
         
-        console.log('Auth initialization:', { savedUser: !!savedUser, hasValidToken });
-        
         if (savedUser && hasValidToken) {
           const parsedUser = JSON.parse(savedUser);
           setUser(parsedUser);
-          console.log("User loaded from localStorage:", parsedUser);
         } else {
           // 清除无效的数据
           localStorage.removeItem("user");
           localStorage.removeItem("token");
           clearUserPermissions(); // 清除权限相关信息
-          console.log("Cleared invalid auth data");
         }
       } catch (error) {
         console.error("Error during auth initialization:", error);
@@ -57,10 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (username: string, password: string) => {
     setIsLoading(true);
     try {
-      console.log('Starting login process for:', username);
-      
       const loginResponse = await authService.login({ username, password });
-      console.log('Login response:', loginResponse);
       
       // 兼容新旧API响应格式
       // 新格式: { userInfo: {...} }
@@ -71,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('登录响应格式错误：缺少用户信息');
       }
       
-      console.log('User info from response:', userInfo);
+
       
       // 将后端返回的用户信息转换为前端User类型
       const userData: User = {
@@ -93,7 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 存储权限信息
       storeUserPermissions(userData);
       
-      console.log("Login successful, user data:", userData);
+
       
       toast({
         title: "登录成功",
@@ -116,12 +109,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      console.log('Starting logout process');
       await authService.logout();
       
       setUser(null);
       clearUserPermissions(); // 清除权限相关信息
-      console.log("Logout successful");
       
       toast({
         title: "退出成功",
