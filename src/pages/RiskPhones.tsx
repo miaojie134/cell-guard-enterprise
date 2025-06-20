@@ -252,6 +252,7 @@ const RiskPhones = () => {
                     <tr>
                       <th>号码</th>
                       <th>办卡人</th>
+                      <th>办卡时间</th>
                       <th>办卡人状态</th>
                       <th>当前使用人</th>
                       <th>状态</th>
@@ -265,6 +266,7 @@ const RiskPhones = () => {
                       <tr key={phone.phoneNumber}>
                         <td>{phone.phoneNumber}</td>
                         <td>{phone.applicantName}</td>
+                        <td>{phone.applicationDate ? new Date(phone.applicationDate).toLocaleDateString('zh-CN') : '-'}</td>
                         <td><StatusBadge status="inactive" text="已离职" /></td>
                         <td>{phone.currentUserName || "-"}</td>
                         <td><StatusBadge status={getStatusVariant(phone.status)} text={getStatusText(phone.status)} /></td>
@@ -284,7 +286,7 @@ const RiskPhones = () => {
                     ))}
                     {riskPhoneNumbers.length === 0 && (
                       <tr>
-                        <td colSpan={8} className="text-center py-4">
+                        <td colSpan={9} className="text-center py-4">
                           恭喜，没有发现风险号码
                         </td>
                       </tr>
