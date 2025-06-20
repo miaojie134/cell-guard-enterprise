@@ -205,7 +205,7 @@ const RiskPhones = () => {
               status: false,
               applicantStatus: true,
               vendor: true,
-              applicationDate: false,
+              applicationDate: true,
               cancellationDate: false,
             }}
             variant="risk"

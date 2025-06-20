@@ -297,6 +297,9 @@ export const useRiskPhoneNumbers = (options: RiskPhoneSearchParams) => {
     vendor: options.vendor,
     sortBy: options.sortBy,
     sortOrder: options.sortOrder,
+    applicationDateFrom: options.applicationDateFrom,
+    applicationDateTo: options.applicationDateTo,
+    applicationDate: options.applicationDate,
   };
 
   // 获取风险手机号码列表

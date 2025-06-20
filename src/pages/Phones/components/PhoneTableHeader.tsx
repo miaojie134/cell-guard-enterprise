@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -57,6 +57,10 @@ export const PhoneTableHeader: React.FC<PhoneTableHeaderProps> = ({
   // 办卡时间筛选
   const applicationDatePicker = useDateRangePicker();
   const cancellationDatePicker = useDateRangePicker();
+  
+  // 供应商筛选器状态
+  const [isVendorOpen, setIsVendorOpen] = useState(false);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
 
   // 同步日期筛选状态
   React.useEffect(() => {
@@ -274,7 +278,7 @@ export const PhoneTableHeader: React.FC<PhoneTableHeaderProps> = ({
       <th>
         <div className="flex items-center gap-1">
           <span>号码状态</span>
-          <Popover>
+          <Popover open={isStatusOpen} onOpenChange={setIsStatusOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
@@ -296,7 +300,10 @@ export const PhoneTableHeader: React.FC<PhoneTableHeaderProps> = ({
                   <Button
                     variant={searchParams.status === "" ? "secondary" : "ghost"}
                     size="sm"
-                    onClick={() => onFilterChange("status", "")}
+                    onClick={() => {
+                      onFilterChange("status", "");
+                      setIsStatusOpen(false);
+                    }}
                     className="w-full justify-start h-7 text-xs"
                   >
                     全部状态
@@ -308,7 +315,10 @@ export const PhoneTableHeader: React.FC<PhoneTableHeaderProps> = ({
                       key={status}
                       variant={searchParams.status === status ? "secondary" : "ghost"}
                       size="sm"
-                      onClick={() => onFilterChange("status", status)}
+                      onClick={() => {
+                        onFilterChange("status", status);
+                        setIsStatusOpen(false);
+                      }}
                       className="w-full justify-start h-7 text-xs"
                     >
                       {getStatusText(status)}
@@ -435,7 +445,7 @@ export const PhoneTableHeader: React.FC<PhoneTableHeaderProps> = ({
       <th className="hidden md:table-cell">
         <div className="flex items-center gap-1">
           <span>运营商</span>
-          <Popover>
+          <Popover open={isVendorOpen} onOpenChange={setIsVendorOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
@@ -457,7 +467,10 @@ export const PhoneTableHeader: React.FC<PhoneTableHeaderProps> = ({
                   <Button
                     variant={searchParams.vendor === "" ? "secondary" : "ghost"}
                     size="sm"
-                    onClick={() => onFilterChange("vendor", "")}
+                    onClick={() => {
+                      onFilterChange("vendor", "");
+                      setIsVendorOpen(false);
+                    }}
                     className="w-full justify-start h-7 text-xs"
                   >
                     全部运营商
@@ -468,7 +481,10 @@ export const PhoneTableHeader: React.FC<PhoneTableHeaderProps> = ({
                       key={vendor}
                       variant={searchParams.vendor === vendor ? "secondary" : "ghost"}
                       size="sm"
-                      onClick={() => onFilterChange("vendor", vendor)}
+                      onClick={() => {
+                        onFilterChange("vendor", vendor);
+                        setIsVendorOpen(false);
+                      }}
                       className="w-full justify-start h-7 text-xs"
                     >
                       {vendor}

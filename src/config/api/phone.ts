@@ -39,6 +39,10 @@ export interface RiskPhoneSearchParams {
   search?: string;
   applicantStatus?: string;
   vendor?: string;              // 供应商筛选
+  // 办卡时间筛选
+  applicationDateFrom?: string;  // 办卡日期起始日期
+  applicationDateTo?: string;    // 办卡日期截止日期
+  applicationDate?: string;      // 办卡日期精确查询（单日）
 }
 
 // 创建手机号码请求（匹配后端CreateMobileNumberPayload）
