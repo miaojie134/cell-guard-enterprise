@@ -291,7 +291,6 @@ const Phones = () => {
             onUpdateSearchParams={setSearchParams}
             filterConfig={{
               status: true,
-              applicantStatus: false,
               vendor: true,
               applicationDate: true,
               cancellationDate: true,

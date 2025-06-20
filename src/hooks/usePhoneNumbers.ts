@@ -293,7 +293,6 @@ export const useRiskPhoneNumbers = (options: RiskPhoneSearchParams) => {
     page: options.page || 1,
     limit: options.limit || 10,
     search: options.search,
-    applicantStatus: options.applicantStatus,
     vendor: options.vendor,
     sortBy: options.sortBy,
     sortOrder: options.sortOrder,

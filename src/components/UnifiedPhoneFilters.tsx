@@ -11,7 +11,6 @@ import { PhoneSearchParams, getStatusText, getVendorText } from "@/utils/phoneUt
 
 interface FilterConfig {
   status?: boolean;
-  applicantStatus?: boolean;
   vendor?: boolean;
   applicationDate?: boolean;
   cancellationDate?: boolean;
@@ -40,7 +39,6 @@ export const UnifiedPhoneFilters: React.FC<UnifiedPhoneFiltersProps> = ({
   onUpdateSearchParams,
   filterConfig = {
     status: true,
-    applicantStatus: false,
     vendor: true,
     applicationDate: true,
     cancellationDate: true,
@@ -157,7 +155,6 @@ export const UnifiedPhoneFilters: React.FC<UnifiedPhoneFiltersProps> = ({
       ...prev,
       page: 1,
       status: "",
-      applicantStatus: "",
       vendor: "",
       applicationDateFrom: "",
       applicationDateTo: "",
@@ -184,7 +181,6 @@ export const UnifiedPhoneFilters: React.FC<UnifiedPhoneFiltersProps> = ({
       cancellationDatePicker.dateRange.to
     )) ||
     (filterConfig.status && searchParams.status) ||
-    (filterConfig.applicantStatus && searchParams.applicantStatus) ||
     (filterConfig.vendor && searchParams.vendor)
   );
 
@@ -234,22 +230,7 @@ export const UnifiedPhoneFilters: React.FC<UnifiedPhoneFiltersProps> = ({
               </div>
             )}
 
-            {/* 办卡人状态筛选条件 */}
-            {filterConfig.applicantStatus && searchParams.applicantStatus && (
-              <div className={`flex items-center gap-1 ${getFilterButtonColor()} rounded px-2 py-0.5`}>
-                <span>办卡人状态</span>
-                <span className={`font-medium ${getFilterTextColor()}`}>
-                  {searchParams.applicantStatus === "Active" ? "在职" : "离职"}
-                </span>
-                <button
-                  onClick={() => onFilterChange("applicantStatus", "all")}
-                  className="ml-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded px-1"
-                  title="清除办卡人状态筛选"
-                >
-                  ×
-                </button>
-              </div>
-            )}
+
 
             {/* 供应商筛选条件 */}
             {filterConfig.vendor && searchParams.vendor && (

@@ -53,7 +53,6 @@ export const getRiskPhoneNumbers = async (params: RiskPhoneSearchParams = {}): P
   if (params.sortBy) url.searchParams.append('sortBy', params.sortBy);
   if (params.sortOrder) url.searchParams.append('sortOrder', params.sortOrder);
   if (params.search) url.searchParams.append('search', params.search);
-  if (params.applicantStatus) url.searchParams.append('applicantStatus', params.applicantStatus);
   if (params.vendor) url.searchParams.append('vendor', params.vendor);
 
   // 办卡时间筛选参数

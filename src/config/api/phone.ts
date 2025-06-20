@@ -37,7 +37,6 @@ export interface RiskPhoneSearchParams {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   search?: string;
-  applicantStatus?: string;
   vendor?: string;              // 供应商筛选
   // 办卡时间筛选
   applicationDateFrom?: string;  // 办卡日期起始日期

@@ -203,7 +203,6 @@ const RiskPhones = () => {
             onUpdateSearchParams={setSearchParams}
             filterConfig={{
               status: false,
-              applicantStatus: true,
               vendor: true,
               applicationDate: true,
               cancellationDate: false,
