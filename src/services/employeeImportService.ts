@@ -1,4 +1,5 @@
 import { APIResponse, API_CONFIG } from '@/config/api';
+import { apiFetch } from './api';
 
 export interface EmployeeImportResponse {
   data: {
@@ -21,19 +22,6 @@ export interface EmployeeImportError {
 }
 
 export class EmployeeImportService {
-  private getHeaders(includeAuth: boolean = true): HeadersInit {
-    const headers: HeadersInit = {};
-
-    if (includeAuth) {
-      const token = localStorage.getItem('token');
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-    }
-
-    return headers;
-  }
-
   /**
    * 批量导入员工数据
    * @param file CSV文件
@@ -43,10 +31,9 @@ export class EmployeeImportService {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${API_CONFIG.BASE_URL}/employees/import`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/employees/import`, {
       method: 'POST',
       body: formData,
-      headers: this.getHeaders(),
     });
 
     if (!response.ok) {

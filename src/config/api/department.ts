@@ -41,6 +41,8 @@ export interface UpdateDepartmentPayload {
 // 部门查询参数
 export interface DepartmentSearchParams {
   includeInactive?: boolean;
+  parentId?: number;
+  signal?: AbortSignal;
 }
 
 // 部门列表响应

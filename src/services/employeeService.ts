@@ -13,23 +13,9 @@ import {
   UpdateEmployeeResponse
 } from '@/config/api';
 import { formatDateFromISO } from '@/lib/utils';
+import { apiFetch } from './api';
 
 class EmployeeService {
-  private getHeaders(includeAuth: boolean = true): HeadersInit {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-
-    if (includeAuth) {
-      const token = localStorage.getItem('token');
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-    }
-
-    return headers;
-  }
-
   async getEmployees(params: EmployeeSearchParams = {}): Promise<EmployeesListResponse> {
     try {
       const queryParams = new URLSearchParams();
@@ -46,9 +32,8 @@ class EmployeeService {
 
       console.log('Fetching employees from:', url);
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method: 'GET',
-        headers: this.getHeaders(true),
       });
 
       console.log('Employees response status:', response.status);
@@ -90,9 +75,8 @@ class EmployeeService {
     try {
       console.log('Fetching employee by id:', id);
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EMPLOYEES}/${id}`, {
+      const response = await apiFetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EMPLOYEES}/${id}`, {
         method: 'GET',
-        headers: this.getHeaders(true),
       });
 
       console.log('Employee response status:', response.status);
@@ -131,9 +115,8 @@ class EmployeeService {
     try {
       console.log('Creating employee:', employeeData);
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EMPLOYEES}`, {
+      const response = await apiFetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EMPLOYEES}`, {
         method: 'POST',
-        headers: this.getHeaders(true),
         body: JSON.stringify(employeeData),
       });
 
@@ -177,9 +160,8 @@ class EmployeeService {
       console.log('Update URL:', url);
       console.log('Employee ID being used:', employeeId);
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method: 'POST',
-        headers: this.getHeaders(true),
         body: JSON.stringify(updateData),
       });
 
@@ -219,9 +201,8 @@ class EmployeeService {
     try {
       console.log('Fetching employee detail by employeeId:', employeeId);
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EMPLOYEES}/${employeeId}`, {
+      const response = await apiFetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EMPLOYEES}/${employeeId}`, {
         method: 'GET',
-        headers: this.getHeaders(true),
       });
 
       console.log('Employee detail response status:', response.status);
@@ -249,6 +230,29 @@ class EmployeeService {
       return formattedData;
     } catch (error) {
       console.error('Get employee detail error:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('网络连接失败，请检查后端服务是否正常运行');
+    }
+  }
+
+  async deleteEmployee(employeeId: string): Promise<void> {
+    try {
+      console.log('Deleting employee by employeeId:', employeeId);
+
+      const response = await apiFetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EMPLOYEES}/${employeeId}`, {
+        method: 'DELETE',
+      });
+
+      console.log('Delete employee response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json() as APIErrorResponse;
+        throw new Error(errorData.error || errorData.details || '删除员工失败');
+      }
+    } catch (error) {
+      console.error('Delete employee error:', error);
       if (error instanceof Error) {
         throw error;
       }

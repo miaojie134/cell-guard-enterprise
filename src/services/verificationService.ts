@@ -11,68 +11,24 @@ import {
   VerificationSubmitRequest,
   VerificationResults
 } from '@/types';
+import { apiFetch } from './api';
 
 class VerificationService {
-  private getHeaders(includeAuth: boolean = false): HeadersInit {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-
-    if (includeAuth) {
-      const token = localStorage.getItem('token');
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-    }
-
-    return headers;
-  }
-
-  private async handleResponse<T>(response: Response): Promise<T> {
-    const data: APIResponse<T> | APIErrorResponse = await response.json();
-
-    if (!response.ok) {
-      const errorData = data as APIErrorResponse;
-      throw new Error(errorData.error || errorData.details || '请求失败');
-    }
-
-    const successData = data as APIResponse<T>;
-    if (successData.status !== ResponseStatus.SUCCESS || !successData.data) {
-      throw new Error(successData.message || '响应格式错误');
-    }
-
-    return successData.data;
-  }
-
-  // 处理提交类接口响应（不需要返回数据）
-  private async handleSubmitResponse(response: Response): Promise<void> {
-    const data: APIResponse<null> | APIErrorResponse = await response.json();
-
-    if (!response.ok) {
-      const errorData = data as APIErrorResponse;
-      throw new Error(errorData.error || errorData.details || '请求失败');
-    }
-
-    const successData = data as APIResponse<null>;
-    if (successData.status !== ResponseStatus.SUCCESS) {
-      throw new Error(successData.message || '响应格式错误');
-    }
-
-    // 提交成功，不需要返回数据
-  }
-
   // 发起号码使用确认流程（管理员接口）
   async initiate(data: VerificationInitiateRequest): Promise<{ batchId: string }> {
     try {
       console.log('发起盘点验证:', data);
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/verification/initiate`, {
+      const response = await apiFetch(`${API_CONFIG.BASE_URL}/verification/initiate`, {
         method: 'POST',
-        headers: this.getHeaders(true),
         body: JSON.stringify(data),
       });
 
-      return await this.handleResponse<{ batchId: string }>(response);
+      const responseData: APIResponse<{ batchId: string }> | APIErrorResponse = await response.json();
+      if (!response.ok) {
+        throw new Error((responseData as APIErrorResponse).error || '发起盘点验证失败');
+      }
+      return (responseData as APIResponse<{ batchId: string }>).data;
     } catch (error) {
       console.error('发起盘点验证失败:', error);
       if (error instanceof Error) {
@@ -87,12 +43,15 @@ class VerificationService {
     try {
       console.log('获取批处理状态:', batchId);
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/verification/batch/${batchId}/status`, {
+      const response = await apiFetch(`${API_CONFIG.BASE_URL}/verification/batch/${batchId}/status`, {
         method: 'GET',
-        headers: this.getHeaders(true),
       });
 
-      return await this.handleResponse<VerificationBatchTask>(response);
+      const responseData: APIResponse<VerificationBatchTask> | APIErrorResponse = await response.json();
+      if (!response.ok) {
+        throw new Error((responseData as APIErrorResponse).error || '获取批处理状态失败');
+      }
+      return (responseData as APIResponse<VerificationBatchTask>).data;
     } catch (error) {
       console.error('获取批处理状态失败:', error);
       if (error instanceof Error) {
@@ -107,12 +66,16 @@ class VerificationService {
     try {
       console.log('获取员工确认信息');
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/verification/info?token=${encodeURIComponent(token)}`, {
+      const response = await apiFetch(`${API_CONFIG.BASE_URL}/verification/info?token=${encodeURIComponent(token)}`, {
         method: 'GET',
-        headers: this.getHeaders(false), // 无需JWT认证
+        auth: false, // 无需JWT认证
       });
 
-      return await this.handleResponse<VerificationEmployeeInfo>(response);
+      const responseData: APIResponse<VerificationEmployeeInfo> | APIErrorResponse = await response.json();
+      if (!response.ok) {
+        throw new Error((responseData as APIErrorResponse).error || '获取员工确认信息失败');
+      }
+      return (responseData as APIResponse<VerificationEmployeeInfo>).data;
     } catch (error) {
       console.error('获取员工确认信息失败:', error);
       if (error instanceof Error) {
@@ -127,14 +90,16 @@ class VerificationService {
     try {
       console.log('提交确认结果:', data);
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/verification/submit?token=${encodeURIComponent(token)}`, {
+      const response = await apiFetch(`${API_CONFIG.BASE_URL}/verification/submit?token=${encodeURIComponent(token)}`, {
         method: 'POST',
-        headers: this.getHeaders(false), // 无需JWT认证
         body: JSON.stringify(data),
+        auth: false, // 无需JWT认证
       });
 
-      // 对于提交类接口，使用特殊的响应处理逻辑
-      await this.handleSubmitResponse(response);
+      if (!response.ok) {
+        const errorData: APIErrorResponse = await response.json();
+        throw new Error(errorData.error || '提交确认结果失败');
+      }
     } catch (error) {
       console.error('提交确认结果失败:', error);
       if (error instanceof Error) {
@@ -159,12 +124,15 @@ class VerificationService {
 
       const url = `${API_CONFIG.BASE_URL}/verification/admin/phone-status${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method: 'GET',
-        headers: this.getHeaders(true),
       });
 
-      return await this.handleResponse<VerificationResults>(response);
+      const responseData: APIResponse<VerificationResults> | APIErrorResponse = await response.json();
+      if (!response.ok) {
+        throw new Error((responseData as APIErrorResponse).error || '获取盘点结果失败');
+      }
+      return (responseData as APIResponse<VerificationResults>).data;
     } catch (error) {
       console.error('获取盘点结果失败:', error);
 
@@ -217,19 +185,22 @@ class VerificationService {
 
       const url = `${API_CONFIG.BASE_URL}/verification/batch/tasks${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method: 'GET',
-        headers: this.getHeaders(true),
       });
 
-      const result = await this.handleResponse<{
+      const result: APIResponse<{
         tasks: VerificationBatchTask[];
         totalCount: number;
         currentPage: number;
         totalPages: number;
-      }>(response);
+      }> = await response.json();
 
-      return result.tasks;
+      if (!response.ok) {
+        throw new Error((result as unknown as APIErrorResponse).error || '获取批处理任务列表失败');
+      }
+
+      return result.data.tasks;
     } catch (error) {
       console.error('获取批处理任务列表失败:', error);
       // 如果接口不存在，返回空数组
@@ -248,7 +219,6 @@ class VerificationService {
     failedCount: number;
     successEmails: Array<{
       employeeId: string;
-      employeeName: string;
       emailAddress: string;
     }>;
     failedEmails: Array<{
@@ -259,41 +229,24 @@ class VerificationService {
     }>;
   }> {
     try {
-      console.log('补发失败邮件:', batchId, employeeIds);
+      console.log(`补发邮件: batchId=${batchId}, employeeIds=${employeeIds?.join(',')}`);
 
-      const requestBody: { employeeIds?: string[] } = {};
-      if (employeeIds && employeeIds.length > 0) {
-        requestBody.employeeIds = employeeIds;
-      }
-
-      const response = await fetch(`${API_CONFIG.BASE_URL}/verification/batch/${batchId}/resend`, {
+      const response = await apiFetch(`${API_CONFIG.BASE_URL}/verification/batch/${batchId}/resend`, {
         method: 'POST',
-        headers: this.getHeaders(true),
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({ employeeIds }),
       });
 
-      return await this.handleResponse<{
-        totalAttempted: number;
-        successCount: number;
-        failedCount: number;
-        successEmails: Array<{
-          employeeId: string;
-          employeeName: string;
-          emailAddress: string;
-        }>;
-        failedEmails: Array<{
-          employeeId: string;
-          employeeName: string;
-          emailAddress: string;
-          reason: string;
-        }>;
-      }>(response);
+      const responseData: APIResponse<any> | APIErrorResponse = await response.json();
+      if (!response.ok) {
+        throw new Error((responseData as APIErrorResponse).error || '补发邮件失败');
+      }
+      return (responseData as APIResponse<any>).data;
     } catch (error) {
-      console.error('补发邮件失败:', error);
+      console.error('补发失败的验证邮件失败:', error);
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error('补发邮件失败，请稍后重试');
+      throw new Error('补发失败的验证邮件失败，请稍后重试');
     }
   }
 }

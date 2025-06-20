@@ -1,19 +1,6 @@
 import { API_CONFIG, APIResponse, APIErrorResponse } from '@/config/api/base';
 import { PhoneSearchParams, RiskPhoneSearchParams, PhoneListResponse, APIPhone, CreatePhoneRequest, UpdatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest, HandleRiskPhoneRequest } from '@/config/api/phone';
-
-// 获取认证头
-const getAuthHeaders = (): HeadersInit => {
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-  };
-
-  const token = localStorage.getItem('token');
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  return headers;
-};
+import { apiFetch } from './api';
 
 // 获取手机号码列表
 export const getPhoneNumbers = async (params: PhoneSearchParams = {}): Promise<APIResponse<PhoneListResponse>> => {
@@ -39,9 +26,8 @@ export const getPhoneNumbers = async (params: PhoneSearchParams = {}): Promise<A
   if (params.cancellationDate) url.searchParams.append('cancellationDate', params.cancellationDate);
 
   try {
-    const response = await fetch(url.toString(), {
+    const response = await apiFetch(url.toString(), {
       method: 'GET',
-      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -69,9 +55,8 @@ export const getRiskPhoneNumbers = async (params: RiskPhoneSearchParams = {}): P
   if (params.applicantStatus) url.searchParams.append('applicantStatus', params.applicantStatus);
 
   try {
-    const response = await fetch(url.toString(), {
+    const response = await apiFetch(url.toString(), {
       method: 'GET',
-      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -89,9 +74,8 @@ export const getRiskPhoneNumbers = async (params: RiskPhoneSearchParams = {}): P
 // 获取单个手机号码详情
 export const getPhoneByNumber = async (phoneNumber: string): Promise<APIResponse<APIPhone>> => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${phoneNumber}`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${phoneNumber}`, {
       method: 'GET',
-      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -111,9 +95,8 @@ export const createPhone = async (phoneData: CreatePhoneRequest): Promise<APIRes
   try {
     console.log('Creating phone with data:', phoneData);
 
-    const response = await fetch(`${API_CONFIG.BASE_URL}/mobilenumbers`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/mobilenumbers`, {
       method: 'POST',
-      headers: getAuthHeaders(),
       body: JSON.stringify(phoneData),
     });
 
@@ -139,9 +122,8 @@ export const updatePhone = async (phoneNumber: string, phoneData: UpdatePhoneReq
   try {
     console.log('Updating phone:', phoneNumber, 'with data:', phoneData);
 
-    const response = await fetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${phoneNumber}/update`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${phoneNumber}/update`, {
       method: 'POST',
-      headers: getAuthHeaders(),
       body: JSON.stringify(phoneData),
     });
 
@@ -167,9 +149,8 @@ export const deletePhone = async (id: string): Promise<APIResponse<void>> => {
   try {
     console.log('Deleting phone:', id);
 
-    const response = await fetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${id}`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${id}`, {
       method: 'DELETE',
-      headers: getAuthHeaders(),
     });
 
     console.log('Delete phone response status:', response.status);
@@ -202,9 +183,8 @@ export const assignPhone = async (phoneNumber: string, assignData: AssignPhoneRe
   try {
     console.log('Assigning phone:', phoneNumber, 'with data:', assignData);
 
-    const response = await fetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${phoneNumber}/assign`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${phoneNumber}/assign`, {
       method: 'POST',
-      headers: getAuthHeaders(),
       body: JSON.stringify(assignData),
     });
 
@@ -230,9 +210,8 @@ export const unassignPhone = async (phoneNumber: string, unassignData: UnassignP
   try {
     console.log('Unassigning phone:', phoneNumber, 'with data:', unassignData);
 
-    const response = await fetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${phoneNumber}/unassign`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${phoneNumber}/unassign`, {
       method: 'POST',
-      headers: getAuthHeaders(),
       body: JSON.stringify(unassignData),
     });
 
@@ -258,9 +237,8 @@ export const handleRiskPhone = async (phoneNumber: string, handleData: HandleRis
   try {
     console.log('Handling risk phone:', phoneNumber, 'with data:', handleData);
 
-    const response = await fetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${phoneNumber}/handle-risk`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/mobilenumbers/${phoneNumber}/handle-risk`, {
       method: 'POST',
-      headers: getAuthHeaders(),
       body: JSON.stringify(handleData),
     });
 
@@ -295,10 +273,9 @@ export const exportPhoneAssets = async (params: PhoneSearchParams = {}): Promise
   if (params.cancellationDateTo) url.searchParams.append('cancellationDateTo', params.cancellationDateTo);
 
   try {
-    const response = await fetch(url.toString(), {
+    const response = await apiFetch(url.toString(), {
       method: 'GET',
       headers: {
-        ...getAuthHeaders(),
         'Accept': 'text/csv',
       },
     });
@@ -307,8 +284,7 @@ export const exportPhoneAssets = async (params: PhoneSearchParams = {}): Promise
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const blob = await response.blob();
-    return blob;
+    return response.blob();
   } catch (error) {
     console.error('导出手机号码资产明细失败:', error);
     throw error;
@@ -374,23 +350,18 @@ const preprocessCSVFile = async (file: File): Promise<File> => {
 
 export const enhancedImportPhones = async (file: File): Promise<APIResponse<EnhancedImportResult>> => {
   try {
-    // 预处理CSV文件，将中文状态转换为英文状态
     const processedFile = await preprocessCSVFile(file);
-
     const formData = new FormData();
-    formData.append('file', processedFile);
+    formData.append('file', processedFile, processedFile.name);
 
-    const token = localStorage.getItem('token');
-    const headers: HeadersInit = {};
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+    console.log('Importing phones with file:', processedFile.name);
 
-    const response = await fetch(`${API_CONFIG.BASE_URL}/mobilenumbers/import`, {
+    const response = await apiFetch(`${API_CONFIG.BASE_URL}/mobilenumbers/import`, {
       method: 'POST',
-      headers,
       body: formData,
     });
+
+    console.log('Import phones response status:', response.status);
 
     if (!response.ok) {
       const errorData = await response.json();

@@ -13,36 +13,26 @@ import {
   DepartmentTreeResponse,
   DepartmentOptionsResponse,
 } from '@/config/api';
+import { apiFetch } from './api';
 
 class DepartmentService {
-  private getHeaders(includeAuth: boolean = true): HeadersInit {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-
-    if (includeAuth) {
-      const token = localStorage.getItem('token');
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-    }
-
-    return headers;
-  }
-
   // 获取部门列表
   async getDepartments(params: DepartmentSearchParams = {}): Promise<Department[]> {
     try {
+      const url = new URL(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DEPARTMENTS}`);
       const queryParams = new URLSearchParams();
+
       if (params.includeInactive !== undefined) {
         queryParams.append('includeInactive', params.includeInactive.toString());
       }
+      if (params.parentId) {
+        queryParams.append('parent_id', params.parentId.toString());
+      }
+      url.search = queryParams.toString();
 
-      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DEPARTMENTS}?${queryParams.toString()}`;
-
-      const response = await fetch(url, {
+      const response = await apiFetch(url.toString(), {
         method: 'GET',
-        headers: this.getHeaders(true),
+        signal: params.signal,
       });
 
       const data: DepartmentsListResponse | APIErrorResponse = await response.json();
@@ -72,9 +62,8 @@ class DepartmentService {
     try {
       const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DEPARTMENTS}/options`;
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method: 'GET',
-        headers: this.getHeaders(true),
       });
 
       const data: DepartmentOptionsResponse | APIErrorResponse = await response.json();
@@ -104,9 +93,8 @@ class DepartmentService {
     try {
       const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DEPARTMENTS}/tree`;
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method: 'GET',
-        headers: this.getHeaders(true),
       });
 
       const data: DepartmentTreeResponse | APIErrorResponse = await response.json();
@@ -136,9 +124,8 @@ class DepartmentService {
     try {
       const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DEPARTMENTS}/${id}`;
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method: 'GET',
-        headers: this.getHeaders(true),
       });
 
       const data: APIResponse<Department> | APIErrorResponse = await response.json();
@@ -166,9 +153,8 @@ class DepartmentService {
   // 创建部门
   async createDepartment(departmentData: CreateDepartmentPayload): Promise<Department> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DEPARTMENTS}`, {
+      const response = await apiFetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DEPARTMENTS}`, {
         method: 'POST',
-        headers: this.getHeaders(true),
         body: JSON.stringify(departmentData),
       });
 
@@ -197,9 +183,8 @@ class DepartmentService {
   // 更新部门
   async updateDepartment(id: number, updateData: UpdateDepartmentPayload): Promise<Department> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DEPARTMENTS}/${id}`, {
+      const response = await apiFetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DEPARTMENTS}/${id}`, {
         method: 'PUT',
-        headers: this.getHeaders(true),
         body: JSON.stringify(updateData),
       });
 
@@ -228,9 +213,8 @@ class DepartmentService {
   // 删除部门
   async deleteDepartment(id: number): Promise<void> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DEPARTMENTS}/${id}`, {
+      const response = await apiFetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DEPARTMENTS}/${id}`, {
         method: 'DELETE',
-        headers: this.getHeaders(true),
       });
 
       if (!response.ok) {

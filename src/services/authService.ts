@@ -1,4 +1,5 @@
 import { API_CONFIG, LoginRequest, LoginResponsePayload, APIResponse, APIErrorResponse, ResponseStatus } from '@/config/api';
+import { apiFetch } from './api';
 
 class AuthService {
   private getHeaders(includeAuth: boolean = false): HeadersInit {
@@ -59,7 +60,7 @@ class AuthService {
     try {
       console.log('Attempting logout');
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGOUT}`, {
+      const response = await apiFetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGOUT}`, {
         method: 'POST',
         headers: this.getHeaders(true),
       });
@@ -87,6 +88,10 @@ class AuthService {
       }
       throw new Error('网络连接失败');
     }
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem('token');
   }
 
   // 检查token是否有效
