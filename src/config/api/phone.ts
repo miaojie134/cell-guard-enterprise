@@ -38,6 +38,7 @@ export interface RiskPhoneSearchParams {
   sortOrder?: 'asc' | 'desc';
   search?: string;
   applicantStatus?: string;
+  vendor?: string;              // 供应商筛选
 }
 
 // 创建手机号码请求（匹配后端CreateMobileNumberPayload）

@@ -294,6 +294,7 @@ export const useRiskPhoneNumbers = (options: RiskPhoneSearchParams) => {
     limit: options.limit || 10,
     search: options.search,
     applicantStatus: options.applicantStatus,
+    vendor: options.vendor,
     sortBy: options.sortBy,
     sortOrder: options.sortOrder,
   };

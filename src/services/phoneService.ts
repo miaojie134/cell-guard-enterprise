@@ -54,6 +54,7 @@ export const getRiskPhoneNumbers = async (params: RiskPhoneSearchParams = {}): P
   if (params.sortOrder) url.searchParams.append('sortOrder', params.sortOrder);
   if (params.search) url.searchParams.append('search', params.search);
   if (params.applicantStatus) url.searchParams.append('applicantStatus', params.applicantStatus);
+  if (params.vendor) url.searchParams.append('vendor', params.vendor);
 
   try {
     const response = await apiFetch(url.toString(), {

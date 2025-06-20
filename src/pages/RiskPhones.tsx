@@ -10,13 +10,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pagination } from "@/components/Pagination";
 import { StatusBadge } from "@/components/StatusBadge";
 import { SearchBar } from "@/components/SearchBar";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { AlertTriangle, Edit } from "lucide-react";
+import { AlertTriangle, Edit, Filter } from "lucide-react";
 import { PhoneNumber } from "@/types";
 import { EmployeeSelector, Employee as SelectorEmployee } from "@/components/EmployeeSelector";
 import { PhoneStatus, RiskHandleAction } from "@/config/api/phone";
@@ -42,6 +43,7 @@ const RiskPhones = () => {
     limit: 10,
     search: "",
     applicantStatus: "",
+    vendor: "",
     sortBy: "",
     sortOrder: "desc" as const,
   });
@@ -166,6 +168,17 @@ const RiskPhones = () => {
     return statusMap[status] || status;
   };
 
+  // 供应商映射
+  const getVendorText = (vendor: string) => {
+    const vendorMap: Record<string, string> = {
+      '北京联通': '北京联通',
+      '北京电信': '北京电信',
+      '北京第三方': '北京第三方',
+      '长春联通': '长春联通',
+    };
+    return vendorMap[vendor] || vendor;
+  };
+
   // 部门映射
   const getDepartmentName = (departmentId?: number) => {
     if (!departmentId) {
@@ -257,7 +270,54 @@ const RiskPhones = () => {
                       <th>当前使用人</th>
                       <th>状态</th>
                       <th>部门</th>
-                      <th>供应商</th>
+                      <th>
+                        <div className="flex items-center gap-1">
+                          <span>供应商</span>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={`relative h-5 w-5 p-0 hover:bg-gray-100 ${searchParams.vendor ? 'text-blue-600' : ''}`}
+                                title={searchParams.vendor ? `筛选: ${getVendorText(searchParams.vendor)}` : "筛选供应商"}
+                              >
+                                <Filter className="h-3 w-3" />
+                                {searchParams.vendor && (
+                                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full"></div>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-40 p-3" align="start">
+                              <div className="space-y-2">
+                                <div className="text-xs font-medium border-b pb-1">筛选供应商</div>
+                                
+                                <div className="space-y-1">
+                                  <Button
+                                    variant={searchParams.vendor === "" ? "secondary" : "ghost"}
+                                    size="sm"
+                                    onClick={() => handleFilterChange("vendor", "")}
+                                    className="w-full justify-start h-7 text-xs"
+                                  >
+                                    全部供应商
+                                  </Button>
+                                  
+                                  {['北京联通', '北京电信', '北京第三方', '长春联通'].map((vendor) => (
+                                    <Button
+                                      key={vendor}
+                                      variant={searchParams.vendor === vendor ? "secondary" : "ghost"}
+                                      size="sm"
+                                      onClick={() => handleFilterChange("vendor", vendor)}
+                                      className="w-full justify-start h-7 text-xs"
+                                    >
+                                      {vendor}
+                                    </Button>
+                                  ))}
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </th>
                       <th>操作</th>
                     </tr>
                   </thead>
