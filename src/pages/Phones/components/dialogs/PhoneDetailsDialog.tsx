@@ -108,7 +108,7 @@ export const PhoneDetailsDialog: React.FC<PhoneDetailsDialogProps> = ({
               )}
               <div className="col-span-2">
                 <Label className="text-sm font-medium text-muted-foreground">用途</Label>
-                <p>{phoneData.purpose}</p>
+                <p>{phoneData.purpose || "-"}</p>
               </div>
               {phoneData.remarks && (
                 <div className="col-span-2">
