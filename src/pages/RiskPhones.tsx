@@ -20,7 +20,7 @@ import { AlertTriangle, Edit } from "lucide-react";
 import { PhoneNumber } from "@/types";
 import { EmployeeSelector, Employee as SelectorEmployee } from "@/components/EmployeeSelector";
 import { PhoneStatus, RiskHandleAction } from "@/config/api/phone";
-import { useEmployeesForSelector } from "@/hooks/useEmployees";
+
 import { useRiskPhoneNumbers } from "@/hooks/usePhoneNumbers";
 import { useAuth } from "@/context/AuthContext";
 import { hasManagePermission } from "@/utils/permissions";
@@ -55,11 +55,7 @@ const RiskPhones = () => {
   });
   const [selectedEmployee, setSelectedEmployee] = useState<SelectorEmployee | null>(null);
 
-  // 获取在职员工列表
-  const { activeEmployees, isLoading: isLoadingEmployees } = useEmployeesForSelector({
-    employmentStatus: 'Active',
-    limit: 100,
-  });
+  // 员工选择器使用动态搜索，不需要预加载员工列表
 
   // 获取部门选项数据来映射部门名称
   const { options: departmentOptions } = useDepartmentOptions();
@@ -358,11 +354,10 @@ const RiskPhones = () => {
                   <EmployeeSelector
                     value={selectedEmployee}
                     onChange={handleEmployeeChange}
-                    employees={activeEmployees}
-                    isLoading={isLoadingEmployees}
                     placeholder="选择新的办卡人..."
                     required
                     compact={true}
+                    enableDynamicSearch={true}
                   />
                   <p className="text-xs text-muted-foreground">
                     将办卡责任转移给在职员工，通常转给当前使用人
