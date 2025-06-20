@@ -10,15 +10,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pagination } from "@/components/Pagination";
-import { StatusBadge } from "@/components/StatusBadge";
-import { SearchBar } from "@/components/SearchBar";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { AlertTriangle, Edit, Filter } from "lucide-react";
-import { PhoneNumber } from "@/types";
+import { AlertTriangle, Edit } from "lucide-react";
 import { EmployeeSelector, Employee as SelectorEmployee } from "@/components/EmployeeSelector";
 import { PhoneStatus, RiskHandleAction } from "@/config/api/phone";
 
@@ -26,6 +22,11 @@ import { useRiskPhoneNumbers } from "@/hooks/usePhoneNumbers";
 import { useAuth } from "@/context/AuthContext";
 import { hasManagePermission } from "@/utils/permissions";
 import { useDepartmentOptions } from "@/hooks/useDepartments";
+
+// 导入新的统一组件
+import { UnifiedPhoneTable, ActionConfig } from "@/components/UnifiedPhoneTable";
+import { UnifiedPhoneFilters } from "@/components/UnifiedPhoneFilters";
+import { PhoneSearchParams } from "@/utils/phoneUtils";
 
 // 处理表单数据类型
 interface RiskHandlingForm {
@@ -38,14 +39,21 @@ const RiskPhones = () => {
   const { user } = useAuth(); // 添加用户认证
   
   // State
-  const [searchParams, setSearchParams] = useState({
+  const [searchParams, setSearchParams] = useState<PhoneSearchParams>({
     page: 1,
     limit: 10,
     search: "",
+    status: "",
     applicantStatus: "",
+    applicationDateFrom: "",
+    applicationDateTo: "",
+    applicationDate: "",
+    cancellationDateFrom: "",
+    cancellationDateTo: "",
+    cancellationDate: "",
     vendor: "",
     sortBy: "",
-    sortOrder: "desc" as const,
+    sortOrder: "desc",
   });
   
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -119,10 +127,10 @@ const RiskPhones = () => {
   };
 
   // Dialog handlers
-  const openEditDialog = (id: string) => {
-    const phone = riskPhoneNumbers.find(p => p.phoneNumber === id);
+  const openEditDialog = (phoneNumber: string) => {
+    const phone = riskPhoneNumbers.find(p => p.phoneNumber === phoneNumber);
     if (phone) {
-      setCurrentPhoneNumber(id);
+      setCurrentPhoneNumber(phoneNumber);
       setFormData({
         action: '',
         notes: '',
@@ -155,49 +163,23 @@ const RiskPhones = () => {
     setShowEditDialog(false);
   };
 
-  // 状态映射
-  const getStatusText = (status: string) => {
-    const statusMap: Record<string, string> = {
-      'idle': '闲置',
-      'in_use': '使用中', 
-      'pending_deactivation': '待注销',
-      'deactivated': '已注销',
-      'risk_pending': '待核实-办卡人离职',
-      'user_reported': '待核实-用户报告',
-    };
-    return statusMap[status] || status;
-  };
+  // 配置操作按钮
+  const actions: ActionConfig[] = [
+    {
+      key: "handle",
+      label: "处理",
+      icon: <Edit className="h-4 w-4" />,
+      variant: "ghost",
+      size: "sm",
+      onClick: openEditDialog,
+      disabled: (phone) => !hasManagePermission(user, phone.departmentId),
+      title: "处理风险号码",
+    },
+  ];
 
-  // 供应商映射
-  const getVendorText = (vendor: string) => {
-    const vendorMap: Record<string, string> = {
-      '北京联通': '北京联通',
-      '北京电信': '北京电信',
-      '北京第三方': '北京第三方',
-      '长春联通': '长春联通',
-    };
-    return vendorMap[vendor] || vendor;
-  };
-
-  // 部门映射
-  const getDepartmentName = (departmentId?: number) => {
-    if (!departmentId) {
-      return '未分配部门';
-    }
-    const department = departmentOptions.find(dept => dept.id === departmentId);
-    return department ? department.name : `部门ID: ${departmentId}`;
-  };
-
-  const getStatusVariant = (status: string): "active" | "inactive" | "pending" | "cancelled" | "risk" => {
-    const variantMap: Record<string, "active" | "inactive" | "pending" | "cancelled" | "risk"> = {
-      'idle': 'inactive',
-      'in_use': 'active',
-      'pending_deactivation': 'pending',
-      'deactivated': 'cancelled',
-      'risk_pending': 'risk',
-      'user_reported': 'risk',
-    };
-    return variantMap[status] || 'inactive';
+  // 加载状态映射
+  const loadingStates = {
+    handle: isHandlingRiskPhone,
   };
 
   return (
@@ -214,158 +196,51 @@ const RiskPhones = () => {
             以下号码的办卡人已经离职，请尽快处理这些号码，可以将其进行回收、转移或注销。
           </p>
           
-          {/* 搜索和筛选 */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0 mb-4">
-            <SearchBar
-              onSearch={handleSearch}
-              placeholder="搜索手机号码、办卡人姓名或当前使用人..."
+          <UnifiedPhoneFilters
+            searchParams={searchParams}
+            onSearch={handleSearch}
+            onFilterChange={handleFilterChange}
+            onUpdateSearchParams={setSearchParams}
+            filterConfig={{
+              status: false,
+              applicantStatus: true,
+              vendor: true,
+              applicationDate: false,
+              cancellationDate: false,
+            }}
+            variant="risk"
+            searchPlaceholder="搜索手机号码、办卡人姓名或当前使用人..."
+          />
+          
+          <UnifiedPhoneTable
+            phoneNumbers={riskPhoneNumbers}
+            isLoading={riskPhoneLoading}
+            error={riskPhoneError}
+            searchParams={searchParams}
+            user={user}
+            departmentOptions={departmentOptions}
+            onFilterChange={handleFilterChange}
+            onUpdateSearchParams={setSearchParams}
+            actions={actions}
+            showColumns={{
+              currentUser: true,
+              purpose: false,
+              cancellationDate: false,
+            }}
+            variant="risk"
+            emptyText="恭喜，没有发现风险号码"
+            loadingStates={loadingStates}
+          />
+          
+          {riskPhoneNumbers.length > 0 && riskPhonePagination && (
+            <Pagination
+              currentPage={searchParams.page}
+              totalPages={riskPhonePagination.totalPages}
+              pageSize={searchParams.limit}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              totalItems={riskPhonePagination.totalItems}
             />
-            <div className="flex space-x-2">
-              <Select
-                value={searchParams.applicantStatus || "all"}
-                onValueChange={(value) => handleFilterChange("applicantStatus", value)}
-              >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="办卡人状态" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">全部办卡人</SelectItem>
-                  <SelectItem value="Active">在职</SelectItem>
-                  <SelectItem value="Departed">离职</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          {riskPhoneLoading && (
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              <p className="mt-2 text-muted-foreground">正在加载风险号码...</p>
-            </div>
-          )}
-          
-          {riskPhoneError && (
-            <div className="text-center py-8">
-              <p className="text-red-600">加载失败: {riskPhoneError.message}</p>
-              <Button 
-                variant="outline" 
-                onClick={() => window.location.reload()} 
-                className="mt-2"
-              >
-                重试
-              </Button>
-            </div>
-          )}
-          
-          {!riskPhoneLoading && !riskPhoneError && (
-            <>
-              <div className="overflow-x-auto">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>号码</th>
-                      <th>办卡人</th>
-                      <th>办卡时间</th>
-                      <th>办卡人状态</th>
-                      <th>当前使用人</th>
-                      <th>状态</th>
-                      <th>部门</th>
-                      <th>
-                        <div className="flex items-center gap-1">
-                          <span>供应商</span>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className={`relative h-5 w-5 p-0 hover:bg-gray-100 ${searchParams.vendor ? 'text-blue-600' : ''}`}
-                                title={searchParams.vendor ? `筛选: ${getVendorText(searchParams.vendor)}` : "筛选供应商"}
-                              >
-                                <Filter className="h-3 w-3" />
-                                {searchParams.vendor && (
-                                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full"></div>
-                                )}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-40 p-3" align="start">
-                              <div className="space-y-2">
-                                <div className="text-xs font-medium border-b pb-1">筛选供应商</div>
-                                
-                                <div className="space-y-1">
-                                  <Button
-                                    variant={searchParams.vendor === "" ? "secondary" : "ghost"}
-                                    size="sm"
-                                    onClick={() => handleFilterChange("vendor", "")}
-                                    className="w-full justify-start h-7 text-xs"
-                                  >
-                                    全部供应商
-                                  </Button>
-                                  
-                                  {['北京联通', '北京电信', '北京第三方', '长春联通'].map((vendor) => (
-                                    <Button
-                                      key={vendor}
-                                      variant={searchParams.vendor === vendor ? "secondary" : "ghost"}
-                                      size="sm"
-                                      onClick={() => handleFilterChange("vendor", vendor)}
-                                      className="w-full justify-start h-7 text-xs"
-                                    >
-                                      {vendor}
-                                    </Button>
-                                  ))}
-                                </div>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                        </div>
-                      </th>
-                      <th>操作</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {riskPhoneNumbers.map((phone) => (
-                      <tr key={phone.phoneNumber}>
-                        <td>{phone.phoneNumber}</td>
-                        <td>{phone.applicantName}</td>
-                        <td>{phone.applicationDate ? new Date(phone.applicationDate).toLocaleDateString('zh-CN') : '-'}</td>
-                        <td><StatusBadge status="inactive" text="已离职" /></td>
-                        <td>{phone.currentUserName || "-"}</td>
-                        <td><StatusBadge status={getStatusVariant(phone.status)} text={getStatusText(phone.status)} /></td>
-                        <td>{getDepartmentName(phone.departmentId)}</td>
-                        <td>{phone.vendor}</td>
-                        <td>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => openEditDialog(phone.phoneNumber)}
-                            disabled={isHandlingRiskPhone || !hasManagePermission(user, phone.departmentId)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                    {riskPhoneNumbers.length === 0 && (
-                      <tr>
-                        <td colSpan={9} className="text-center py-4">
-                          恭喜，没有发现风险号码
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              
-              {riskPhoneNumbers.length > 0 && riskPhonePagination && (
-                <Pagination
-                  currentPage={searchParams.page}
-                  totalPages={riskPhonePagination.totalPages}
-                  pageSize={searchParams.limit}
-                  onPageChange={handlePageChange}
-                  onPageSizeChange={handlePageSizeChange}
-                  totalItems={riskPhonePagination.totalItems}
-                />
-              )}
-            </>
           )}
         </CardContent>
       </Card>

@@ -3,7 +3,7 @@ import { MainLayout } from "@/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pagination } from "@/components/Pagination";
-import { Plus, Loader2, AlertCircle } from "lucide-react";
+import { Plus, Loader2, AlertCircle, FileText, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/context/AuthContext";
@@ -12,9 +12,12 @@ import { usePhoneNumbers, usePhoneNumber } from "@/hooks/usePhoneNumbers";
 import { useDepartmentOptions } from "@/hooks/useDepartments";
 import { CreatePhoneRequest, UpdatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest } from "@/config/api/phone";
 
-// 导入拆分的组件
-import { PhoneFilters } from "./Phones/components/PhoneFilters";
-import { PhoneTable } from "./Phones/components/PhoneTable";
+// 导入新的统一组件
+import { UnifiedPhoneTable, ActionConfig } from "@/components/UnifiedPhoneTable";
+import { UnifiedPhoneFilters } from "@/components/UnifiedPhoneFilters";
+import { PhoneSearchParams, hasUsageHistory } from "@/utils/phoneUtils";
+
+// 导入对话框组件
 import {
   AddPhoneDialog,
   EditPhoneDialog,
@@ -32,7 +35,7 @@ const Phones = () => {
   const { options: departmentOptions } = useDepartmentOptions();
   
   // State
-  const [searchParams, setSearchParams] = useState({
+  const [searchParams, setSearchParams] = useState<PhoneSearchParams>({
     page: 1,
     limit: 10,
     search: "",
@@ -148,7 +151,7 @@ const Phones = () => {
   const openDeleteDialog = (phoneNumber: string) => {
     // 双重检查：确保没有使用历史才能删除
     const phone = phoneNumbers.find(p => p.phoneNumber === phoneNumber);
-    if (phone?.usageHistory && phone.usageHistory.length > 0) {
+    if (phone && hasUsageHistory(phone)) {
       toast({
         title: '无法删除',
         description: '该号码存在使用历史记录，不允许删除',
@@ -203,6 +206,69 @@ const Phones = () => {
     } : null;
   };
 
+  // 配置操作按钮
+  const actions: ActionConfig[] = [
+    {
+      key: "details",
+      label: "详情",
+      icon: <FileText className="h-3 w-3" />,
+      variant: "outline",
+      size: "icon",
+      onClick: openDetailsDialog,
+      className: "w-7 h-7",
+    },
+    {
+      key: "edit",
+      label: "编辑",
+      icon: <Pencil className="h-3 w-3" />,
+      variant: "outline",
+      size: "icon",
+      onClick: openEditDialog,
+      disabled: (phone) => !hasManagePermission(user, phone.departmentId),
+      className: "w-7 h-7",
+    },
+    {
+      key: "assign",
+      label: "分配",
+      variant: "outline",
+      size: "sm",
+      onClick: openAssignDialog,
+      disabled: (phone) => !hasManagePermission(user, phone.departmentId),
+      show: (phone) => !phone.currentUserName,
+      className: "px-2 text-xs",
+    },
+    {
+      key: "unassign",
+      label: "回收",
+      variant: "outline",
+      size: "sm",
+      onClick: openUnassignDialog,
+      disabled: (phone) => !hasManagePermission(user, phone.departmentId),
+      show: (phone) => !!phone.currentUserName,
+      className: "px-2 text-xs",
+    },
+    {
+      key: "delete",
+      label: "删除",
+      icon: <Trash2 className="h-3 w-3" />,
+      variant: "ghost",
+      size: "icon",
+      onClick: openDeleteDialog,
+      disabled: (phone) => hasUsageHistory(phone) || !hasManagePermission(user, phone.departmentId),
+      show: (phone) => !hasUsageHistory(phone),
+      className: "w-7 h-7 text-gray-400 hover:text-red-500 hover:bg-red-50",
+      title: "删除号码",
+    },
+  ];
+
+  // 加载状态映射
+  const loadingStates = {
+    edit: isUpdating,
+    assign: isAssigning,
+    unassign: isUnassigning,
+    delete: isDeleting,
+  };
+
   return (
     <MainLayout title="号码管理">
       <Card>
@@ -218,31 +284,40 @@ const Phones = () => {
           </Button>
         </CardHeader>
         <CardContent>
-          <PhoneFilters
+          <UnifiedPhoneFilters
             searchParams={searchParams}
             onSearch={handleSearch}
             onFilterChange={handleFilterChange}
             onUpdateSearchParams={setSearchParams}
+            filterConfig={{
+              status: true,
+              applicantStatus: false,
+              vendor: true,
+              applicationDate: true,
+              cancellationDate: true,
+            }}
+            variant="default"
+            searchPlaceholder="搜索号码、使用人、办卡人、部门..."
           />
           
-          <PhoneTable
+          <UnifiedPhoneTable
             phoneNumbers={phoneNumbers}
             isLoading={isLoading}
             error={error}
             searchParams={searchParams}
-            isUpdating={isUpdating}
-            isAssigning={isAssigning}
-            isUnassigning={isUnassigning}
-            isDeleting={isDeleting}
             user={user}
             departmentOptions={departmentOptions}
             onFilterChange={handleFilterChange}
             onUpdateSearchParams={setSearchParams}
-            onOpenDetails={openDetailsDialog}
-            onOpenEdit={openEditDialog}
-            onOpenAssign={openAssignDialog}
-            onOpenUnassign={openUnassignDialog}
-            onOpenDelete={openDeleteDialog}
+            actions={actions}
+            showColumns={{
+              currentUser: true,
+              purpose: true,
+              cancellationDate: true,
+            }}
+            variant="default"
+            emptyText="没有找到符合条件的手机号码"
+            loadingStates={loadingStates}
           />
           
           {pagination && (
@@ -304,7 +379,7 @@ const Phones = () => {
         isDeleting={isDeleting}
         hasUsageHistory={
           currentPhoneNumber 
-            ? (phoneNumbers.find(p => p.phoneNumber === currentPhoneNumber)?.usageHistory?.length ?? 0) > 0 
+            ? hasUsageHistory(phoneNumbers.find(p => p.phoneNumber === currentPhoneNumber) || { phoneNumber: "", applicantName: "", applicantEmployeeId: "", applicantStatus: "", applicationDate: "", status: "", vendor: "" })
             : false
         }
       />
