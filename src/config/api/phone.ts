@@ -19,6 +19,7 @@ export interface PhoneSearchParams {
   search?: string;
   status?: string;
   applicantStatus?: string;
+  vendor?: string;              // 供应商筛选
   // 办卡时间筛选
   applicationDateFrom?: string;  // 办卡日期起始日期
   applicationDateTo?: string;    // 办卡日期截止日期

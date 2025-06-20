@@ -19,6 +19,7 @@ interface SearchParams {
   cancellationDateFrom: string;
   cancellationDateTo: string;
   cancellationDate: string;
+  vendor: string;
 }
 
 interface PhoneTableHeaderProps {
@@ -37,6 +38,16 @@ const getStatusText = (status: string) => {
     'user_reported': '待核实-用户报告',
   };
   return statusMap[status] || status;
+};
+
+const getVendorText = (vendor: string) => {
+  const vendorMap: Record<string, string> = {
+    '北京联通': '北京联通',
+    '北京电信': '北京电信',
+    '北京第三方': '北京第三方',
+    '长春联通': '长春联通',
+  };
+  return vendorMap[vendor] || vendor;
 };
 
 export const PhoneTableHeader: React.FC<PhoneTableHeaderProps> = ({
@@ -234,7 +245,8 @@ export const PhoneTableHeader: React.FC<PhoneTableHeaderProps> = ({
                     全部状态
                   </Button>
                   
-                  {['idle', 'in_use', 'pending_deactivation', 'deactivated', 'risk_pending', 'user_reported'].map((status) => (
+                  {/* {['idle', 'in_use', 'pending_deactivation', 'deactivated', 'risk_pending', 'user_reported'].map((status) => ( */}
+                  {['idle', 'in_use', 'pending_deactivation', 'deactivated'].map((status) => (
                     <Button
                       key={status}
                       variant={searchParams.status === status ? "secondary" : "ghost"}
@@ -337,7 +349,54 @@ export const PhoneTableHeader: React.FC<PhoneTableHeaderProps> = ({
           </Popover>
         </div>
       </th>
-      <th className="hidden md:table-cell">运营商</th>
+      <th className="hidden md:table-cell">
+        <div className="flex items-center gap-1">
+          <span>运营商</span>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`relative h-5 w-5 p-0 hover:bg-gray-100 ${searchParams.vendor ? 'text-blue-600' : ''}`}
+                title={searchParams.vendor ? `筛选: ${getVendorText(searchParams.vendor)}` : "筛选运营商"}
+              >
+                <Filter className="h-3 w-3" />
+                {searchParams.vendor && (
+                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full"></div>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-40 p-3" align="start">
+              <div className="space-y-2">
+                <div className="text-xs font-medium border-b pb-1">筛选运营商</div>
+                
+                <div className="space-y-1">
+                  <Button
+                    variant={searchParams.vendor === "" ? "secondary" : "ghost"}
+                    size="sm"
+                    onClick={() => onFilterChange("vendor", "")}
+                    className="w-full justify-start h-7 text-xs"
+                  >
+                    全部运营商
+                  </Button>
+                  
+                  {['北京联通', '北京电信', '北京第三方', '长春联通'].map((vendor) => (
+                    <Button
+                      key={vendor}
+                      variant={searchParams.vendor === vendor ? "secondary" : "ghost"}
+                      size="sm"
+                      onClick={() => onFilterChange("vendor", vendor)}
+                      className="w-full justify-start h-7 text-xs"
+                    >
+                      {vendor}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </th>
       <th className="hidden lg:table-cell">用途</th>
       <th className="min-w-[140px]">操作</th>
     </tr>

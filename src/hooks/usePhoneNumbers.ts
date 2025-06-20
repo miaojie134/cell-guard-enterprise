@@ -12,6 +12,7 @@ export interface UsePhoneNumbersOptions {
   search?: string;
   status?: string;
   applicantStatus?: string;
+  vendor?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   applicationDateFrom?: string;
@@ -33,6 +34,7 @@ export const usePhoneNumbers = (options: UsePhoneNumbersOptions = {}) => {
     search: options.search,
     status: options.status,
     applicantStatus: options.applicantStatus,
+    vendor: options.vendor,
     sortBy: options.sortBy,
     sortOrder: options.sortOrder,
     applicationDateFrom: options.applicationDateFrom,

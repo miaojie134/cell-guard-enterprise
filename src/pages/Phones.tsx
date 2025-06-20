@@ -44,6 +44,7 @@ const Phones = () => {
     cancellationDateFrom: "",
     cancellationDateTo: "",
     cancellationDate: "",
+    vendor: "",
   });
   
   // 对话框状态

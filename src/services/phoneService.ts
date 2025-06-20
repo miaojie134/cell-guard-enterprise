@@ -14,6 +14,7 @@ export const getPhoneNumbers = async (params: PhoneSearchParams = {}): Promise<A
   if (params.search) url.searchParams.append('search', params.search);
   if (params.status) url.searchParams.append('status', params.status);
   if (params.applicantStatus) url.searchParams.append('applicantStatus', params.applicantStatus);
+  if (params.vendor) url.searchParams.append('vendor', params.vendor);
 
   // 办卡时间筛选参数
   if (params.applicationDateFrom) url.searchParams.append('applicationDateFrom', params.applicationDateFrom);
@@ -267,6 +268,7 @@ export const exportPhoneAssets = async (params: PhoneSearchParams = {}): Promise
   if (params.search) url.searchParams.append('search', params.search);
   if (params.status) url.searchParams.append('status', params.status);
   if (params.applicantStatus) url.searchParams.append('applicantStatus', params.applicantStatus);
+  if (params.vendor) url.searchParams.append('vendor', params.vendor);
   if (params.applicationDateFrom) url.searchParams.append('applicationDateFrom', params.applicationDateFrom);
   if (params.applicationDateTo) url.searchParams.append('applicationDateTo', params.applicationDateTo);
   if (params.cancellationDateFrom) url.searchParams.append('cancellationDateFrom', params.cancellationDateFrom);

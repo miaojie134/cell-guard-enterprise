@@ -41,6 +41,7 @@ interface SearchParams {
   cancellationDateFrom: string;
   cancellationDateTo: string;
   cancellationDate: string;
+  vendor: string;
 }
 
 interface PhoneTableProps {

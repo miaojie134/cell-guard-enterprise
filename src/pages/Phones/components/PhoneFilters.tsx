@@ -20,6 +20,7 @@ interface SearchParams {
   cancellationDateFrom: string;
   cancellationDateTo: string;
   cancellationDate: string;
+  vendor: string;
 }
 
 interface PhoneFiltersProps {
@@ -39,6 +40,16 @@ const getStatusText = (status: string) => {
     'user_reported': '待核实-用户报告',
   };
   return statusMap[status] || status;
+};
+
+const getVendorText = (vendor: string) => {
+  const vendorMap: Record<string, string> = {
+    '北京联通': '北京联通',
+    '北京电信': '北京电信',
+    '北京第三方': '北京第三方',
+    '长春联通': '长春联通',
+  };
+  return vendorMap[vendor] || vendor;
 };
 
 export const PhoneFilters: React.FC<PhoneFiltersProps> = ({
@@ -121,6 +132,7 @@ export const PhoneFilters: React.FC<PhoneFiltersProps> = ({
       ...prev,
       page: 1,
       status: "",
+      vendor: "",
       applicationDateFrom: "",
       applicationDateTo: "",
       applicationDate: "",
@@ -135,14 +147,15 @@ export const PhoneFilters: React.FC<PhoneFiltersProps> = ({
     applicationDatePicker.dateRange.to || 
     cancellationDatePicker.dateRange.from || 
     cancellationDatePicker.dateRange.to || 
-    searchParams.status
+    searchParams.status ||
+    searchParams.vendor
   );
 
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0 mb-4">
       <SearchBar
         onSearch={onSearch}
-        placeholder="搜索号码、使用人、办卡人..."
+        placeholder="搜索号码、使用人、办卡人、部门..."
       />
       
       <div className="flex flex-wrap gap-2">
@@ -161,6 +174,21 @@ export const PhoneFilters: React.FC<PhoneFiltersProps> = ({
                   onClick={() => onFilterChange("status", "all")}
                   className="ml-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded px-1"
                   title="清除号码状态筛选"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+
+            {/* 供应商筛选条件 */}
+            {searchParams.vendor && (
+              <div className="flex items-center gap-1 bg-white border border-blue-200 rounded px-2 py-0.5">
+                <span>供应商</span>
+                <span className="font-medium text-blue-800">{getVendorText(searchParams.vendor)}</span>
+                <button
+                  onClick={() => onFilterChange("vendor", "all")}
+                  className="ml-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded px-1"
+                  title="清除供应商筛选"
                 >
                   ×
                 </button>
