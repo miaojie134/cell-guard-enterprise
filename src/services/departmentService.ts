@@ -19,18 +19,25 @@ class DepartmentService {
   // 获取部门列表
   async getDepartments(params: DepartmentSearchParams = {}): Promise<Department[]> {
     try {
-      const url = new URL(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DEPARTMENTS}`);
-      const queryParams = new URLSearchParams();
+      // 构建基础路径
+      let url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DEPARTMENTS}`;
 
+      // 构建查询参数
+      const queryParams = new URLSearchParams();
       if (params.includeInactive !== undefined) {
         queryParams.append('includeInactive', params.includeInactive.toString());
       }
       if (params.parentId) {
         queryParams.append('parent_id', params.parentId.toString());
       }
-      url.search = queryParams.toString();
 
-      const response = await apiFetch(url.toString(), {
+      // 如果有查询参数，添加到URL中
+      const queryString = queryParams.toString();
+      if (queryString) {
+        url += `?${queryString}`;
+      }
+
+      const response = await apiFetch(url, {
         method: 'GET',
         signal: params.signal,
       });

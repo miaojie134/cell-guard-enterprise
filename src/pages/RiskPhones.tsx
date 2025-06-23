@@ -208,7 +208,7 @@ const RiskPhones = () => {
               cancellationDate: false,
             }}
             variant="risk"
-            searchPlaceholder="搜索手机号码、办卡人姓名或当前使用人..."
+            searchPlaceholder="搜索号码、使用人、办卡人、部门..."
           />
           
           <UnifiedPhoneTable

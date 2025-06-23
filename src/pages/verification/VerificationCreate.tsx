@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MainLayout } from '@/layouts/MainLayout';
 import { useNavigate } from 'react-router-dom';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -13,21 +13,21 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Users, Building2, UserCheck, Calendar, Send, ArrowLeft, X } from 'lucide-react';
 import { EmployeeSelector, type Employee } from '@/components/EmployeeSelector';
+import { DepartmentTreeSelector } from '@/components/DepartmentTreeSelector';
 import { verificationService } from '@/services/verificationService';
-import { departmentService } from '@/services/departmentService';
 import { useEmployeesForSelector } from '@/hooks/useEmployees';
 import { 
   VerificationInitiateRequest, 
   VERIFICATION_SCOPE
 } from '@/types';
-import { 
-  Department
-} from '@/config/api';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
+import { hasManagePermission } from '@/utils/permissions';
 
 interface CreateForm {
   scope: string;
   selectedDepartments: string[];
+  selectedDepartmentNames: string[]; // 新增：存储选中部门的名称
   selectedEmployees: Employee[];
   durationDays: number;
   previewEnabled: boolean;
@@ -35,19 +35,15 @@ interface CreateForm {
 
 const VerificationCreate: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const [form, setForm] = useState<CreateForm>({
     scope: VERIFICATION_SCOPE.ALL_USERS,
     selectedDepartments: [],
+    selectedDepartmentNames: [],
     selectedEmployees: [],
     durationDays: 7,
     previewEnabled: false,
-  });
-
-  // 获取部门列表
-  const { data: departments = [] } = useQuery({
-    queryKey: ['departments'],
-    queryFn: () => departmentService.getDepartments(),
   });
 
   // 获取活跃员工数据用于统计 (员工选择器现在自带动态搜索)
@@ -81,17 +77,21 @@ const VerificationCreate: React.FC = () => {
       ...prev,
       scope,
       selectedDepartments: [],
+      selectedDepartmentNames: [],
       selectedEmployees: [],
     }));
   };
 
   // 处理部门选择
-  const handleDepartmentChange = (departmentId: string, checked: boolean) => {
+  const handleDepartmentChange = (departmentId: string, checked: boolean, departmentName?: string) => {
     setForm(prev => ({
       ...prev,
       selectedDepartments: checked
         ? [...prev.selectedDepartments, departmentId]
-        : prev.selectedDepartments.filter(id => id !== departmentId)
+        : prev.selectedDepartments.filter(id => id !== departmentId),
+      selectedDepartmentNames: checked
+        ? [...prev.selectedDepartmentNames, departmentName || '']
+        : prev.selectedDepartmentNames.filter(name => name !== departmentName)
     }));
   };
 
@@ -124,6 +124,48 @@ const VerificationCreate: React.FC = () => {
     }));
   };
 
+  // 获取选中部门及其所有子部门的员工数量
+  const getSelectedDepartmentEmployeeCount = () => {
+    if (form.selectedDepartmentNames.length === 0) return 0;
+    
+    // 计算选中部门及其子部门的员工总数
+    const matchingEmployees = activeEmployees.filter(emp => {
+      const empDept = emp.department; // 格式如："产研中心 > 产研中心4组"
+      // 检查员工部门是否属于选中的部门或其子部门
+      return form.selectedDepartmentNames.some(selectedDept => {
+        // 情况1：完全匹配选中的部门
+        if (empDept === selectedDept) {
+          return true;
+        }
+        
+        // 情况2：员工部门路径以选中部门名称结尾（精确匹配）
+        // 例如："产研中心 > 产研中心4组" 结尾匹配 "产研中心4组"
+        if (empDept.endsWith(selectedDept)) {
+          return true;
+        }
+        
+        // 情况3：如果选中的是父部门，匹配所有以该部门开头的路径
+        // 例如："产研中心" 匹配 "产研中心 > 产研中心4组"
+        if (empDept.startsWith(selectedDept + ' >')) {
+          return true;
+        }
+        
+        return false;
+      });
+    });
+    
+    // 调试信息
+    console.log('选中部门员工计算:', {
+      selectedDepartmentNames: form.selectedDepartmentNames,
+      totalEmployees: activeEmployees.length,
+      allEmployeeDepartments: activeEmployees.map(emp => emp.department),
+      matchingEmployees: matchingEmployees.map(emp => emp.department),
+      finalCount: matchingEmployees.length
+    });
+    
+    return matchingEmployees.length;
+  };
+
   // 获取预览数据
   const getPreviewData = () => {
     switch (form.scope) {
@@ -134,16 +176,15 @@ const VerificationCreate: React.FC = () => {
           description: "将向所有在职员工发送确认邮件"
         };
       case VERIFICATION_SCOPE.DEPARTMENT_IDS:
-        const selectedDepts = departments.filter(dept => 
-          form.selectedDepartments.includes(dept.id.toString())
-        );
-        const deptEmployees = activeEmployees.filter(emp => 
-          selectedDepts.some(dept => dept.name === emp.department)
-        );
+        const selectedDeptCount = form.selectedDepartments.length;
+        const selectedEmployeeCount = getSelectedDepartmentEmployeeCount();
+        
         return {
           title: "按部门盘点",
-          count: deptEmployees.length,
-          description: `选中部门：${selectedDepts.map(d => d.name).join(', ')}`
+          count: selectedEmployeeCount,
+          description: selectedDeptCount > 0 
+            ? `选中部门：${form.selectedDepartmentNames.join('、')}`
+            : "请选择要盘点的部门"
         };
       case VERIFICATION_SCOPE.EMPLOYEE_IDS:
         return {
@@ -290,25 +331,11 @@ const VerificationCreate: React.FC = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 gap-3">
-                      {departments.map((dept) => (
-                        <div key={dept.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`dept-${dept.id}`}
-                            checked={form.selectedDepartments.includes(dept.id.toString())}
-                            onCheckedChange={(checked) => 
-                              handleDepartmentChange(dept.id.toString(), checked as boolean)
-                            }
-                          />
-                          <Label htmlFor={`dept-${dept.id}`} className="cursor-pointer text-sm">
-                            {dept.name}
-                            <Badge variant="outline" className="ml-2 text-xs">
-                              {activeEmployees.filter(emp => emp.department === dept.name).length}
-                            </Badge>
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
+                    <DepartmentTreeSelector
+                      selectedDepartmentIds={form.selectedDepartments}
+                      onDepartmentChange={handleDepartmentChange}
+                      activeEmployees={activeEmployees}
+                    />
                   </CardContent>
                 </Card>
               )}
