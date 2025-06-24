@@ -18,9 +18,14 @@ export interface BasePhoneNumber {
   remarks?: string;
   createdAt?: string;
   usageHistory?: Array<{
-    employeeId: string;
+    id: number;
+    mobileNumberDbId: number;
+    employeeName: string;
     startDate: string;
     endDate?: string;
+    createdAt: string;
+    updatedAt: string;
+    deletedAt?: string;
   }>;
   departmentId?: number;
 }

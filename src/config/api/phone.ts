@@ -56,10 +56,14 @@ export interface CreatePhoneRequest {
 
 // 使用历史记录项
 export interface UsageHistoryItem {
-  employeeId: string;
+  id: number;
+  mobileNumberDbId: number;
+  employeeName: string;
   startDate: string;
-  endDate: string;
+  endDate?: string;
   createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
 }
 
 // 后端手机号码数据结构（根据实际API响应格式）

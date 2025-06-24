@@ -177,8 +177,9 @@ export const usePhoneNumbers = (options: UsePhoneNumbersOptions = {}) => {
   const assignMutation = useMutation({
     mutationFn: ({ phoneNumber, data }: { phoneNumber: string; data: AssignPhoneRequest }) =>
       assignPhone(phoneNumber, data),
-    onSuccess: () => {
+    onSuccess: (_, { phoneNumber }) => {
       queryClient.invalidateQueries({ queryKey: ['phoneNumbers'] });
+      queryClient.invalidateQueries({ queryKey: ['phoneNumber', phoneNumber] });
       toast({
         title: '成功',
         description: '手机号码分配成功',
@@ -206,8 +207,9 @@ export const usePhoneNumbers = (options: UsePhoneNumbersOptions = {}) => {
   const unassignMutation = useMutation({
     mutationFn: ({ phoneNumber, data }: { phoneNumber: string; data: UnassignPhoneRequest }) =>
       unassignPhone(phoneNumber, data),
-    onSuccess: () => {
+    onSuccess: (_, { phoneNumber }) => {
       queryClient.invalidateQueries({ queryKey: ['phoneNumbers'] });
+      queryClient.invalidateQueries({ queryKey: ['phoneNumber', phoneNumber] });
       toast({
         title: '成功',
         description: '手机号码回收成功',
@@ -361,9 +363,9 @@ export const useRiskPhoneNumbers = (options: RiskPhoneSearchParams) => {
   const updateRiskPhoneMutation = useMutation({
     mutationFn: ({ phoneNumber, data }: { phoneNumber: string; data: UpdatePhoneRequest }) =>
       updatePhone(phoneNumber, data),
-    onSuccess: () => {
+    onSuccess: (_, { phoneNumber }) => {
       queryClient.invalidateQueries({ queryKey: ['riskPhoneNumbers'] });
-      queryClient.invalidateQueries({ queryKey: ['phoneNumber'] });
+      queryClient.invalidateQueries({ queryKey: ['phoneNumber', phoneNumber] });
       toast({
         title: '成功',
         description: '风险手机号码更新成功',
@@ -419,8 +421,9 @@ export const useRiskPhoneNumbers = (options: RiskPhoneSearchParams) => {
   const assignRiskPhoneMutation = useMutation({
     mutationFn: ({ phoneNumber, data }: { phoneNumber: string; data: AssignPhoneRequest }) =>
       assignPhone(phoneNumber, data),
-    onSuccess: () => {
+    onSuccess: (_, { phoneNumber }) => {
       queryClient.invalidateQueries({ queryKey: ['riskPhoneNumbers'] });
+      queryClient.invalidateQueries({ queryKey: ['phoneNumber', phoneNumber] });
       toast({
         title: '成功',
         description: '风险手机号码分配成功',
@@ -448,8 +451,9 @@ export const useRiskPhoneNumbers = (options: RiskPhoneSearchParams) => {
   const unassignRiskPhoneMutation = useMutation({
     mutationFn: ({ phoneNumber, data }: { phoneNumber: string; data: UnassignPhoneRequest }) =>
       unassignPhone(phoneNumber, data),
-    onSuccess: () => {
+    onSuccess: (_, { phoneNumber }) => {
       queryClient.invalidateQueries({ queryKey: ['riskPhoneNumbers'] });
+      queryClient.invalidateQueries({ queryKey: ['phoneNumber', phoneNumber] });
       toast({
         title: '成功',
         description: '风险手机号码回收成功',
@@ -477,9 +481,10 @@ export const useRiskPhoneNumbers = (options: RiskPhoneSearchParams) => {
   const handleRiskPhoneMutation = useMutation({
     mutationFn: ({ phoneNumber, data }: { phoneNumber: string; data: HandleRiskPhoneRequest }) =>
       handleRiskPhone(phoneNumber, data),
-    onSuccess: () => {
+    onSuccess: (_, { phoneNumber }) => {
       queryClient.invalidateQueries({ queryKey: ['riskPhoneNumbers'] });
       queryClient.invalidateQueries({ queryKey: ['phoneNumbers'] }); // 同时刷新主列表
+      queryClient.invalidateQueries({ queryKey: ['phoneNumber', phoneNumber] });
       toast({
         title: '成功',
         description: '风险手机号码处理成功',

@@ -25,9 +25,14 @@ interface PhoneNumber {
   remarks?: string;
   createdAt: string;
   usageHistory?: Array<{
-    employeeId: string;
+    id: number;
+    mobileNumberDbId: number;
+    employeeName: string;
     startDate: string;
     endDate?: string;
+    createdAt: string;
+    updatedAt: string;
+    deletedAt?: string;
   }>;
 }
 
@@ -127,7 +132,7 @@ export const PhoneDetailsDialog: React.FC<PhoneDetailsDialogProps> = ({
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-3 py-2 text-left font-medium text-gray-900">员工</th>
+                      <th className="px-3 py-2 text-left font-medium text-gray-900">员工姓名</th>
                       <th className="px-3 py-2 text-left font-medium text-gray-900">开始日期</th>
                       <th className="px-3 py-2 text-left font-medium text-gray-900">结束日期</th>
                     </tr>
@@ -146,8 +151,8 @@ export const PhoneDetailsDialog: React.FC<PhoneDetailsDialogProps> = ({
                         return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
                       })
                       .map((usage, index) => (
-                      <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        <td className="px-3 py-2">{usage.employeeId}</td>
+                      <tr key={usage.id || index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                        <td className="px-3 py-2">{usage.employeeName}</td>
                         <td className="px-3 py-2">{usage.startDate}</td>
                         <td className="px-3 py-2">{usage.endDate || '-'}</td>
                       </tr>

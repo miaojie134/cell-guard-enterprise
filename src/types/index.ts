@@ -130,10 +130,14 @@ export interface BackendPhoneNumber {
   vendor: string;
   departmentId: number; // 所属部门ID，用于权限控制
   usageHistory?: Array<{
-    employeeId: string;
+    id: number;
+    mobileNumberDbId: number;
+    employeeName: string;
     startDate: string;
-    endDate: string;
+    endDate?: string;
     createdAt: string;
+    updatedAt: string;
+    deletedAt?: string;
   }>; // 后端使用历史记录格式
 }
 
@@ -156,10 +160,14 @@ export interface PhoneAssign {
 }
 
 export interface PhoneUsageHistory {
-  employeeId: string;
+  id: number;
+  mobileNumberDbId: number;
+  employeeName: string;
   startDate: string;
-  endDate: string;
+  endDate?: string;
   createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
 }
 
 // Authentication types
@@ -247,10 +255,14 @@ export const mapBackendPhoneToFrontend = (backendPhone: BackendPhoneNumber): Pho
     createdAt: formatDateFromISO(backendPhone.createdAt),
     updatedAt: formatDateFromISO(backendPhone.updatedAt),
     usageHistory: backendPhone.usageHistory?.map(usage => ({
-      employeeId: usage.employeeId,
+      id: usage.id,
+      mobileNumberDbId: usage.mobileNumberDbId,
+      employeeName: usage.employeeName,
       startDate: formatDateFromISO(usage.startDate),
-      endDate: formatDateFromISO(usage.endDate),
+      endDate: usage.endDate ? formatDateFromISO(usage.endDate) : undefined,
       createdAt: formatDateFromISO(usage.createdAt),
+      updatedAt: formatDateFromISO(usage.updatedAt),
+      deletedAt: usage.deletedAt ? formatDateFromISO(usage.deletedAt) : undefined,
     })),
   };
 };
