@@ -28,6 +28,7 @@ interface PhoneNumber {
     id: number;
     mobileNumberDbId: number;
     employeeName: string;
+    purpose?: string;
     startDate: string;
     endDate?: string;
     createdAt: string;
@@ -130,13 +131,14 @@ export const PhoneDetailsDialog: React.FC<PhoneDetailsDialogProps> = ({
               <h3 className="text-lg font-medium mb-3">使用历史记录</h3>
               <div className="border rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-3 py-2 text-left font-medium text-gray-900">员工姓名</th>
-                      <th className="px-3 py-2 text-left font-medium text-gray-900">开始日期</th>
-                      <th className="px-3 py-2 text-left font-medium text-gray-900">结束日期</th>
-                    </tr>
-                  </thead>
+                                      <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-3 py-2 text-left font-medium text-gray-900">员工姓名</th>
+                        <th className="px-3 py-2 text-left font-medium text-gray-900">用途</th>
+                        <th className="px-3 py-2 text-left font-medium text-gray-900">开始日期</th>
+                        <th className="px-3 py-2 text-left font-medium text-gray-900">结束日期</th>
+                      </tr>
+                    </thead>
                   <tbody className="divide-y divide-gray-200">
                     {phoneData.usageHistory
                       .sort((a, b) => {
@@ -153,6 +155,7 @@ export const PhoneDetailsDialog: React.FC<PhoneDetailsDialogProps> = ({
                       .map((usage, index) => (
                       <tr key={usage.id || index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                         <td className="px-3 py-2">{usage.employeeName}</td>
+                        <td className="px-3 py-2">{usage.purpose || '-'}</td>
                         <td className="px-3 py-2">{usage.startDate}</td>
                         <td className="px-3 py-2">{usage.endDate || '-'}</td>
                       </tr>

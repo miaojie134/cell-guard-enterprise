@@ -133,6 +133,7 @@ export interface BackendPhoneNumber {
     id: number;
     mobileNumberDbId: number;
     employeeName: string;
+    purpose?: string;
     startDate: string;
     endDate?: string;
     createdAt: string;
@@ -163,6 +164,7 @@ export interface PhoneUsageHistory {
   id: number;
   mobileNumberDbId: number;
   employeeName: string;
+  purpose?: string;
   startDate: string;
   endDate?: string;
   createdAt: string;
@@ -258,6 +260,7 @@ export const mapBackendPhoneToFrontend = (backendPhone: BackendPhoneNumber): Pho
       id: usage.id,
       mobileNumberDbId: usage.mobileNumberDbId,
       employeeName: usage.employeeName,
+      purpose: usage.purpose,
       startDate: formatDateFromISO(usage.startDate),
       endDate: usage.endDate ? formatDateFromISO(usage.endDate) : undefined,
       createdAt: formatDateFromISO(usage.createdAt),

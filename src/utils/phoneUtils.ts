@@ -21,6 +21,7 @@ export interface BasePhoneNumber {
     id: number;
     mobileNumberDbId: number;
     employeeName: string;
+    purpose?: string;
     startDate: string;
     endDate?: string;
     createdAt: string;
