@@ -584,7 +584,7 @@ const VerificationBatchStatus: React.FC = () => {
             {batchStatus && (batchStatus.status === VERIFICATION_STATUS.COMPLETED || 
               batchStatus.status === VERIFICATION_STATUS.COMPLETED_WITH_ERRORS) && (
               <Button 
-                onClick={() => navigate('/verification/results')}
+                onClick={() => navigate(`/verification/results/${batchId}`)}
                 size="sm"
               >
                 <BarChart3 className="h-4 w-4 mr-2" />

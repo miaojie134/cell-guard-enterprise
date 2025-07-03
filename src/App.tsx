@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { DataProvider } from "./context/DataContext";
 import Login from "./pages/Login";
@@ -24,6 +24,20 @@ const VerificationCreate = lazy(() => import('@/pages/verification/VerificationC
 const VerificationBatchStatus = lazy(() => import('@/pages/verification/VerificationBatchStatus'));
 const VerificationResults = lazy(() => import('@/pages/verification/VerificationResults'));
 const VerificationVerification = lazy(() => import('@/pages/verification/EmployeeVerification'));
+
+// 重定向组件：处理旧的或错误的验证链接格式
+const VerifyRedirect: React.FC = () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  
+  if (token) {
+    // 重定向到正确的验证路由
+    return <Navigate to={`/verification/verify/${token}`} replace />;
+  }
+  
+  // 如果没有token，重定向到首页
+  return <Navigate to="/" replace />;
+};
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,10 +72,13 @@ const App = () => (
                 <Route path="/verification" element={<VerificationManagement />} />
                 <Route path="/verification/create" element={<VerificationCreate />} />
                 <Route path="/verification/batch/:batchId" element={<VerificationBatchStatus />} />
-                <Route path="/verification/results" element={<VerificationResults />} />
+                <Route path="/verification/results/:batchId" element={<VerificationResults />} />
                 
                 {/* 员工验证路由（不需要登录） */}
                 <Route path="/verification/verify/:token" element={<VerificationVerification />} />
+                
+                {/* 错误的验证链接重定向 */}
+                <Route path="/verify-numbers" element={<VerifyRedirect />} />
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>

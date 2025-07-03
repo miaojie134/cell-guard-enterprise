@@ -19,7 +19,7 @@ class VerificationService {
     try {
       console.log('发起盘点验证:', data);
 
-      const response = await apiFetch(`${API_CONFIG.BASE_URL}/verification/initiate`, {
+      const response = await apiFetch(`${API_CONFIG.BASE_URL}/verification/admin/batch`, {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -110,19 +110,11 @@ class VerificationService {
   }
 
   // 获取基于手机号码维度的确认流程状态（管理员接口）
-  async getResults(filters?: { employee_id?: string; department_id?: string }): Promise<VerificationResults> {
+  async getResults(batchId: string): Promise<VerificationResults> {
     try {
-      console.log('获取盘点结果:', filters);
+      console.log('获取盘点结果, batchId:', batchId);
 
-      const queryParams = new URLSearchParams();
-      if (filters?.employee_id) {
-        queryParams.append('employee_id', filters.employee_id);
-      }
-      if (filters?.department_id) {
-        queryParams.append('department_id', filters.department_id);
-      }
-
-      const url = `${API_CONFIG.BASE_URL}/verification/admin/phone-status${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const url = `${API_CONFIG.BASE_URL}/verification/admin/phone-status?batch_id=${batchId}`;
 
       const response = await apiFetch(url, {
         method: 'GET',
@@ -183,7 +175,7 @@ class VerificationService {
       if (params?.createdAfter) queryParams.append('createdAfter', params.createdAfter);
       if (params?.createdBefore) queryParams.append('createdBefore', params.createdBefore);
 
-      const url = `${API_CONFIG.BASE_URL}/verification/batch/tasks${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const url = `${API_CONFIG.BASE_URL}/verification/admin/batch-tasks${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
 
       const response = await apiFetch(url, {
         method: 'GET',
