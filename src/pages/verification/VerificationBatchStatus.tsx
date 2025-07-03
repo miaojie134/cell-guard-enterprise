@@ -345,6 +345,66 @@ const VerificationBatchStatus: React.FC = () => {
     }
   };
 
+  // 解析跳过员工信息
+  const parseSkippedEmployees = (skippedEmployeesSummary: string) => {
+    if (!skippedEmployeesSummary?.trim()) return [];
+    
+    try {
+      const lines = skippedEmployeesSummary.trim().split('\n');
+      const skippedEmployees = [];
+      
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        
+        try {
+          const parsed = JSON.parse(line.trim());
+          skippedEmployees.push({
+            employeeId: parsed.employeeId || '未知',
+            employeeName: parsed.employeeName || '未知员工',
+            departmentName: parsed.departmentName || '未知部门',
+            emailAddress: parsed.emailAddress || 'N/A',
+            reason: getFriendlySkipReason(parsed.reason || '未知原因')
+          });
+        } catch (lineError) {
+          console.error('解析跳过员工信息行失败:', lineError, '行内容:', line);
+          // 尝试从错误行中提取基本信息
+          const employeeMatch = line.match(/employeeId[":]+([^",]+)/);
+          const nameMatch = line.match(/employeeName[":]+([^",]+)/);
+          
+          skippedEmployees.push({
+            employeeId: employeeMatch ? employeeMatch[1] : '未知',
+            employeeName: nameMatch ? nameMatch[1] : '未知员工',
+            departmentName: '未知部门',
+            emailAddress: 'N/A',
+            reason: '信息解析失败'
+          });
+        }
+      }
+      
+      return skippedEmployees;
+    } catch (error) {
+      console.error('解析跳过员工摘要失败:', error);
+      return [];
+    }
+  };
+
+  // 将跳过原因转换为用户友好的信息
+  const getFriendlySkipReason = (reason: string): string => {
+    if (reason.includes('没有分配任何手机号码') || reason.includes('无手机号码')) {
+      return '未分配手机号码';
+    }
+    if (reason.includes('查询手机号码失败') || reason.includes('database')) {
+      return '查询失败';
+    }
+    if (reason.includes('员工已离职') || reason.includes('非在职')) {
+      return '员工已离职';
+    }
+    if (reason.includes('邮箱地址无效') || reason.includes('email')) {
+      return '邮箱地址无效';
+    }
+    return reason.length > 20 ? '其他原因' : reason;
+  };
+
   // 将技术错误信息转换为用户友好的信息
   const getFriendlyErrorMessage = (reason: string): string => {
     if (reason.includes('SMTP rcpt to failed: 554') || reason.includes('User unknown')) {
@@ -609,7 +669,7 @@ const VerificationBatchStatus: React.FC = () => {
               {/* 详细统计 */}
               <Card>
                 <CardContent className="py-3">
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-5 gap-2">
                     <div className="text-center p-2 bg-blue-50 rounded-lg">
                       <Users className="h-4 w-4 mx-auto mb-1 text-blue-600" />
                       <p className="text-base font-bold text-blue-600">{batchStatus.totalEmployeesToProcess}</p>
@@ -629,6 +689,11 @@ const VerificationBatchStatus: React.FC = () => {
                       <AlertCircle className="h-4 w-4 mx-auto mb-1 text-orange-600" />
                       <p className="text-base font-bold text-orange-600">{batchStatus.emailsFailedCount}</p>
                       <p className="text-xs text-gray-600">邮件失败</p>
+                    </div>
+                    <div className="text-center p-2 bg-gray-50 rounded-lg">
+                      <User className="h-4 w-4 mx-auto mb-1 text-gray-600" />
+                      <p className="text-base font-bold text-gray-600">{batchStatus.skippedEmployeesCount || 0}</p>
+                      <p className="text-xs text-gray-600">跳过员工</p>
                     </div>
                   </div>
                 </CardContent>
@@ -740,6 +805,62 @@ const VerificationBatchStatus: React.FC = () => {
                               <User className="h-4 w-4 mr-2" />
                               员工管理
                             </Button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* 跳过员工信息 */}
+              {batchStatus.skippedEmployeesSummary && batchStatus.skippedEmployeesCount > 0 && (
+                <Card className="w-full">
+                  <CardHeader className="pb-3">
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    {(() => {
+                      const skippedEmployees = parseSkippedEmployees(batchStatus.skippedEmployeesSummary);
+                      
+                      return (
+                        <div className="space-y-4">
+                          {/* 跳过统计 */}
+                          <div className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                            <div className="flex items-center space-x-2">
+                              <User className="h-5 w-5 text-gray-600" />
+                              <span className="text-base font-medium text-gray-800">
+                                跳过员工 - {skippedEmployees.length}位员工被跳过
+                              </span>
+                            </div>
+                            <Badge variant="secondary" className="text-sm px-2 py-1">{skippedEmployees.length}人</Badge>
+                          </div>
+
+                          {/* 跳过员工列表 */}
+                          <div className="space-y-3">
+                            <span className="text-base font-medium">跳过原因详情</span>
+                            
+                            <div className="max-h-60 overflow-y-auto space-y-2">
+                              {skippedEmployees.map((employee, index) => (
+                                <div key={index} className="flex items-center space-x-3 p-3 border rounded-lg bg-gray-50/50">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center space-x-2">
+                                      <span className="font-medium text-base">{employee.employeeName}</span>
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                      {employee.departmentName && employee.departmentName !== '未知部门' && (
+                                        <>
+                                          <span className="text-gray-500">{employee.departmentName}</span>
+                                          <span className="mx-1">•</span>
+                                        </>
+                                      )}
+                                      <span>{employee.emailAddress}</span>
+                                      <span className="mx-1">•</span>
+                                      <span className="text-orange-600 font-medium">{employee.reason}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       );

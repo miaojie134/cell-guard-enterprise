@@ -281,11 +281,13 @@ export interface VerificationBatchTask {
   id: string;
   status: 'Pending' | 'InProgress' | 'Completed' | 'CompletedWithErrors' | 'Failed';
   totalEmployeesToProcess: number;
+  skippedEmployeesCount: number;
   tokensGeneratedCount: number;
   emailsAttemptedCount: number;
   emailsSucceededCount: number;
   emailsFailedCount: number;
   errorSummary?: string;
+  skippedEmployeesSummary?: string;
   requestedScopeType: string;
   requestedScopeValues?: string;
   requestedDurationDays: number;
