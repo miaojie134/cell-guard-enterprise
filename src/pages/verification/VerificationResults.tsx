@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { verificationService } from '@/services/verificationService';
 import { MainLayout } from '@/layouts/MainLayout';
@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, CheckCircle, Phone, User, Users, Clock, AlertCircleIcon } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Phone, User, Users, Clock, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PendingPhonesDialog } from './components/PendingPhonesDialog';
 import { PendingUser } from '@/types';
@@ -16,6 +16,7 @@ const PENDING_PHONE_DISPLAY_LIMIT = 5;
 
 const VerificationResults: React.FC = () => {
   const { batchId } = useParams<{ batchId: string }>();
+  const navigate = useNavigate();
   const [selectedUser, setSelectedUser] = useState<PendingUser | null>(null);
 
   const { data: results, isLoading, error } = useQuery({
@@ -42,7 +43,19 @@ const VerificationResults: React.FC = () => {
   return (
     <MainLayout title={`盘点结果 (批次: ${batchId})`}>
       <div className="space-y-4">
-        {/* 页面头部 */}
+        {/* 页面头部导航 */}
+        <div className="flex items-center">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            返回
+          </Button>
+        </div>
+        
+        {/* 页面摘要 */}
         <Card>
           <CardHeader>
             <CardTitle>盘点结果摘要</CardTitle>
@@ -118,7 +131,7 @@ const VerificationResults: React.FC = () => {
 
         {/* 详细结果Tabs */}
         <div className="w-full">
-          <Tabs defaultValue="confirmed" className="w-full">
+          <Tabs defaultValue="pending" className="w-full">
             <TabsList className="grid w-full grid-cols-4 h-9">
               <TabsTrigger value="pending" className="text-xs">待确认用户 ({results.pendingUsers?.length || 0})</TabsTrigger>
               <TabsTrigger value="confirmed" className="text-xs">已确认号码 ({results.summary?.confirmedPhonesCount || 0})</TabsTrigger>
