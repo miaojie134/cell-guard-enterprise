@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { verificationService } from '@/services/verificationService';
@@ -9,9 +9,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, CheckCircle, Phone, User, Users, Clock, AlertCircleIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PendingPhonesDialog } from './components/PendingPhonesDialog';
+import { PendingUser } from '@/types';
+
+const PENDING_PHONE_DISPLAY_LIMIT = 5;
 
 const VerificationResults: React.FC = () => {
   const { batchId } = useParams<{ batchId: string }>();
+  const [selectedUser, setSelectedUser] = useState<PendingUser | null>(null);
 
   const { data: results, isLoading, error } = useQuery({
     queryKey: ['verification', 'results', batchId],
@@ -115,9 +120,9 @@ const VerificationResults: React.FC = () => {
         <div className="w-full">
           <Tabs defaultValue="confirmed" className="w-full">
             <TabsList className="grid w-full grid-cols-4 h-9">
+              <TabsTrigger value="pending" className="text-xs">待确认用户 ({results.pendingUsers?.length || 0})</TabsTrigger>
               <TabsTrigger value="confirmed" className="text-xs">已确认号码 ({results.summary?.confirmedPhonesCount || 0})</TabsTrigger>
               <TabsTrigger value="issues" className="text-xs">问题报告 ({results.summary?.reportedIssuesCount || 0})</TabsTrigger>
-              <TabsTrigger value="pending" className="text-xs">待确认用户 ({results.pendingUsers?.length || 0})</TabsTrigger>
               <TabsTrigger value="unlisted" className="text-xs">新上报号码 ({results.summary?.newlyReportedPhonesCount || 0})</TabsTrigger>
             </TabsList>
             
@@ -207,23 +212,43 @@ const VerificationResults: React.FC = () => {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg">待确认用户列表</CardTitle>
-                  <CardDescription className="text-sm">尚未完成确认的员工</CardDescription>
+                  <CardDescription className="text-sm">尚未完成确认的员工及其需要确认的号码</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-xs">员工姓名</TableHead>
-                        <TableHead className="text-xs">邮箱</TableHead>
-                        <TableHead className="text-xs">确认链接过期时间</TableHead>
+                        <TableHead className="text-xs">员工信息</TableHead>
+                        <TableHead className="text-xs">待确认号码</TableHead>
+                        <TableHead className="text-xs">链接过期时间</TableHead>
                         <TableHead className="text-xs">操作</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {(results.pendingUsers || []).map((user) => (
                         <TableRow key={user.employeeId}>
-                          <TableCell className="font-medium text-sm">{user.fullName}</TableCell>
-                          <TableCell className="text-sm">{user.email}</TableCell>
+                          <TableCell>
+                            <div className="font-medium text-sm">{user.fullName}</div>
+                            <div className="text-xs text-gray-500">{user.email}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div 
+                              className="flex flex-wrap items-center gap-1 cursor-pointer"
+                              onClick={() => setSelectedUser(user)}
+                            >
+                              {user.pendingPhones?.slice(0, PENDING_PHONE_DISPLAY_LIMIT).map(phone => (
+                                <Badge key={phone.id} variant="outline">{phone.phoneNumber}</Badge>
+                              ))}
+                              {user.pendingPhones && user.pendingPhones.length > PENDING_PHONE_DISPLAY_LIMIT && (
+                                <Badge variant="default">
+                                  +{user.pendingPhones.length - PENDING_PHONE_DISPLAY_LIMIT}
+                                </Badge>
+                              )}
+                              {(!user.pendingPhones || user.pendingPhones.length === 0) && (
+                                <span className="text-xs text-gray-500">无号码信息</span>
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell className="text-sm">{new Date(user.expiresAt).toLocaleString('zh-CN')}</TableCell>
                           <TableCell>
                             <Button variant="outline" size="sm">提醒</Button>
@@ -277,6 +302,11 @@ const VerificationResults: React.FC = () => {
           </Tabs>
         </div>
       </div>
+      <PendingPhonesDialog 
+        isOpen={!!selectedUser}
+        onClose={() => setSelectedUser(null)}
+        user={selectedUser}
+      />
     </MainLayout>
   );
 };

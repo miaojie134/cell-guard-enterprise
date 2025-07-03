@@ -347,6 +347,10 @@ export interface PendingUser {
   email: string;
   tokenId: number;
   expiresAt: string;
+  pendingPhones?: {
+    id: number;
+    phoneNumber: string;
+  }[];
 }
 
 export interface ReportedIssue {
