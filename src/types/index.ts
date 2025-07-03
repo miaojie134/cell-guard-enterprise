@@ -312,7 +312,7 @@ export interface VerificationEmployeeInfo {
 
 export interface VerifiedNumber {
   mobileNumberId: number;
-  action: 'confirm_usage' | 'report_issue';
+  action: 'not_selected' | 'confirm_usage' | 'report_issue';
   purpose: string;
   userComment?: string;
 }
@@ -390,6 +390,7 @@ export const VERIFICATION_SCOPE = {
 } as const;
 
 export const VERIFICATION_ACTION = {
+  NOT_SELECTED: 'not_selected',
   CONFIRM_USAGE: 'confirm_usage',
   REPORT_ISSUE: 'report_issue'
 } as const;

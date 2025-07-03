@@ -105,12 +105,8 @@ const EmployeeVerification: React.FC = () => {
     if (employeeInfo?.phoneNumbers && Array.isArray(employeeInfo.phoneNumbers) && verifiedNumbers.length === 0) {
       const initialVerified = employeeInfo.phoneNumbers.map(phone => ({
         mobileNumberId: phone.id,
-        action: phone.status === PHONE_VERIFICATION_STATUS.CONFIRMED 
-          ? VERIFICATION_ACTION.CONFIRM_USAGE 
-          : phone.status === PHONE_VERIFICATION_STATUS.REPORTED
-            ? VERIFICATION_ACTION.REPORT_ISSUE
-            : VERIFICATION_ACTION.CONFIRM_USAGE,
-        purpose: phone.purpose,
+        action: VERIFICATION_ACTION.NOT_SELECTED,
+        purpose: phone.purpose || '',
         userComment: phone.userComment || '',
       }));
       setVerifiedNumbers(initialVerified);
@@ -121,7 +117,15 @@ const EmployeeVerification: React.FC = () => {
   const validateForm = (): boolean => {
     // 检查已确认号码
     for (const verified of verifiedNumbers) {
-      if (verified.action === VERIFICATION_ACTION.CONFIRM_USAGE) {
+      if (verified.action === VERIFICATION_ACTION.NOT_SELECTED) {
+        // 未选择状态
+        toast({
+          title: "表单验证失败",
+          description: "请为所有号码选择使用状态（确认使用或报告问题）",
+          variant: "destructive",
+        });
+        return false;
+      } else if (verified.action === VERIFICATION_ACTION.CONFIRM_USAGE) {
         // 确认使用时需要填写用途说明
         if (!verified.purpose.trim()) {
           toast({
@@ -141,14 +145,6 @@ const EmployeeVerification: React.FC = () => {
           });
           return false;
         }
-      } else {
-        // 未选择状态
-        toast({
-          title: "表单验证失败",
-          description: "请选择所有号码的使用状态",
-          variant: "destructive",
-        });
-        return false;
       }
     }
 
@@ -179,8 +175,13 @@ const EmployeeVerification: React.FC = () => {
   const handleSubmit = () => {
     if (!validateForm()) return;
 
+    // 过滤掉未选择状态的号码，只提交已确认的号码
+    const filteredVerifiedNumbers = verifiedNumbers.filter(
+      verified => verified.action !== VERIFICATION_ACTION.NOT_SELECTED
+    );
+
     const submitData: VerificationSubmitRequest = {
-      verifiedNumbers,
+      verifiedNumbers: filteredVerifiedNumbers,
       unlistedNumbersReported: unlistedNumbers,
     };
 
@@ -293,100 +294,131 @@ const EmployeeVerification: React.FC = () => {
             <CardDescription className="text-sm text-gray-600 mt-1">
               请逐一确认每个号码的使用状态，并填写相关信息
             </CardDescription>
+            {/* 简单的进度提示 */}
+            {(() => {
+              const totalNumbers = verifiedNumbers.length;
+              const confirmedNumbers = verifiedNumbers.filter(v => v.action !== VERIFICATION_ACTION.NOT_SELECTED).length;
+              
+              if (totalNumbers > 0 && confirmedNumbers < totalNumbers) {
+                return (
+                  <div className="mt-2 text-xs text-gray-600">
+                    已确认 {confirmedNumbers}/{totalNumbers} 个号码
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </CardHeader>
           <CardContent className="space-y-4">
-            {(employeeInfo?.phoneNumbers || []).map((phone, index) => (
-              <div key={phone.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50/30">
-                {/* 号码标题区域 */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center">
-                      <Phone className="h-3.5 w-3.5 text-blue-600" />
+            {(employeeInfo?.phoneNumbers || []).map((phone, index) => {
+              const currentAction = verifiedNumbers[index]?.action;
+              const isNotSelected = currentAction === VERIFICATION_ACTION.NOT_SELECTED;
+              
+              return (
+                <div 
+                  key={phone.id} 
+                  className={`border rounded-lg p-4 ${
+                    isNotSelected 
+                      ? "border-orange-200 bg-orange-50/20" 
+                      : "border-gray-200 bg-gray-50/30"
+                  }`}
+                >
+                  {/* 号码标题区域 */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center">
+                        <Phone className="h-3.5 w-3.5 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900 text-sm">{phone.phoneNumber}</div>
+                        {phone.department && (
+                          <Badge variant="secondary" className="text-xs mt-0.5 font-normal">
+                            {phone.department}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
+                    <div className="flex items-center space-x-2">
+                      {isNotSelected && (
+                        <span className="text-xs text-orange-600 font-medium">待确认</span>
+                      )}
+                      <div className="text-xs text-gray-500 bg-white px-2 py-1 rounded font-normal">
+                        {index + 1}/{(employeeInfo?.phoneNumbers || []).length}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
+                    {/* 状态选择区域 */}
                     <div>
-                      <div className="font-medium text-gray-900 text-sm">{phone.phoneNumber}</div>
-                      {phone.department && (
-                        <Badge variant="secondary" className="text-xs mt-0.5 font-normal">
-                          {phone.department}
-                        </Badge>
+                      <Label className="text-xs font-medium text-gray-700 mb-2 block">
+                        使用状态 <span className="text-red-500">*</span>
+                      </Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          variant={currentAction === VERIFICATION_ACTION.CONFIRM_USAGE ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => updateVerifiedNumber(index, { 
+                            action: VERIFICATION_ACTION.CONFIRM_USAGE,
+                            userComment: ''
+                          })}
+                          className={`h-9 text-xs font-medium ${
+                            currentAction === VERIFICATION_ACTION.CONFIRM_USAGE 
+                              ? "bg-green-600 hover:bg-green-700 text-white" 
+                              : ""
+                          }`}
+                        >
+                          <CheckCircle className="h-3 w-3 mr-1.5" />
+                          确认使用
+                        </Button>
+                        <Button
+                          variant={currentAction === VERIFICATION_ACTION.REPORT_ISSUE ? "destructive" : "outline"}
+                          size="sm"
+                          onClick={() => updateVerifiedNumber(index, { 
+                            action: VERIFICATION_ACTION.REPORT_ISSUE,
+                            purpose: ''
+                          })}
+                          className="h-9 text-xs font-medium"
+                        >
+                          <AlertCircle className="h-3 w-3 mr-1.5" />
+                          报告问题
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* 用途说明 或 问题说明 */}
+                    <div className="lg:col-span-2">
+                      {currentAction === VERIFICATION_ACTION.NOT_SELECTED ? (
+                        <div className="h-9 flex items-center text-xs text-orange-600 italic">
+                          ← 请先选择使用状态
+                        </div>
+                      ) : currentAction === VERIFICATION_ACTION.REPORT_ISSUE ? (
+                        <>
+                          <Label className="text-xs font-medium text-red-700 mb-2 block">
+                            问题说明 <span className="text-red-500">*</span>
+                          </Label>
+                          <PurposeSelector
+                            value={verifiedNumbers[index]?.userComment || ''}
+                            onValueChange={(value) => updateVerifiedNumber(index, { userComment: value })}
+                            options={issueOptions}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <Label className="text-xs font-medium text-gray-700 mb-2 block">
+                            用途说明 <span className="text-red-500">*</span>
+                          </Label>
+                          <PurposeSelector
+                            value={verifiedNumbers[index]?.purpose || ''}
+                            onValueChange={(value) => updateVerifiedNumber(index, { purpose: value })}
+                          />
+                        </>
                       )}
                     </div>
                   </div>
-                  <div className="text-xs text-gray-500 bg-white px-2 py-1 rounded font-normal">
-                    {index + 1}/{(employeeInfo?.phoneNumbers || []).length}
-                  </div>
                 </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
-                  {/* 状态选择区域 */}
-                  <div>
-                    <Label className="text-xs font-medium text-gray-700 mb-2 block">
-                      使用状态 <span className="text-red-500">*</span>
-                    </Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        variant={verifiedNumbers[index]?.action === VERIFICATION_ACTION.CONFIRM_USAGE ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => updateVerifiedNumber(index, { 
-                          action: VERIFICATION_ACTION.CONFIRM_USAGE,
-                          userComment: ''
-                        })}
-                        className={`h-9 text-xs font-medium ${
-                          verifiedNumbers[index]?.action === VERIFICATION_ACTION.CONFIRM_USAGE 
-                            ? "bg-green-600 hover:bg-green-700 text-white" 
-                            : "border-gray-300 hover:border-green-500 hover:text-green-600"
-                        }`}
-                      >
-                        <CheckCircle className="h-3 w-3 mr-1.5" />
-                        确认使用
-                      </Button>
-                      <Button
-                        variant={verifiedNumbers[index]?.action === VERIFICATION_ACTION.REPORT_ISSUE ? "destructive" : "outline"}
-                        size="sm"
-                        onClick={() => updateVerifiedNumber(index, { 
-                          action: VERIFICATION_ACTION.REPORT_ISSUE,
-                          purpose: '' // 清空用途说明
-                        })}
-                        className={`h-9 text-xs font-medium ${
-                          verifiedNumbers[index]?.action !== VERIFICATION_ACTION.REPORT_ISSUE 
-                            ? "border-gray-300 hover:border-red-500 hover:text-red-600" 
-                            : ""
-                        }`}
-                      >
-                        <AlertCircle className="h-3 w-3 mr-1.5" />
-                        报告问题
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* 用途说明 或 问题说明 */}
-                  <div className="lg:col-span-2">
-                    {verifiedNumbers[index]?.action === VERIFICATION_ACTION.REPORT_ISSUE ? (
-                      <>
-                        <Label className="text-xs font-medium text-red-700 mb-2 block">
-                          问题说明 <span className="text-red-500">*</span>
-                        </Label>
-                        <PurposeSelector
-                          value={verifiedNumbers[index]?.userComment || ''}
-                          onValueChange={(value) => updateVerifiedNumber(index, { userComment: value })}
-                          options={issueOptions}
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <Label className="text-xs font-medium text-gray-700 mb-2 block">
-                          用途说明 <span className="text-red-500">*</span>
-                        </Label>
-                        <PurposeSelector
-                          value={verifiedNumbers[index]?.purpose || ''}
-                          onValueChange={(value) => updateVerifiedNumber(index, { purpose: value })}
-                        />
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
 
@@ -477,16 +509,32 @@ const EmployeeVerification: React.FC = () => {
         </Card>
 
         {/* 提交按钮 */}
-        <div className="flex justify-center">
-          <Button
-            onClick={handleSubmit}
-            disabled={submitMutation.isPending}
-            size="lg"
-            className="px-8 text-sm font-medium"
-          >
-            {submitMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            提交确认结果
-          </Button>
+        <div className="flex flex-col items-center space-y-3">
+          {(() => {
+            const pendingCount = verifiedNumbers.filter(v => v.action === VERIFICATION_ACTION.NOT_SELECTED).length;
+            const isDisabled = submitMutation.isPending || pendingCount > 0;
+            
+            return (
+              <>
+                {pendingCount > 0 && (
+                  <div className="text-sm text-orange-600">
+                    还有 {pendingCount} 个号码待确认
+                  </div>
+                )}
+                <Button
+                  onClick={handleSubmit}
+                  disabled={isDisabled}
+                  size="lg"
+                  className={`px-8 text-sm font-medium ${
+                    isDisabled ? "opacity-60" : ""
+                  }`}
+                >
+                  {submitMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  提交确认结果
+                </Button>
+              </>
+            );
+          })()}
         </div>
       </div>
     </div>
