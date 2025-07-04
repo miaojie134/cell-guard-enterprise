@@ -1,12 +1,16 @@
 import React from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { PanelLeft, PanelRight } from "lucide-react";
 
 interface HeaderProps {
   title: string;
+  isSidebarCollapsed: boolean;
+  onToggleSidebar: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ title }) => {
+export const Header: React.FC<HeaderProps> = ({ title, isSidebarCollapsed, onToggleSidebar }) => {
   const { user } = useAuth();
 
   const getUserRoleDisplay = () => {
@@ -39,7 +43,12 @@ export const Header: React.FC<HeaderProps> = ({ title }) => {
 
   return (
     <header className="border-b px-4 py-2 bg-white flex items-center justify-between">
-      <h1 className="text-xl font-bold text-gray-800">{title}</h1>
+      <div className="flex items-center space-x-2">
+        <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="h-8 w-8">
+          {isSidebarCollapsed ? <PanelRight className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />}
+        </Button>
+        <h1 className="text-xl font-bold text-gray-800">{title}</h1>
+      </div>
       <div className="flex items-center space-x-3">
         <div className="text-xs">
           <div className="flex items-center space-x-2">

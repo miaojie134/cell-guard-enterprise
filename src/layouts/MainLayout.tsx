@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +12,7 @@ interface MainLayoutProps {
 export const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
 
   React.useEffect(() => {
       if (!isLoading && !isAuthenticated) {
@@ -38,9 +38,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
 
   return (
     <div className="h-screen flex overflow-hidden">
-      <Sidebar />
+      <Sidebar isCollapsed={isSidebarCollapsed} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title={title} />
+        <Header 
+          title={title} 
+          isSidebarCollapsed={isSidebarCollapsed}
+          onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        />
         <main className="flex-1 p-4 overflow-auto bg-gray-50">
           {children}
         </main>
