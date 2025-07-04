@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { UpdatePhoneRequest, PhoneStatus } from "@/config/api/phone";
+import { VENDORS } from "@/utils/phoneUtils";
 
 interface PhoneNumber {
   phoneNumber: string;
@@ -241,9 +242,11 @@ export const EditPhoneDialog: React.FC<EditPhoneDialogProps> = ({
                   <SelectValue placeholder="选择运营商" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="中国移动">中国移动</SelectItem>
-                  <SelectItem value="中国联通">中国联通</SelectItem>
-                  <SelectItem value="中国电信">中国电信</SelectItem>
+                  {VENDORS.map((vendor) => (
+                    <SelectItem key={vendor} value={vendor}>
+                      {vendor}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

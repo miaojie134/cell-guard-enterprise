@@ -19,6 +19,7 @@ import {
 import { EmployeeSelector, type Employee } from "@/components/EmployeeSelector";
 import { Loader2 } from "lucide-react";
 import { CreatePhoneRequest, PhoneStatus } from "@/config/api/phone";
+import { VENDORS } from "@/utils/phoneUtils";
 
 interface AddPhoneDialogProps {
   open: boolean;
@@ -202,9 +203,11 @@ export const AddPhoneDialog: React.FC<AddPhoneDialogProps> = ({
                   <SelectValue placeholder="选择运营商" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="中国移动">中国移动</SelectItem>
-                  <SelectItem value="中国联通">中国联通</SelectItem>
-                  <SelectItem value="中国电信">中国电信</SelectItem>
+                  {VENDORS.map((vendor) => (
+                    <SelectItem key={vendor} value={vendor}>
+                      {vendor}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {formErrors.vendor && (

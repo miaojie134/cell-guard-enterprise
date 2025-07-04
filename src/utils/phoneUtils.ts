@@ -75,6 +75,14 @@ export const getStatusVariant = (status: string): "active" | "inactive" | "pendi
   return variantMap[status] || 'inactive';
 };
 
+// 供应商列表
+export const VENDORS = [
+  '北京联通',
+  '北京电信',
+  '北京第三方',
+  '长春联通',
+];
+
 // 供应商文本映射
 export const getVendorText = (vendor: string): string => {
   const vendorMap: Record<string, string> = {
