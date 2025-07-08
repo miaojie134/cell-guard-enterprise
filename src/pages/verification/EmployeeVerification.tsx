@@ -100,6 +100,33 @@ const EmployeeVerification: React.FC = () => {
     },
   });
 
+  // 重新激活确认
+  const reactivateMutation = useMutation({
+    mutationFn: (currentToken: string) => {
+      if (!currentToken) throw new Error('缺少验证令牌');
+      return verificationService.reactivateVerification(currentToken);
+    },
+    onSuccess: (data) => {
+      if (data && data.new_token) {
+        toast({
+          title: "重新激活成功",
+          description: "已为您生成新的确认链接，3秒后将自动跳转...",
+        });
+        setTimeout(() => {
+          // navigate(`/verification/verify/${data.new_token}`, { replace: true });
+          window.location.href = `/verification/verify/${data.new_token}`;
+        }, 3000);
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "重新激活失败",
+        description: error instanceof Error ? error.message : "无法重新激活，请联系管理员",
+        variant: "destructive",
+      });
+    },
+  });
+
   // 初始化已确认号码列表
   useEffect(() => {
     if (employeeInfo?.phoneNumbers && Array.isArray(employeeInfo.phoneNumbers) && verifiedNumbers.length === 0) {
@@ -202,26 +229,46 @@ const EmployeeVerification: React.FC = () => {
 
   // 错误状态
   if (error || !employeeInfo) {
+    const status = (error as any)?.status;
+    const canReactivate = status === 403;
+    let title = "访问失败";
+    let description = "无法获取确认信息，请稍后重试或联系管理员。";
+
+    if (status === 403) {
+      title = "链接已失效";
+      description = "此确认链接可能已被使用或已过期。如果您需要修改已提交的信息，可以申请一个新的链接。";
+    } else if (status === 404) {
+      title = "链接无效";
+      description = "我们无法找到此确认链接。请您仔细核对链接地址是否正确，或联系管理员获取帮助。";
+    } else if (error instanceof Error) {
+      description = error.message;
+    }
+
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <Card className="w-full max-w-md text-center">
           <CardHeader>
-            <CardTitle className="flex items-center text-red-600">
-              <AlertCircle className="h-5 w-5 mr-2" />
-              访问失败
-            </CardTitle>
+            <div className="mx-auto bg-red-100 rounded-full h-14 w-14 flex items-center justify-center">
+              <AlertCircle className="h-8 w-8 text-red-600" />
+            </div>
+            <CardTitle className="mt-5 text-xl font-bold">{title}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600 mb-4">
-              {error instanceof Error ? error.message : '无法获取确认信息，请检查链接是否有效或已过期'}
-            </p>
-            <Button 
-              onClick={() => navigate('/')} 
-              variant="outline" 
-              className="w-full"
-            >
-              返回首页
-            </Button>
+            <p className="text-gray-600 mb-6">{description}</p>
+            {canReactivate && token && (
+              <Button
+                onClick={() => reactivateMutation.mutate(token)}
+                disabled={reactivateMutation.isPending}
+                className="w-full"
+              >
+                {reactivateMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <User className="h-4 w-4 mr-2" />
+                )}
+                重新获取确认链接
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -231,24 +278,20 @@ const EmployeeVerification: React.FC = () => {
   // 已提交状态
   if (isSubmitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <Card className="w-full max-w-md text-center">
           <CardHeader>
-            <CardTitle className="flex items-center text-green-600">
-              <CheckCircle className="h-5 w-5 mr-2" />
+            <div className="mx-auto bg-green-100 rounded-full h-14 w-14 flex items-center justify-center">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            </div>
+            <CardTitle className="mt-5 text-xl font-bold">
               提交成功
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600">
               您的反馈已成功提交，感谢您的配合！
             </p>
-            {/* <Button 
-              onClick={() => navigate('/')} 
-              className="w-full"
-            >
-              完成
-            </Button> */}
           </CardContent>
         </Card>
       </div>

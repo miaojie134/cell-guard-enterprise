@@ -71,9 +71,13 @@ class VerificationService {
         auth: false, // 无需JWT认证
       });
 
-      const responseData: APIResponse<VerificationEmployeeInfo> | APIErrorResponse = await response.json();
+      const responseData = await response.json();
+
       if (!response.ok) {
-        throw new Error((responseData as APIErrorResponse).error || '获取员工确认信息失败');
+        const error = new Error((responseData as APIErrorResponse).error || '获取员工确认信息失败');
+        // 将 status 附加到错误对象上
+        (error as any).status = response.status;
+        throw error;
       }
       return (responseData as APIResponse<VerificationEmployeeInfo>).data;
     } catch (error) {
@@ -106,6 +110,31 @@ class VerificationService {
         throw error;
       }
       throw new Error('提交确认结果失败，请稍后重试');
+    }
+  }
+
+  // 重新激活已完成的确认（员工接口）
+  async reactivateVerification(token: string): Promise<{ new_token: string }> {
+    try {
+      console.log('重新激活确认, token:', token);
+      const response = await apiFetch(`${API_CONFIG.BASE_URL}/verification/reactivate`, {
+        method: 'POST',
+        body: JSON.stringify({ token }),
+        auth: false, // 通常这类接口也是免认证的
+      });
+
+      const responseData: { new_token: string } | APIErrorResponse = await response.json();
+      if (!response.ok) {
+        throw new Error((responseData as APIErrorResponse).error || '重新激活确认失败');
+      }
+      // 直接返回响应数据，而不是嵌套的 .data 属性
+      return responseData as { new_token: string };
+    } catch (error) {
+      console.error('重新激活确认失败:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('重新激活确认失败，请稍后重试');
     }
   }
 
