@@ -203,8 +203,17 @@ export const EditPhoneDialog: React.FC<EditPhoneDialogProps> = ({
 
 
 
+  // 处理对话框状态变化
+  const handleOpenChange = (newOpen: boolean) => {
+    // 如果正在更新中，不允许关闭对话框
+    if (!newOpen && isUpdating) {
+      return;
+    }
+    onOpenChange(newOpen);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>编辑手机号码</DialogTitle>

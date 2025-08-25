@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,6 +76,70 @@ const Phones = () => {
     isAssigning,
     isUnassigning,
   } = usePhoneNumbers(searchParams);
+
+  // 监听创建操作完成，自动关闭新增对话框
+  const [wasCreating, setWasCreating] = useState(false);
+  useEffect(() => {
+    if (wasCreating && !isCreating) {
+      // 创建操作完成（无论成功或失败），关闭对话框
+      setShowAddDialog(false);
+      setWasCreating(false);
+    }
+    if (isCreating && !wasCreating) {
+      setWasCreating(true);
+    }
+  }, [isCreating, wasCreating]);
+
+  // 监听更新操作完成，自动关闭编辑对话框
+  const [wasUpdating, setWasUpdating] = useState(false);
+  useEffect(() => {
+    if (wasUpdating && !isUpdating) {
+      // 更新操作完成（无论成功或失败），关闭对话框
+      setShowEditDialog(false);
+      setCurrentPhoneNumber("");
+      setWasUpdating(false);
+    }
+    if (isUpdating && !wasUpdating) {
+      setWasUpdating(true);
+    }
+  }, [isUpdating, wasUpdating]);
+
+  // 监听分配操作完成，自动关闭分配对话框
+  const [wasAssigning, setWasAssigning] = useState(false);
+  useEffect(() => {
+    if (wasAssigning && !isAssigning) {
+      setShowAssignDialog(false);
+      setWasAssigning(false);
+    }
+    if (isAssigning && !wasAssigning) {
+      setWasAssigning(true);
+    }
+  }, [isAssigning, wasAssigning]);
+
+  // 监听回收操作完成，自动关闭回收对话框
+  const [wasUnassigning, setWasUnassigning] = useState(false);
+  useEffect(() => {
+    if (wasUnassigning && !isUnassigning) {
+      setShowUnassignDialog(false);
+      setWasUnassigning(false);
+    }
+    if (isUnassigning && !wasUnassigning) {
+      setWasUnassigning(true);
+    }
+  }, [isUnassigning, wasUnassigning]);
+
+  // 监听删除操作完成，自动关闭删除对话框
+  const [wasDeleting, setWasDeleting] = useState(false);
+  useEffect(() => {
+    if (wasDeleting && !isDeleting) {
+      setShowDeleteDialog(false);
+      setCurrentPhoneNumber("");
+      setWasDeleting(false);
+    }
+    if (isDeleting && !wasDeleting) {
+      setWasDeleting(true);
+    }
+  }, [isDeleting, wasDeleting]);
 
   // 获取当前选中的手机号码详情
   const { phoneNumber: currentPhone } = usePhoneNumber(currentPhoneNumber || "");
@@ -167,29 +231,27 @@ const Phones = () => {
   // Submit handlers
   const handleAddSubmit = (data: CreatePhoneRequest) => {
     createPhone(data);
-    setShowAddDialog(false);
+    // 不再立即关闭对话框，等待API调用完成
   };
 
   const handleEditSubmit = (phoneNumber: string, data: UpdatePhoneRequest) => {
     updatePhone({ phoneNumber, data });
-    setShowEditDialog(false);
-    setCurrentPhoneNumber("");
+    // 不再立即关闭对话框，等待API调用完成
   };
 
   const handleAssignSubmit = (phoneNumber: string, data: AssignPhoneRequest) => {
     assignPhone({ phoneNumber, data });
-    setShowAssignDialog(false);
+    // 不再立即关闭对话框，等待API调用完成
   };
 
   const handleUnassignSubmit = (phoneNumber: string, data: UnassignPhoneRequest) => {
     unassignPhone({ phoneNumber, data });
-    setShowUnassignDialog(false);
+    // 不再立即关闭对话框，等待API调用完成
   };
 
   const handleDeleteSubmit = (phoneNumber: string) => {
     deletePhone(phoneNumber);
-    setShowDeleteDialog(false);
-    setCurrentPhoneNumber("");
+    // 不再立即关闭对话框，等待API调用完成
   };
 
   // 获取当前编辑的手机号码数据

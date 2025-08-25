@@ -94,6 +94,10 @@ export const AssignPhoneDialog: React.FC<AssignPhoneDialogProps> = ({
 
   // 处理对话框状态变化
   const handleOpenChange = (newOpen: boolean) => {
+    // 如果正在分配中，不允许关闭对话框
+    if (!newOpen && isAssigning) {
+      return;
+    }
     onOpenChange(newOpen);
   };
 

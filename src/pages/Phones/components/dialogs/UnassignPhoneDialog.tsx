@@ -35,8 +35,17 @@ export const UnassignPhoneDialog: React.FC<UnassignPhoneDialogProps> = ({
     onSubmit(phoneNumber, unassignRequest);
   };
 
+  // 处理对话框状态变化
+  const handleOpenChange = (newOpen: boolean) => {
+    // 如果正在回收中，不允许关闭对话框
+    if (!newOpen && isUnassigning) {
+      return;
+    }
+    onOpenChange(newOpen);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>回收手机号码</DialogTitle>

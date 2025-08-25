@@ -40,6 +40,19 @@ export const DeletePhoneDialog: React.FC<DeletePhoneDialogProps> = ({
     }
   };
 
+  // 处理对话框状态变化
+  const handleOpenChange = (newOpen: boolean) => {
+    // 如果正在删除中，不允许关闭对话框
+    if (!newOpen && isDeleting) {
+      return;
+    }
+    if (!newOpen) {
+      handleClose();
+    } else {
+      onOpenChange(newOpen);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (confirmText === phoneNumber && hasConfirmed) {
@@ -51,7 +64,7 @@ export const DeletePhoneDialog: React.FC<DeletePhoneDialogProps> = ({
   const isValid = confirmText === phoneNumber && hasConfirmed;
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-600">
