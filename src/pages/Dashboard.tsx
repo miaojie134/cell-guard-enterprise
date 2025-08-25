@@ -1,45 +1,61 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { MainLayout } from "@/layouts/MainLayout";
-import { useData } from "@/context/DataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Phone, User, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Phone, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Link } from "react-router-dom";
-import { sampleEmployees, samplePhoneNumbers } from "@/data/sampleData";
+import { useDashboard } from "@/hooks/useDashboard";
+import { 
+  getStatusVariant,
+  getStatusText,
+  getApplicantStatusVariant,
+  getApplicantStatusText
+} from "@/utils/phoneUtils";
 
 const Dashboard = () => {
-  const { phoneNumbers, employees, getRiskPhones } = useData();
-  
-  // Calculate statistics
-  const stats = {
-    totalPhones: phoneNumbers.length,
-    activePhones: phoneNumbers.filter(p => p.status === "active").length,
-    inactivePhones: phoneNumbers.filter(p => p.status === "inactive").length,
-    riskPhones: getRiskPhones().length,
-    totalEmployees: employees.length,
-    activeEmployees: employees.filter(e => e.status === "active").length,
-    inactiveEmployees: employees.filter(e => e.status === "inactive").length,
-  };
-  
-  // Recent phones (top 5)
-  const recentPhones = [...phoneNumbers]
-    .sort((a, b) => new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime())
-    .slice(0, 5);
-  
-  // Risk phones (top 5)
-  const riskPhones = getRiskPhones().slice(0, 5);
+  const { 
+    dashboardData, 
+    isLoading, 
+    error,
+    stats,
+    recentNumbers,
+    riskNumbers
+  } = useDashboard();
 
-  useEffect(() => {
-  
-  }, [phoneNumbers, employees]);
+  // 加载状态处理
+  if (isLoading) {
+    return (
+      <MainLayout title="仪表盘">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="ml-2">加载中...</span>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // 错误状态处理
+  if (error) {
+    return (
+      <MainLayout title="仪表盘">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <p className="text-red-600 mb-4">加载仪表盘数据失败</p>
+            <Button onClick={() => window.location.reload()}>重试</Button>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout title="仪表盘">
       <div className="space-y-4">
         {/* Stats row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           <Card>
             <CardContent className="p-4 flex items-center space-x-3">
               <div className="rounded-full bg-blue-100 p-2">
@@ -47,7 +63,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">手机号码总数</p>
-                <p className="text-xl font-bold">{stats.totalPhones}</p>
+                <p className="text-xl font-bold">{stats?.totalPhones || 0}</p>
               </div>
             </CardContent>
           </Card>
@@ -59,19 +75,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">在用号码</p>
-                <p className="text-xl font-bold">{stats.activePhones}</p>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4 flex items-center space-x-3">
-              <div className="rounded-full bg-orange-100 p-2">
-                <User className="h-5 w-5 text-orange-700" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">在职员工</p>
-                <p className="text-xl font-bold">{stats.activeEmployees}</p>
+                <p className="text-xl font-bold">{stats?.activePhones || 0}</p>
               </div>
             </CardContent>
           </Card>
@@ -83,7 +87,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">风险号码</p>
-                <p className="text-xl font-bold">{stats.riskPhones}</p>
+                <p className="text-xl font-bold">{stats?.riskPhones || 0}</p>
               </div>
             </CardContent>
           </Card>
@@ -107,16 +111,16 @@ const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {recentPhones.map((phone) => (
-                    <tr key={phone.id}>
-                      <td>{phone.number}</td>
-                      <td>{phone.registrant}</td>
-                      <td>{phone.currentUser || "-"}</td>
-                      <td><StatusBadge status={phone.status} /></td>
-                      <td>{phone.registrationDate}</td>
+                  {recentNumbers.map((phone, index) => (
+                    <tr key={`${phone.phoneNumber}-${index}`}>
+                      <td>{phone.phoneNumber}</td>
+                      <td>{phone.applicantName}</td>
+                      <td>{phone.currentUserName || "-"}</td>
+                      <td><StatusBadge status={getStatusVariant(phone.status)} text={getStatusText(phone.status)} /></td>
+                      <td>{phone.applicationDate}</td>
                     </tr>
                   ))}
-                  {recentPhones.length === 0 && (
+                  {recentNumbers.length === 0 && (
                     <tr>
                       <td colSpan={5} className="text-center py-4">
                         暂无数据
@@ -130,7 +134,7 @@ const Dashboard = () => {
         </Card>
         
         {/* Risk phones */}
-        {riskPhones.length > 0 && (
+        {riskNumbers.length > 0 && (
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center text-lg">
@@ -151,16 +155,16 @@ const Dashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {riskPhones.map((phone) => (
-                      <tr key={phone.id}>
-                        <td>{phone.number}</td>
-                        <td>{phone.registrant}</td>
-                        <td><StatusBadge status="inactive" text="已离职" /></td>
-                        <td>{phone.currentUser || "-"}</td>
-                        <td><StatusBadge status={phone.status} /></td>
+                    {riskNumbers.map((phone, index) => (
+                      <tr key={`risk-${phone.phoneNumber}-${index}`}>
+                        <td>{phone.phoneNumber}</td>
+                        <td>{phone.applicantName}</td>
+                        <td><StatusBadge status={getApplicantStatusVariant(phone.applicantStatus)} text={getApplicantStatusText(phone.applicantStatus)} /></td>
+                        <td>{phone.currentUserName || "-"}</td>
+                        <td><StatusBadge status={getStatusVariant(phone.status)} text={getStatusText(phone.status)} /></td>
                       </tr>
                     ))}
-                    {riskPhones.length === 0 && (
+                    {riskNumbers.length === 0 && (
                       <tr>
                         <td colSpan={5} className="text-center py-4">
                           暂无风险号码

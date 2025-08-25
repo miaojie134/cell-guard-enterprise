@@ -3,4 +3,5 @@ export * from './base';
 export * from './auth';
 export * from './employee';
 export * from './phone';
-export * from './department'; 
+export * from './department';
+export * from './dashboard'; 

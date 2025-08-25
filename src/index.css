@@ -193,6 +193,15 @@
   @apply bg-danger/20 text-danger font-medium px-1.5 py-0.5 rounded-full text-xs;
 }
 
+/* 确保表格中的状态徽标字号一致 */
+.data-table .status-active,
+.data-table .status-inactive,
+.data-table .status-pending,
+.data-table .status-risk {
+  @apply text-xs;
+  font-size: 0.75rem !important; /* 确保表格中的状态徽标字号为12px */
+}
+
 .data-table {
   @apply w-full border-collapse;
 }
