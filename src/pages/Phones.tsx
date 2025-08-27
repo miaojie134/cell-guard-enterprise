@@ -31,6 +31,47 @@ const Phones = () => {
   const { toast } = useToast();
   const { isAuthenticated, user, isLoading: authLoading } = useAuth();
 
+  // 检查认证状态 - 在所有其他 hooks 之前进行检查
+  if (authLoading) {
+    return (
+      <MainLayout title="号码管理">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="ml-2">正在加载...</span>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <MainLayout title="号码管理">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-orange-500" />
+              需要登录
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p>您需要先登录才能访问号码管理功能。</p>
+            <Link to="/login">
+              <Button>前往登录</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </MainLayout>
+    );
+  }
+
+  // 只有在认证完成后才调用其他 hooks
+  return <PhonesContent user={user} />;
+};
+
+// 将主要组件逻辑提取到单独的组件中
+const PhonesContent: React.FC<{ user: any }> = ({ user }) => {
+  const { toast } = useToast();
+
   // 获取部门选项数据来映射部门名称
   const { options: departmentOptions } = useDepartmentOptions();
   
@@ -141,43 +182,8 @@ const Phones = () => {
     }
   }, [isDeleting, wasDeleting]);
 
-  // 获取当前选中的手机号码详情 - 只有在认证完成且有手机号码时才查询
-  const { phoneNumber: currentPhone } = usePhoneNumber(
-    (isAuthenticated && currentPhoneNumber) ? currentPhoneNumber : ""
-  );
-
-  // 检查认证状态 - 添加加载状态检查
-  if (authLoading) {
-    return (
-      <MainLayout title="号码管理">
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin" />
-          <span className="ml-2">正在加载...</span>
-        </div>
-      </MainLayout>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <MainLayout title="号码管理">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-orange-500" />
-              需要登录
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p>您需要先登录才能访问号码管理功能。</p>
-            <Link to="/login">
-              <Button>前往登录</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </MainLayout>
-    );
-  }
+  // 获取当前选中的手机号码详情
+  const { phoneNumber: currentPhone } = usePhoneNumber(currentPhoneNumber || "");
 
   // Handle search and filters
   const handleSearch = (query: string) => {
