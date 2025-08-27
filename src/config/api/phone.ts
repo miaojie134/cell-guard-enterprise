@@ -8,7 +8,9 @@ export type PhoneStatus =
   | 'pending_deactivation' // 待注销
   | 'deactivated'          // 已注销
   | 'risk_pending'         // 待核实-办卡人离职
-  | 'user_reported';       // 待核实-用户报告
+  | 'user_reported'        // 待核实-用户报告
+  | 'suspended'            // 停机保号
+  | 'card_replacing';      // 补卡中
 
 // 手机号码搜索参数
 export interface PhoneSearchParams {

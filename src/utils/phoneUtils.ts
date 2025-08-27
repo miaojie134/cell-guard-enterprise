@@ -58,6 +58,8 @@ export const getStatusText = (status: string): string => {
     'deactivated': '已注销',
     'risk_pending': '待核实-办卡人离职',
     'user_reported': '待核实-用户报告',
+    'suspended': '停机保号',
+    'card_replacing': '补卡中',
   };
   return statusMap[status] || status;
 };
@@ -71,6 +73,8 @@ export const getStatusVariant = (status: string): "active" | "inactive" | "pendi
     'deactivated': 'cancelled',
     'risk_pending': 'risk',
     'user_reported': 'risk',
+    'suspended': 'pending',
+    'card_replacing': 'pending',
   };
   return variantMap[status] || 'inactive';
 };

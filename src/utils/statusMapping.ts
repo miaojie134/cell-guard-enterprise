@@ -21,6 +21,8 @@ export const mapPhoneStatusStringToFrontend = (status: string): FrontendPhoneSta
     'deactivated': FRONTEND_PHONE_STATUS.CANCELLED,
     'risk_pending': FRONTEND_PHONE_STATUS.PENDING_VERIFICATION_EMPLOYEE_LEFT,
     'user_reported': FRONTEND_PHONE_STATUS.PENDING_VERIFICATION_USER_REPORT,
+    'suspended': FRONTEND_PHONE_STATUS.SUSPENDED,
+    'card_replacing': FRONTEND_PHONE_STATUS.CARD_REPLACING,
     // 兼容后端可能返回的其他格式
     'pending_cancellation': FRONTEND_PHONE_STATUS.PENDING_CANCELLATION,
     'cancelled': FRONTEND_PHONE_STATUS.CANCELLED,
@@ -51,6 +53,8 @@ export const getPhoneStatusText = (status: FrontendPhoneStatus): string => {
     [FRONTEND_PHONE_STATUS.CANCELLED]: '已注销',
     [FRONTEND_PHONE_STATUS.PENDING_VERIFICATION_EMPLOYEE_LEFT]: '待核实-办卡人离职',
     [FRONTEND_PHONE_STATUS.PENDING_VERIFICATION_USER_REPORT]: '待核实-用户报告',
+    [FRONTEND_PHONE_STATUS.SUSPENDED]: '停机保号',
+    [FRONTEND_PHONE_STATUS.CARD_REPLACING]: '补卡中',
   };
 
   return textMap[status] || status;

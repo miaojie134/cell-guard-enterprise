@@ -324,7 +324,9 @@ const statusChineseToEnglishMap: Record<string, string> = {
   '待注销': 'pending_deactivation',
   '已注销': 'deactivated',
   '待核实-办卡人离职': 'risk_pending',
-  '待核实-用户报告': 'user_reported'
+  '待核实-用户报告': 'user_reported',
+  '停机保号': 'suspended',
+  '补卡中': 'card_replacing'
 };
 
 // 处理CSV文件内容，将中文状态转换为英文状态

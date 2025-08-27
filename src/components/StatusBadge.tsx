@@ -27,6 +27,10 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
       case "cancelled":
       case "deactivated":
         return "status-inactive";
+      case "suspended":
+        return "status-suspended";
+      case "card_replacing":
+        return "status-replacing";
       case "risk":
         return "status-risk";
       default:
@@ -60,6 +64,10 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
         return "已注销";
       case "deactivated":
         return "已注销";
+      case "suspended":
+        return "停机保号";
+      case "card_replacing":
+        return "补卡中";
       case "risk":
         return "风险";
       default:

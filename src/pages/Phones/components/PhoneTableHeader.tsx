@@ -29,6 +29,8 @@ const getStatusText = (status: string) => {
     'deactivated': '已注销',
     'risk_pending': '待核实-办卡人离职',
     'user_reported': '待核实-用户报告',
+    'suspended': '停机保号',
+    'card_replacing': '补卡中',
   };
   return statusMap[status] || status;
 };
@@ -278,6 +280,7 @@ export const PhoneTableHeader: React.FC<PhoneTableHeaderProps> = ({
       <th>
         <div className="flex items-center gap-1">
           <span>号码状态</span>
+          {variant !== "risk" && (
           <Popover open={isStatusOpen} onOpenChange={setIsStatusOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -309,8 +312,7 @@ export const PhoneTableHeader: React.FC<PhoneTableHeaderProps> = ({
                     全部状态
                   </Button>
                   
-                  {/* {['idle', 'in_use', 'pending_deactivation', 'deactivated', 'risk_pending', 'user_reported'].map((status) => ( */}
-                  {['idle', 'in_use', 'pending_deactivation', 'deactivated'].map((status) => (
+                  {['idle', 'in_use', 'pending_deactivation', 'deactivated', 'suspended', 'card_replacing'].map((status) => (
                     <Button
                       key={status}
                       variant={searchParams.status === status ? "secondary" : "ghost"}
@@ -328,6 +330,7 @@ export const PhoneTableHeader: React.FC<PhoneTableHeaderProps> = ({
               </div>
             </PopoverContent>
           </Popover>
+          )}
         </div>
       </th>
       {showColumns.cancellationDate && (

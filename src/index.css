@@ -193,11 +193,21 @@
   @apply bg-danger/20 text-danger font-medium px-1.5 py-0.5 rounded-full text-xs;
 }
 
+.status-suspended {
+  @apply bg-orange-100 text-orange-700 font-medium px-1.5 py-0.5 rounded-full text-xs;
+}
+
+.status-replacing {
+  @apply bg-blue-100 text-blue-700 font-medium px-1.5 py-0.5 rounded-full text-xs;
+}
+
 /* 确保表格中的状态徽标字号一致 */
 .data-table .status-active,
 .data-table .status-inactive,
 .data-table .status-pending,
-.data-table .status-risk {
+.data-table .status-risk,
+.data-table .status-suspended,
+.data-table .status-replacing {
   @apply text-xs;
   font-size: 0.75rem !important; /* 确保表格中的状态徽标字号为12px */
 }

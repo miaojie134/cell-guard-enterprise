@@ -42,7 +42,9 @@ export const EnhancedPhoneImportForm: React.FC = () => {
       'pending_deactivation': '待注销',
       'deactivated': '已注销',
       'risk_pending': '待核实-办卡人离职',
-      'user_reported': '待核实-用户报告'
+      'user_reported': '待核实-用户报告',
+      'suspended': '停机保号',
+      'card_replacing': '补卡中'
     };
     return statusLabels[status] || status;
   };
@@ -55,7 +57,9 @@ export const EnhancedPhoneImportForm: React.FC = () => {
       'pending_deactivation': '待注销',
       'deactivated': '已注销',
       'risk_pending': '待核实-办卡人离职',
-      'user_reported': '待核实-用户报告'
+      'user_reported': '待核实-用户报告',
+      'suspended': '停机保号',
+      'card_replacing': '补卡中'
     };
     return statusMap[englishStatus] || englishStatus;
   };

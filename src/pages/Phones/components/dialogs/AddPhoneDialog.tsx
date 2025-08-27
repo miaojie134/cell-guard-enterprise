@@ -234,6 +234,8 @@ export const AddPhoneDialog: React.FC<AddPhoneDialogProps> = ({
                 <SelectContent>
                   <SelectItem value="idle">闲置</SelectItem>
                   <SelectItem value="pending_deactivation">待注销</SelectItem>
+                  <SelectItem value="suspended">停机保号</SelectItem>
+                  <SelectItem value="card_replacing">补卡中</SelectItem>
                 </SelectContent>
               </Select>
             </div>
