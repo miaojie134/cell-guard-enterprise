@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { MainLayout } from "@/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -254,8 +254,8 @@ const Phones = () => {
     // 不再立即关闭对话框，等待API调用完成
   };
 
-  // 获取当前编辑的手机号码数据
-  const getCurrentPhoneForEdit = () => {
+  // 获取当前编辑的手机号码数据（使用useMemo避免不必要的对象重新创建）
+  const phoneDataForEdit = useMemo(() => {
     if (!currentPhoneNumber) return null;
     const phone = phoneNumbers.find(p => p.phoneNumber === currentPhoneNumber);
     return phone ? {
@@ -266,7 +266,7 @@ const Phones = () => {
       status: phone.status,
       cancellationDate: phone.cancellationDate || "",
     } : null;
-  };
+  }, [currentPhoneNumber, phoneNumbers]);
 
   // 配置操作按钮
   const actions: ActionConfig[] = [
@@ -405,7 +405,7 @@ const Phones = () => {
       <EditPhoneDialog
         open={showEditDialog}
         onOpenChange={setShowEditDialog}
-        phoneData={getCurrentPhoneForEdit()}
+        phoneData={phoneDataForEdit}
         onSubmit={handleEditSubmit}
         isUpdating={isUpdating}
       />

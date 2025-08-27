@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -54,20 +54,45 @@ export const EditPhoneDialog: React.FC<EditPhoneDialogProps> = ({
   });
   
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  
+  // 使用ref跟踪上次的phoneData，避免不必要的表单重置
+  const prevPhoneDataRef = useRef<PhoneNumber | null>(null);
 
-  // 当phoneData变化时更新表单数据
+  // 当phoneData变化时更新表单数据（只在真正需要时才更新）
   useEffect(() => {
     if (phoneData) {
-      setFormData({
-        purpose: phoneData.purpose,
-        vendor: phoneData.vendor,
-        remarks: phoneData.remarks || "",
-        status: phoneData.status as PhoneStatus,
-        cancellationDate: phoneData.cancellationDate || "",
-      });
-      setFormErrors({});
+      const prevPhoneData = prevPhoneDataRef.current;
+      
+      // 检查phoneData是否真正发生了变化
+      const hasPhoneDataChanges = !prevPhoneData || 
+        prevPhoneData.phoneNumber !== phoneData.phoneNumber ||
+        prevPhoneData.purpose !== phoneData.purpose ||
+        prevPhoneData.vendor !== phoneData.vendor ||
+        (prevPhoneData.remarks || "") !== (phoneData.remarks || "") ||
+        prevPhoneData.status !== phoneData.status ||
+        (prevPhoneData.cancellationDate || "") !== (phoneData.cancellationDate || "");
+      
+      // 只有在phoneData真正变化时才更新表单
+      if (hasPhoneDataChanges) {
+        setFormData({
+          purpose: phoneData.purpose,
+          vendor: phoneData.vendor,
+          remarks: phoneData.remarks || "",
+          status: phoneData.status as PhoneStatus,
+          cancellationDate: phoneData.cancellationDate || "",
+        });
+        setFormErrors({});
+        prevPhoneDataRef.current = phoneData;
+      }
     }
   }, [phoneData]);
+
+  // 当对话框关闭时清理ref状态，确保下次打开时能正确初始化
+  useEffect(() => {
+    if (!open) {
+      prevPhoneDataRef.current = null;
+    }
+  }, [open]);
 
   // 编辑表单验证
   const validateEditForm = (): boolean => {
