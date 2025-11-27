@@ -178,7 +178,8 @@ export const EditPhoneDialog: React.FC<EditPhoneDialogProps> = ({
     const statusLabels: Record<PhoneStatus, string> = {
       'idle': '闲置',
       'in_use': '使用中',
-      'pending_deactivation': '待注销',
+      'pending_deactivation_user': '待注销（员工上报）',
+      'pending_deactivation_admin': '待注销（系统标记）',
       'deactivated': '已注销',
       'risk_pending': '待核实-办卡人离职',
       'user_reported': '待核实-用户报告',
@@ -192,7 +193,7 @@ export const EditPhoneDialog: React.FC<EditPhoneDialogProps> = ({
   const getAvailableStatusOptions = () => {
     if (!phoneData) {
       // 如果没有数据，返回所有状态选项
-      const allStatuses: PhoneStatus[] = ['idle', 'in_use', 'pending_deactivation', 'deactivated', 'risk_pending', 'user_reported', 'suspended', 'card_replacing'];
+      const allStatuses: PhoneStatus[] = ['idle', 'in_use', 'pending_deactivation_user', 'pending_deactivation_admin', 'deactivated', 'risk_pending', 'user_reported', 'suspended', 'card_replacing'];
       return allStatuses.map(status => ({ value: status, label: getStatusLabel(status) }));
     }
 
@@ -205,28 +206,31 @@ export const EditPhoneDialog: React.FC<EditPhoneDialogProps> = ({
 
     switch (currentStatus) {
       case 'idle': // 闲置
-        return getFilteredOptions(['idle', 'pending_deactivation', 'user_reported', 'deactivated', 'suspended', 'card_replacing']);
+        return getFilteredOptions(['idle', 'pending_deactivation_admin', 'pending_deactivation_user', 'user_reported', 'deactivated', 'suspended', 'card_replacing']);
         
       case 'in_use': // 使用中
-        return getFilteredOptions(['in_use', 'pending_deactivation', 'user_reported', 'deactivated', 'suspended', 'card_replacing']);
+        return getFilteredOptions(['in_use', 'pending_deactivation_admin', 'pending_deactivation_user', 'user_reported', 'deactivated', 'suspended', 'card_replacing']);
         
-      case 'pending_deactivation': // 待注销
-        return getFilteredOptions(['pending_deactivation', 'in_use', 'user_reported', 'deactivated', 'suspended', 'card_replacing']);
+      case 'pending_deactivation_user': // 待注销（员工上报）
+        return getFilteredOptions(['pending_deactivation_user', 'in_use', 'user_reported', 'deactivated', 'suspended', 'card_replacing']);
+
+      case 'pending_deactivation_admin': // 待注销（系统标记）
+        return getFilteredOptions(['pending_deactivation_admin', 'in_use', 'user_reported', 'deactivated', 'suspended', 'card_replacing']);
         
       case 'user_reported': // 待核实-用户报告
-        return getFilteredOptions(['user_reported', 'in_use', 'pending_deactivation', 'deactivated', 'suspended', 'card_replacing']);
+        return getFilteredOptions(['user_reported', 'in_use', 'pending_deactivation_admin', 'pending_deactivation_user', 'deactivated', 'suspended', 'card_replacing']);
         
       case 'deactivated': // 已注销
-        return getFilteredOptions(['deactivated', 'idle', 'pending_deactivation', 'user_reported', 'suspended', 'card_replacing']);
+        return getFilteredOptions(['deactivated', 'idle', 'pending_deactivation_admin', 'pending_deactivation_user', 'user_reported', 'suspended', 'card_replacing']);
         
       case 'risk_pending': // 风险待核实 - 不能通过update接口转换
         return getFilteredOptions(['risk_pending']);
         
       case 'suspended': // 停机保号
-        return getFilteredOptions(['suspended', 'idle', 'in_use', 'pending_deactivation', 'deactivated']);
+        return getFilteredOptions(['suspended', 'idle', 'in_use', 'pending_deactivation_admin', 'pending_deactivation_user', 'deactivated']);
         
       case 'card_replacing': // 补卡中
-        return getFilteredOptions(['card_replacing', 'idle', 'in_use', 'pending_deactivation', 'deactivated']);
+        return getFilteredOptions(['card_replacing', 'idle', 'in_use', 'pending_deactivation_admin', 'pending_deactivation_user', 'deactivated']);
         
       default:
         // 未知状态，只保留当前状态

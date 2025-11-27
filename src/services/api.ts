@@ -1,9 +1,16 @@
-import { authService } from './authService';
 import { toast } from '@/hooks/use-toast';
 
-export const apiFetch = async (input: RequestInfo | URL, init?: RequestInit & { auth?: boolean }): Promise<Response> => {
-  const token = authService.getToken();
-  const { auth = true, ...restInit } = init || {};
+export const apiFetch = async (input: RequestInfo | URL, init?: RequestInit & { auth?: boolean; useEmployeeToken?: boolean }): Promise<Response> => {
+  const { auth = true, useEmployeeToken = false, ...restInit } = init || {};
+
+  let token: string | null = null;
+  if (useEmployeeToken) {
+    token = localStorage.getItem('employee_token');
+  } else {
+    // This part remains for admin auth
+    const { authService } = await import('./authService');
+    token = authService.getToken();
+  }
 
   const headers = new Headers(restInit.headers);
   if (auth && token) {
@@ -22,24 +29,26 @@ export const apiFetch = async (input: RequestInfo | URL, init?: RequestInit & { 
   const response = await fetch(input, newInit);
 
   if (response.status === 401) {
-    // 检查是否已在登录页，避免重定向循环
-    if (window.location.pathname !== '/login') {
+    const loginPath = useEmployeeToken ? '/employee-login' : '/login';
+    const userKey = useEmployeeToken ? 'employee_user' : 'user';
+    const tokenKey = useEmployeeToken ? 'employee_token' : 'token';
+
+    if (window.location.pathname !== loginPath) {
       toast({
         title: "会话已过期",
         description: "您的登录已失效，请重新登录。",
         variant: "destructive",
       });
-      // 不再调用 authService.logout()，避免循环
-      // 直接清除本地存储并重定向
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      
+      localStorage.removeItem(tokenKey);
+      localStorage.removeItem(userKey);
 
-      window.location.href = '/login';
+      window.location.href = loginPath;
 
-      // 抛出错误，中断当前请求链
       throw new Error('Token expired or invalid. Redirecting to login.');
     }
   }
 
   return response;
-}; 
+};
+ 

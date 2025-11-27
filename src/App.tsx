@@ -5,8 +5,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { EmployeeAuthProvider } from "./context/EmployeeAuthContext";
 import { DataProvider } from "./context/DataContext";
 import Login from "./pages/Login";
+import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
+import EmployeeLayout from "./layouts/EmployeeLayout";
 import Dashboard from "./pages/Dashboard";
 import Phones from "./pages/Phones";
 import Employees from "./pages/Employees";
@@ -16,6 +19,9 @@ import ImportData from "./pages/ImportData";
 import UserManagement from "./pages/UserManagement";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
+import EmployeeLogin from "@/pages/employee/EmployeeLogin";
+import InventoryManagement from "@/pages/InventoryManagement";
+import InventoryTaskDetail from "@/pages/InventoryTaskDetail";
 import { lazy } from "react";
 
 // 盘点验证相关页面 - 先定义占位组件，后续实现
@@ -53,13 +59,21 @@ const App = () => (
     <TooltipProvider>
       <BrowserRouter>
         <AuthProvider>
-          <DataProvider>
-            <Toaster />
-            <Sonner />
+          <EmployeeAuthProvider>
+            <DataProvider>
+              <Toaster />
+              <Sonner />
             <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen">加载中...</div>}>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/employee-login" element={<EmployeeLogin />} />
+
+                {/* Employee specific routes */}
+                <Route element={<EmployeeLayout />}>
+                  <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+                </Route>
+
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/phones" element={<Phones />} />
                 <Route path="/employees" element={<Employees />} />
@@ -67,6 +81,8 @@ const App = () => (
                 <Route path="/users" element={<UserManagement />} />
                 <Route path="/risk" element={<RiskPhones />} />
                 <Route path="/import" element={<ImportData />} />
+                <Route path="/inventory" element={<InventoryManagement />} />
+                <Route path="/inventory/:taskId" element={<InventoryTaskDetail />} />
                 
                 {/* 验证相关路由 */}
                 <Route path="/verification" element={<VerificationManagement />} />
@@ -84,6 +100,7 @@ const App = () => (
               </Routes>
             </React.Suspense>
           </DataProvider>
+        </EmployeeAuthProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

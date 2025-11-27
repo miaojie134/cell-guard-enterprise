@@ -49,7 +49,8 @@ export const EmployeeDetailDialog: React.FC<EmployeeDetailDialogProps> = ({
 
   const getPhoneStatusBadgeVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (status.toLowerCase()) {
-      case 'pending_deactivation':
+      case 'pending_deactivation_user':
+      case 'pending_deactivation_admin':
         return 'outline';
       case 'risk_pending':
       case 'user_reported':
@@ -61,7 +62,8 @@ export const EmployeeDetailDialog: React.FC<EmployeeDetailDialogProps> = ({
 
   const getUsingPhoneStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'pending_deactivation':
+      case 'pending_deactivation_user':
+      case 'pending_deactivation_admin':
         return 'text-amber-600 bg-amber-50 border-amber-200';
       case 'risk_pending':
       case 'user_reported':

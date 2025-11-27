@@ -47,9 +47,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed }) => {
     },
     {
       name: "盘点管理",
-      path: "/verification",
+      path: "/inventory",
       icon: ClipboardCheck,
-      key: "verification",
+      key: "inventory",
     },
     {
       name: "员工管理",

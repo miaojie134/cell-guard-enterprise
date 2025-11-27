@@ -1,5 +1,6 @@
 import { API_CONFIG, APIResponse, APIErrorResponse } from '@/config/api/base';
 import { PhoneSearchParams, RiskPhoneSearchParams, PhoneListResponse, APIPhone, CreatePhoneRequest, UpdatePhoneRequest, AssignPhoneRequest, UnassignPhoneRequest, HandleRiskPhoneRequest } from '@/config/api/phone';
+import { PaginatedData, PhoneNumber, mapBackendPhoneToFrontend, NewAPIResponse } from '@/types/index';
 import { apiFetch } from './api';
 
 // 获取手机号码列表
@@ -321,7 +322,7 @@ export interface EnhancedImportResult {
 const statusChineseToEnglishMap: Record<string, string> = {
   '闲置': 'idle',
   '使用中': 'in_use',
-  '待注销': 'pending_deactivation',
+  '待注销': 'pending_deactivation_user', // 默认导入视为员工上报
   '已注销': 'deactivated',
   '待核实-办卡人离职': 'risk_pending',
   '待核实-用户报告': 'user_reported',
@@ -385,3 +386,92 @@ export const enhancedImportPhones = async (file: File): Promise<APIResponse<Enha
   }
 };
 
+export const getEmployeeMobileNumbers = async (params: { page?: number, limit?: number }): Promise<PaginatedData<PhoneNumber>> => {
+  try {
+    const url = new URL(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EMPLOYEE_MOBILE_NUMBERS}`, window.location.origin);
+    if (params.page) url.searchParams.append('page', params.page.toString());
+    if (params.limit) url.searchParams.append('limit', params.limit.toString());
+
+    const response = await apiFetch(url.toString(), {
+      method: 'GET',
+      useEmployeeToken: true,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || data.details || '获取员工手机号列表失败');
+    }
+    
+    // 支持两种格式：{code:0,data:{...}} 或 {status:'success',data:{...}}
+    if ('code' in data) {
+      if (data.code !== 0 || !data.data) {
+        throw new Error(data.message || '获取员工手机号列表响应格式错误');
+      }
+    } else if ('status' in data) {
+      if (data.status !== 'success' || !data.data) {
+        throw new Error(data.message || '获取员工手机号列表响应格式错误');
+      }
+    } else {
+      throw new Error('获取员工手机号列表响应格式错误');
+    }
+
+    return {
+      data: data.data.items.map(mapBackendPhoneToFrontend),
+      total: data.data.pagination.total,
+      page: data.data.pagination.page,
+      pageSize: data.data.pagination.limit || data.data.pagination.pageSize,
+    };
+
+  } catch (error) {
+    console.error('Get employee mobile numbers error:', error);
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('网络连接失败或服务器错误');
+  }
+};
+
+export const requestDeactivatePhone = async (phoneNumber: string): Promise<void> => {
+  try {
+    const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EMPLOYEE_MOBILE_NUMBERS}/${encodeURIComponent(phoneNumber)}/deactivate-request`;
+    const response = await apiFetch(url, {
+      method: 'POST',
+      useEmployeeToken: true,
+    });
+
+    const data: NewAPIResponse<{ submitted: boolean }> | { status: string; message?: string; data?: { submitted?: boolean } } = await response.json();
+
+    const successByCode = 'code' in data && data.code === 0;
+    const successByStatus = 'status' in data && data.status === 'success';
+    const submitted = (data as any).data?.submitted;
+
+    if (!response.ok || !(successByCode || successByStatus) || submitted === false) {
+      throw new Error((data as any).message || '提交停用申请失败');
+    }
+  } catch (error) {
+    console.error('Request deactivate phone error:', error);
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('网络连接失败或服务器错误');
+  }
+};
+
+export const confirmDeactivatePhone = async (phoneNumber: string): Promise<void> => {
+  const url = `${API_CONFIG.BASE_URL}/mobilenumbers/${encodeURIComponent(phoneNumber)}/confirm-deactivate`;
+  const response = await apiFetch(url, { method: 'POST' });
+  const data: NewAPIResponse = await response.json();
+  if (!response.ok || data.code !== 0) {
+    throw new Error(data.message || '确认停用失败');
+  }
+};
+
+export const rejectDeactivatePhone = async (phoneNumber: string): Promise<void> => {
+  const url = `${API_CONFIG.BASE_URL}/mobilenumbers/${encodeURIComponent(phoneNumber)}/reject-deactivate`;
+  const response = await apiFetch(url, { method: 'POST' });
+  const data: NewAPIResponse = await response.json();
+  if (!response.ok || data.code !== 0) {
+    throw new Error(data.message || '驳回停用失败');
+  }
+};

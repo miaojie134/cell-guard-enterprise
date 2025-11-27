@@ -18,7 +18,6 @@ import { hasManagePermission } from '@/utils/permissions';
 interface DepartmentTreeSelectorProps {
   selectedDepartmentIds: string[];
   onDepartmentChange: (departmentId: string, checked: boolean, departmentName?: string) => void;
-  activeEmployees?: Array<{ department: string }>;
 }
 
 interface TreeNodeProps {
@@ -28,7 +27,6 @@ interface TreeNodeProps {
   parentIsLast?: boolean[];
   selectedDepartmentIds: string[];
   onDepartmentChange: (departmentId: string, checked: boolean, departmentName?: string) => void;
-  activeEmployees?: Array<{ department: string }>;
 }
 
 // 根据部门层级返回不同的图标
@@ -44,60 +42,11 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   isLast = false, 
   parentIsLast = [],
   selectedDepartmentIds,
-  onDepartmentChange,
-  activeEmployees = []
+  onDepartmentChange
 }) => {
   const [isExpanded, setIsExpanded] = useState(false); // 默认关闭
   const hasChildren = node.children && node.children.length > 0;
   const isSelected = selectedDepartmentIds.includes(node.id.toString());
-
-  // 计算该部门及其子部门的员工数量
-  const matchingEmployees = activeEmployees.filter(emp => {
-    const empDept = emp.department; // 格式如："产研中心 > 产研中心4组"
-    
-    // 如果员工部门路径包含当前部门名称，则匹配
-    // 处理几种情况：
-    // 1. 完全匹配：empDept === node.name （不太可能，因为员工部门是路径格式）
-    // 2. 路径中包含部门名称：empDept.includes(node.name)
-    // 3. 路径结尾匹配：empDept.endsWith(node.name) （精确匹配子部门）
-    
-    // 情况1：完全匹配
-    if (empDept === node.name) {
-      return true;
-    }
-    
-    // 情况2：员工部门路径以当前部门名称结尾（精确匹配）
-    // 例如："产研中心 > 产研中心4组" 结尾匹配 "产研中心4组"
-    if (empDept.endsWith(node.name)) {
-      return true;
-    }
-    
-    // 情况3：如果是父部门，匹配所有以该部门开头的路径
-    // 例如："产研中心" 匹配 "产研中心 > 产研中心4组"
-    if (empDept.startsWith(node.name + ' >')) {
-      return true;
-    }
-    
-    return false;
-  });
-  
-  const employeeCount = matchingEmployees.length;
-  
-  // 调试信息：输出匹配情况
-  if (node.name.includes('产研中心')) {
-    console.log(`部门 "${node.name}" 的员工匹配情况:`, {
-      departmentName: node.name,
-      matchingEmployees: matchingEmployees.map(emp => emp.department),
-      employeeCount,
-      // 测试几个样本匹配
-      testMatches: activeEmployees.slice(0, 5).map(emp => ({
-        empDept: emp.department,
-        endsWith: emp.department.endsWith(node.name),
-        startsWith: emp.department.startsWith(node.name + ' >'),
-        exact: emp.department === node.name
-      }))
-    });
-  }
 
   const handleToggle = () => {
     if (hasChildren) {
@@ -210,11 +159,6 @@ const TreeNode: React.FC<TreeNodeProps> = ({
               {node.name}
             </label>
             
-            {/* 员工数量徽章 */}
-            <Badge variant="outline" className="text-xs h-5 px-1.5">
-              {employeeCount}
-            </Badge>
-            
             {!node.isActive && (
               <Badge variant="secondary" className="text-xs h-5 bg-orange-100 text-orange-700 border-orange-200">
                 停用
@@ -248,7 +192,6 @@ const TreeNode: React.FC<TreeNodeProps> = ({
               parentIsLast={[...parentIsLast, isLast]}
               selectedDepartmentIds={selectedDepartmentIds}
               onDepartmentChange={onDepartmentChange}
-              activeEmployees={activeEmployees}
             />
           ))}
         </div>
@@ -259,8 +202,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
 
 export const DepartmentTreeSelector: React.FC<DepartmentTreeSelectorProps> = ({ 
   selectedDepartmentIds,
-  onDepartmentChange,
-  activeEmployees = []
+  onDepartmentChange
 }) => {
   const { tree, isLoading, error } = useDepartmentTree();
   const { user } = useAuth();
@@ -323,7 +265,6 @@ export const DepartmentTreeSelector: React.FC<DepartmentTreeSelectorProps> = ({
           parentIsLast={[]}
           selectedDepartmentIds={selectedDepartmentIds}
           onDepartmentChange={onDepartmentChange}
-          activeEmployees={activeEmployees}
         />
       ))}
     </div>

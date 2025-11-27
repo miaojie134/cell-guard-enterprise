@@ -21,6 +21,8 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
         return "status-inactive";
       case "pending":
       case "pending_deactivation":
+      case "pending_deactivation_user":
+      case "pending_deactivation_admin":
       case "risk_pending":
       case "user_reported":
         return "status-pending";
@@ -55,7 +57,10 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
       case "pending":
         return "待处理";
       case "pending_deactivation":
-        return "待注销";
+      case "pending_deactivation_user":
+        return "待注销（员工上报）";
+      case "pending_deactivation_admin":
+        return "待注销（系统标记）";
       case "risk_pending":
         return "待核实-办卡人离职";
       case "user_reported":

@@ -4,4 +4,5 @@ export * from './auth';
 export * from './employee';
 export * from './phone';
 export * from './department';
-export * from './dashboard'; 
+export * from './dashboard';
+export * from './inventory'; 

@@ -334,7 +334,6 @@ const VerificationCreate: React.FC = () => {
                     <DepartmentTreeSelector
                       selectedDepartmentIds={form.selectedDepartments}
                       onDepartmentChange={handleDepartmentChange}
-                      activeEmployees={activeEmployees}
                     />
                   </CardContent>
                 </Card>

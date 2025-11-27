@@ -37,11 +37,11 @@ interface UnifiedPhoneTableProps {
   phoneNumbers: BasePhoneNumber[];
   isLoading: boolean;
   error: Error | null;
-  searchParams: PhoneSearchParams;
+  searchParams: Partial<PhoneSearchParams>;
   user: User | null;
   departmentOptions: DepartmentOption[];
   onFilterChange: (key: string, value: string) => void;
-  onUpdateSearchParams: (updater: (prev: PhoneSearchParams) => PhoneSearchParams) => void;
+  onUpdateSearchParams: (updater: (prev: Partial<PhoneSearchParams>) => Partial<PhoneSearchParams>) => void;
   
   // 操作配置
   actions: ActionConfig[];
@@ -49,6 +49,8 @@ interface UnifiedPhoneTableProps {
   // 表格配置
   showColumns?: {
     currentUser?: boolean;
+    applicant?: boolean;
+    applicantStatus?: boolean;
     purpose?: boolean;
     cancellationDate?: boolean;
   };
@@ -77,6 +79,8 @@ export const UnifiedPhoneTable: React.FC<UnifiedPhoneTableProps> = ({
   actions,
   showColumns = {
     currentUser: true,
+    applicant: true,
+    applicantStatus: true,
     purpose: true,
     cancellationDate: true,
   },
@@ -103,8 +107,11 @@ export const UnifiedPhoneTable: React.FC<UnifiedPhoneTableProps> = ({
 
   // 计算表格列数
   const getColSpan = () => {
-    let count = 6; // 号码、办卡人、办卡人状态、部门、办卡时间、状态、供应商、操作
+    // 固定列：号码、部门、办卡时间、状态、供应商、操作
+    let count = 6;
     if (showColumns.currentUser) count += 1;
+    if (showColumns.applicant) count += 1;
+    if (showColumns.applicantStatus) count += 1;
     if (showColumns.purpose) count += 1;
     if (showColumns.cancellationDate) count += 1;
     return count;
@@ -153,13 +160,13 @@ export const UnifiedPhoneTable: React.FC<UnifiedPhoneTableProps> = ({
     <div className="overflow-x-auto">
       <table className="data-table">
         <thead>
-          <PhoneTableHeader
-            searchParams={searchParams}
-            onFilterChange={onFilterChange}
-            onUpdateSearchParams={onUpdateSearchParams}
-            variant={variant}
-            showColumns={showColumns}
-          />
+            <PhoneTableHeader
+              searchParams={searchParams}
+              onFilterChange={onFilterChange}
+              onUpdateSearchParams={onUpdateSearchParams}
+              variant={variant}
+              showColumns={showColumns}
+            />
         </thead>
         <tbody>
           {phoneNumbers.map((phone) => (
@@ -170,16 +177,20 @@ export const UnifiedPhoneTable: React.FC<UnifiedPhoneTableProps> = ({
                 <td className="hidden sm:table-cell">{phone.currentUserName || "-"}</td>
               )}
               
-              <td className="max-w-[80px] truncate" title={phone.applicantName}>
-                {phone.applicantName}
-              </td>
+              {showColumns.applicant && (
+                <td className="max-w-[80px] truncate" title={phone.applicantName}>
+                  {phone.applicantName}
+                </td>
+              )}
               
-              <td>
-                <StatusBadge 
-                  status={getApplicantStatusVariant(phone.applicantStatus)} 
-                  text={getApplicantStatusText(phone.applicantStatus)} 
-                />
-              </td>
+              {showColumns.applicantStatus && (
+                <td>
+                  <StatusBadge 
+                    status={getApplicantStatusVariant(phone.applicantStatus)} 
+                    text={getApplicantStatusText(phone.applicantStatus)} 
+                  />
+                </td>
+              )}
               
               <td className="hidden md:table-cell max-w-[100px] truncate" 
                   title={getDepartmentName(phone.departmentId, departmentOptions)}>

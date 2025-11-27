@@ -54,7 +54,9 @@ export const getStatusText = (status: string): string => {
   const statusMap: Record<string, string> = {
     'idle': '闲置',
     'in_use': '使用中',
-    'pending_deactivation': '待注销',
+    'pending_deactivation': '待注销', // 兼容旧值
+    'pending_deactivation_user': '待注销（员工上报）',
+    'pending_deactivation_admin': '待注销（系统标记）',
     'deactivated': '已注销',
     'risk_pending': '待核实-办卡人离职',
     'user_reported': '待核实-用户报告',
@@ -70,6 +72,8 @@ export const getStatusVariant = (status: string): "active" | "inactive" | "pendi
     'idle': 'inactive',
     'in_use': 'active',
     'pending_deactivation': 'pending',
+    'pending_deactivation_user': 'pending',
+    'pending_deactivation_admin': 'pending',
     'deactivated': 'cancelled',
     'risk_pending': 'risk',
     'user_reported': 'risk',

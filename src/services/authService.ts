@@ -1,4 +1,5 @@
-import { API_CONFIG, LoginRequest, LoginResponsePayload, APIResponse, APIErrorResponse, ResponseStatus } from '@/config/api';
+import { API_CONFIG, LoginRequest, LoginResponsePayload, APIResponse, APIErrorResponse, ResponseStatus, EmployeeLoginPayload, EmployeeLoginResponsePayload, EmployeePhoneHintResponse } from '@/config/api';
+import { NewAPIResponse } from '@/types';
 import { apiFetch } from './api';
 
 class AuthService {
@@ -90,8 +91,84 @@ class AuthService {
     }
   }
 
+  async getEmployeePhoneHint(email: string): Promise<EmployeePhoneHintResponse> {
+    try {
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EMPLOYEE_AUTH_HINT}?email=${encodeURIComponent(email)}`;
+      const response = await apiFetch(url, { method: 'GET' });
+      const data: NewAPIResponse<EmployeePhoneHintResponse> | APIErrorResponse = await response.json();
+
+      if (!response.ok) {
+        const errorData = data as APIErrorResponse;
+        throw new Error(errorData.error || errorData.details || '获取手机号提示失败');
+      }
+
+      const successData = data as NewAPIResponse<EmployeePhoneHintResponse>;
+      if (successData.code !== 0 || !successData.data) {
+        throw new Error(successData.message || '获取提示响应格式错误');
+      }
+      return successData.data;
+    } catch (error) {
+      console.error('Get phone hint error:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('网络连接失败或服务器错误');
+    }
+  }
+
+  async employeeLogin(credentials: EmployeeLoginPayload): Promise<EmployeeLoginResponsePayload> {
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EMPLOYEE_LOGIN}`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(credentials),
+      });
+
+      const data: NewAPIResponse<EmployeeLoginResponsePayload> | APIResponse<EmployeeLoginResponsePayload> | APIErrorResponse = await response.json();
+      console.log('Employee login response:', data);
+
+      if (!response.ok) {
+        const errorData = data as APIErrorResponse;
+        throw new Error(errorData.error || errorData.details || '员工登录失败');
+      }
+
+      // 支持新旧两种响应格式：{"code":0,"data":...} 和 {"status":"success","data":...}
+      if ('code' in data) {
+        const successData = data as NewAPIResponse<EmployeeLoginResponsePayload>;
+        if (successData.code !== 0 || !successData.data) {
+          throw new Error(successData.message || '员工登录响应格式错误');
+        }
+        this.storeEmployeeSession(successData.data);
+        return successData.data;
+      }
+
+      if ('status' in data) {
+        const legacyData = data as APIResponse<EmployeeLoginResponsePayload>;
+        if (legacyData.status !== ResponseStatus.SUCCESS || !legacyData.data) {
+          throw new Error(legacyData.message || '员工登录响应格式错误');
+        }
+        this.storeEmployeeSession(legacyData.data);
+        return legacyData.data;
+      }
+
+      throw new Error('员工登录响应格式错误');
+    } catch (error) {
+      console.error('Employee login error:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('网络连接失败，请检查后端服务是否正常运行');
+    }
+  }
+
   getToken(): string | null {
     return localStorage.getItem('token');
+  }
+
+  private storeEmployeeSession(loginData: EmployeeLoginResponsePayload) {
+    // 使用不同的键存储员工token和信息
+    localStorage.setItem('employee_token', loginData.token);
+    localStorage.setItem('employee_user', JSON.stringify(loginData.employee));
   }
 
   // 检查token是否有效

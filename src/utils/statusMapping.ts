@@ -18,6 +18,8 @@ export const mapPhoneStatusStringToFrontend = (status: string): FrontendPhoneSta
     'idle': FRONTEND_PHONE_STATUS.IDLE,
     'in_use': FRONTEND_PHONE_STATUS.IN_USE,
     'pending_deactivation': FRONTEND_PHONE_STATUS.PENDING_CANCELLATION,
+    'pending_deactivation_user': FRONTEND_PHONE_STATUS.PENDING_CANCELLATION,
+    'pending_deactivation_admin': FRONTEND_PHONE_STATUS.PENDING_CANCELLATION,
     'deactivated': FRONTEND_PHONE_STATUS.CANCELLED,
     'risk_pending': FRONTEND_PHONE_STATUS.PENDING_VERIFICATION_EMPLOYEE_LEFT,
     'user_reported': FRONTEND_PHONE_STATUS.PENDING_VERIFICATION_USER_REPORT,

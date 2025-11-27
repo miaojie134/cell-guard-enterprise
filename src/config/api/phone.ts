@@ -5,7 +5,8 @@
 export type PhoneStatus =
   | 'idle'                 // 闲置
   | 'in_use'               // 使用中
-  | 'pending_deactivation' // 待注销
+  | 'pending_deactivation_user'   // 员工上报待注销
+  | 'pending_deactivation_admin'  // 系统/管理员标记待注销
   | 'deactivated'          // 已注销
   | 'risk_pending'         // 待核实-办卡人离职
   | 'user_reported'        // 待核实-用户报告

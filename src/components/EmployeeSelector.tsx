@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEmployeesForSelector } from '@/hooks/useEmployees';
+import { useDebounce } from '@/hooks/useDebounce';
 
 export interface Employee {
   id: number;
@@ -31,7 +32,7 @@ export interface Employee {
 interface EmployeeSelectorProps {
   value?: Employee | null;
   onChange: (employee: Employee | null) => void;
-  employees?: Employee[]; // 兼容旧用法，但不推荐
+  employees?: Employee[];
   isLoading?: boolean;
   placeholder?: string;
   required?: boolean;
@@ -40,25 +41,8 @@ interface EmployeeSelectorProps {
   error?: string;
   compact?: boolean;
   label?: string;
-  enableDynamicSearch?: boolean; // 是否启用动态搜索
+  enableDynamicSearch?: boolean;
 }
-
-// 防抖hook
-const useDebounce = (value: string, delay: number) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-};
 
 export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
   value,

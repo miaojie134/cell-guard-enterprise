@@ -16,6 +16,8 @@ export const BACKEND_PHONE_STATUS = {
   IDLE: 'idle',
   IN_USE: 'in_use',
   PENDING_CANCELLATION: 'pending_deactivation',
+  PENDING_CANCELLATION_USER: 'pending_deactivation_user',
+  PENDING_CANCELLATION_ADMIN: 'pending_deactivation_admin',
   CANCELLED: 'deactivated',
   PENDING_VERIFICATION_EMPLOYEE_LEFT: 'risk_pending',
   PENDING_VERIFICATION_USER_REPORT: 'user_reported',
@@ -27,6 +29,8 @@ export const FRONTEND_PHONE_STATUS = {
   IDLE: 'idle',
   IN_USE: 'in_use',
   PENDING_CANCELLATION: 'pending_deactivation',
+  PENDING_CANCELLATION_USER: 'pending_deactivation_user',
+  PENDING_CANCELLATION_ADMIN: 'pending_deactivation_admin',
   CANCELLED: 'deactivated',
   PENDING_VERIFICATION_EMPLOYEE_LEFT: 'risk_pending',
   PENDING_VERIFICATION_USER_REPORT: 'user_reported',
@@ -221,6 +225,8 @@ const PHONE_STATUS_MAP: Record<BackendPhoneStatus, FrontendPhoneStatus> = {
   [BACKEND_PHONE_STATUS.IDLE]: FRONTEND_PHONE_STATUS.IDLE,
   [BACKEND_PHONE_STATUS.IN_USE]: FRONTEND_PHONE_STATUS.IN_USE,
   [BACKEND_PHONE_STATUS.PENDING_CANCELLATION]: FRONTEND_PHONE_STATUS.PENDING_CANCELLATION,
+  [BACKEND_PHONE_STATUS.PENDING_CANCELLATION_USER]: FRONTEND_PHONE_STATUS.PENDING_CANCELLATION_USER,
+  [BACKEND_PHONE_STATUS.PENDING_CANCELLATION_ADMIN]: FRONTEND_PHONE_STATUS.PENDING_CANCELLATION_ADMIN,
   [BACKEND_PHONE_STATUS.CANCELLED]: FRONTEND_PHONE_STATUS.CANCELLED,
   [BACKEND_PHONE_STATUS.PENDING_VERIFICATION_EMPLOYEE_LEFT]: FRONTEND_PHONE_STATUS.PENDING_VERIFICATION_EMPLOYEE_LEFT,
   [BACKEND_PHONE_STATUS.PENDING_VERIFICATION_USER_REPORT]: FRONTEND_PHONE_STATUS.PENDING_VERIFICATION_USER_REPORT,
@@ -424,4 +430,160 @@ export interface DepartmentPermission {
   departmentName: string;
   permissionType: PermissionType;
   subDepartmentIds?: number[]; // 子部门ID列表，继承父部门的权限
+}
+
+// 新盘点功能相关类型
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+}
+
+export interface InventoryTaskSummary {
+  total: number;
+  confirmed: number;
+  unavailable: number;
+  pending: number;
+  unlistedReported: number;
+}
+
+export type InventoryTaskStatus = 'pending' | 'in_progress' | 'completed' | 'closed';
+export type InventoryTaskScopeType = 'department_ids' | 'employee_ids';
+
+export interface InventoryTask {
+  id: string;
+  name: string;
+  scopeType: InventoryTaskScopeType;
+  dueAt: string;
+  status: InventoryTaskStatus;
+  summary?: InventoryTaskSummary;
+  totalItems?: number;
+  confirmedItems?: number;
+  unavailableItems?: number;
+  unlistedReported?: number;
+  createdAt: string;
+}
+
+export interface InventoryTasksListResponse {
+  items: InventoryTask[];
+  pagination: PaginationInfo;
+}
+
+export interface InventoryTaskSearchParams {
+  page?: number;
+  limit?: number;
+  status?: InventoryTaskStatus;
+  scopeType?: InventoryTaskScopeType;
+  keyword?: string;
+  createdFrom?: string;
+  createdTo?: string;
+  signal?: AbortSignal;
+}
+
+export interface CreateInventoryTaskPayload {
+  name: string;
+  scopeType: InventoryTaskScopeType;
+  scopeValues: string[];
+  dueAt: string; // ISO 8601 format
+}
+
+// 员工认证相关类型
+export interface EmployeeLoginPayload {
+  email: string;
+  last4: string;
+}
+
+export interface EmployeeInfo {
+  employeeId: string;
+  fullName: string;
+  email: string;
+}
+
+export interface EmployeeLoginResponsePayload {
+  token: string;
+  employee: EmployeeInfo;
+}
+
+export interface EmployeePhoneHintResponse {
+  exists: boolean;
+  phonePrefix: string;
+}
+
+// 员工通知相关类型
+export type NotificationType = 'inventory_task_assigned' | 'transfer_request' | 'general_message';
+
+export interface Notification {
+  id: string;
+  title: string;
+  content: string;
+  type: NotificationType;
+  createdAt: string;
+  read: boolean;
+  relatedId?: string; // e.g., task ID or transfer ID
+}
+
+export interface PaginatedNotificationsResponse {
+  items: Notification[];
+  pagination: PaginationInfo;
+}
+
+// 员工盘点流程相关类型
+export type InventoryItemStatus = 'pending' | 'confirmed' | 'unavailable';
+
+export interface InventoryTaskItem {
+  itemId: number;
+  mobileNumberId: number;
+  phoneNumber: string;
+  status: InventoryItemStatus;
+  purpose: string;
+  comment: string | null;
+  updatedAt: string;
+}
+
+export interface InventoryTaskItemsResponse {
+  items: InventoryTaskItem[];
+  pagination: PaginationInfo;
+}
+
+export interface PerformItemActionPayload {
+  action: 'confirm' | 'unavailable';
+  purpose?: string;
+  comment?: string;
+}
+
+export interface ReportUnlistedPhonePayload {
+  phoneNumber: string;
+  purpose: string;
+  comment?: string;
+}
+
+// 手机号转移相关类型
+export interface TransferRequest {
+  id: string;
+  mobileNumberId?: number;
+  phoneNumber: string;
+  fromEmployee: {
+    id: string;
+    name: string;
+  };
+  toEmployee: {
+    id: string;
+    name: string;
+  };
+  status: 'pending' | 'accepted' | 'rejected';
+  remark?: string;
+  createdAt: string;
+}
+
+export interface InitiateTransferPayload {
+  phoneNumber: string;
+  toEmployeeId: string;
+  remark?: string;
+}
+
+// 新API通用响应类型
+export interface NewAPIResponse<TData = any> {
+  code: number;
+  message: string;
+  data: TData;
 }

@@ -4,9 +4,21 @@ export const API_CONFIG = {
   ENDPOINTS: {
     LOGIN: '/auth/login',
     LOGOUT: '/auth/logout',
+    EMPLOYEE_LOGIN: '/employee-auth/login',
+    EMPLOYEE_AUTH_HINT: '/employee-auth/hint',
+    EMPLOYEE_INVENTORY_TASKS: '/employee/inventory/tasks',
+    EMPLOYEE_INVENTORY_TASKS_ACTIVE: '/employee/inventory/tasks/active',
     EMPLOYEES: '/employees',
     PHONES: '/phones',
     DEPARTMENTS: '/departments',
+    EMPLOYEE_MOBILE_NUMBERS: '/employee/mobile-numbers',
+    EMPLOYEE_NOTIFICATIONS: '/employee/notifications',
+    EMPLOYEE_NOTIFICATIONS_UNREAD_COUNT: '/employee/notifications/unread-count',
+    EMPLOYEE_NOTIFICATIONS_MARK_AS_READ: '/employee/notifications/:id/read', // Placeholder for dynamic ID
+    EMPLOYEE_TRANSFER_REQUESTS_PENDING: '/employee/transfer-requests/pending',
+    EMPLOYEE_TRANSFER_REQUESTS_MINE: '/employee/transfer-requests/mine',
+    EMPLOYEE_TRANSFER_REQUESTS_BASE: '/employee/transfer-requests',
+    TRANSFER_REQUESTS: '/transfer/requests',
   },
 };
 
