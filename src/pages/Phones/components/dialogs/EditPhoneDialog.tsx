@@ -174,10 +174,11 @@ export const EditPhoneDialog: React.FC<EditPhoneDialogProps> = ({
   };
 
   // 状态标签映射
-  const getStatusLabel = (status: PhoneStatus): string => {
-    const statusLabels: Record<PhoneStatus, string> = {
+  const getStatusLabel = (status: PhoneStatus | 'pending_deactivation'): string => {
+    const statusLabels: Record<PhoneStatus | 'pending_deactivation', string> = {
       'idle': '闲置',
       'in_use': '使用中',
+      'pending_deactivation': '待注销',
       'pending_deactivation_user': '待注销（员工上报）',
       'pending_deactivation_admin': '待注销（系统标记）',
       'deactivated': '已注销',
@@ -186,7 +187,7 @@ export const EditPhoneDialog: React.FC<EditPhoneDialogProps> = ({
       'suspended': '停机保号',
       'card_replacing': '补卡中'
     };
-    return statusLabels[status];
+    return statusLabels[status] || status;
   };
 
   // 获取可选择的状态选项（根据当前状态和业务规则）
@@ -216,6 +217,9 @@ export const EditPhoneDialog: React.FC<EditPhoneDialogProps> = ({
 
       case 'pending_deactivation_admin': // 待注销（系统标记）
         return getFilteredOptions(['pending_deactivation_admin', 'in_use', 'user_reported', 'deactivated', 'suspended', 'card_replacing']);
+      
+      case 'pending_deactivation': // 待注销（兼容旧状态）
+        return getFilteredOptions(['pending_deactivation' as PhoneStatus, 'in_use', 'user_reported', 'deactivated', 'suspended', 'card_replacing']);
         
       case 'user_reported': // 待核实-用户报告
         return getFilteredOptions(['user_reported', 'in_use', 'pending_deactivation_admin', 'pending_deactivation_user', 'deactivated', 'suspended', 'card_replacing']);

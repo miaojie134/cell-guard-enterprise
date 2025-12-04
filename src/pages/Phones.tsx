@@ -116,10 +116,6 @@ const PhonesContent: React.FC<{ user: any }> = ({ user }) => {
     isDeleting,
     isAssigning,
     isUnassigning,
-    confirmDeactivate,
-    rejectDeactivate,
-    isConfirmingDeactivate,
-    isRejectingDeactivate,
   } = usePhoneNumbers(searchParams);
 
   // 监听创建操作完成，自动关闭新增对话框
